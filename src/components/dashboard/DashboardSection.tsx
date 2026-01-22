@@ -126,7 +126,7 @@ const DashboardSection = () => {
             ].map((action, index) => (
               <button
                 key={index}
-                className="flex items-center gap-3 p-4 rounded-lg bg-muted hover:bg-primary/10 hover:text-primary transition-all duration-200 text-sm font-medium"
+                className="flex items-center gap-3 p-4 rounded-lg bg-muted text-foreground hover:bg-primary/10 hover:text-primary transition-all duration-200 text-sm font-medium"
               >
                 <action.icon className="w-5 h-5" />
                 {action.label}
