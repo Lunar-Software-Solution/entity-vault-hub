@@ -200,8 +200,7 @@ const ServiceProvidersSection = () => {
   };
 
   const renderForm = () => {
-    const formProps = {
-      defaultValues: editingItem || undefined,
+    const commonProps = {
       onSubmit: handleSubmit,
       onCancel: handleCloseForm,
       isLoading: false,
@@ -209,13 +208,20 @@ const ServiceProvidersSection = () => {
     };
 
     switch (activeTab) {
-      case "law_firms": return <LawFirmForm {...formProps} />;
-      case "accountants": return <AccountantFirmForm {...formProps} />;
-      case "auditors": return <AuditorForm {...formProps} />;
-      case "advisors": return <AdvisorForm {...formProps} />;
-      case "consultants": return <ConsultantForm {...formProps} />;
-      case "registration_agents": return <RegistrationAgentForm {...formProps} />;
-      default: return null;
+      case "law_firms": 
+        return <LawFirmForm {...commonProps} firm={editingItem} />;
+      case "accountants": 
+        return <AccountantFirmForm {...commonProps} firm={editingItem} />;
+      case "auditors": 
+        return <AuditorForm {...commonProps} auditor={editingItem} />;
+      case "advisors": 
+        return <AdvisorForm {...commonProps} advisor={editingItem} />;
+      case "consultants": 
+        return <ConsultantForm {...commonProps} consultant={editingItem} />;
+      case "registration_agents": 
+        return <RegistrationAgentForm {...commonProps} agent={editingItem} />;
+      default: 
+        return null;
     }
   };
 
