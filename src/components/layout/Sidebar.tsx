@@ -10,6 +10,7 @@ import {
   LogOut
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import braxLogo from "@/assets/braxtech-logo.png";
 
 interface SidebarProps {
   activeSection: string;
@@ -31,8 +32,8 @@ const Sidebar = ({ activeSection, onSectionChange }: SidebarProps) => {
     <aside className="fixed left-0 top-0 h-screen w-64 bg-sidebar border-r border-sidebar-border flex flex-col">
       <div className="p-6">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl gradient-primary flex items-center justify-center glow-primary">
-            <Building2 className="w-5 h-5 text-sidebar-primary-foreground" />
+          <div className="w-10 h-10 rounded-xl overflow-hidden">
+            <img src={braxLogo} alt="BraxTech" className="w-full h-full object-contain" />
           </div>
           <div>
             <h1 className="font-semibold text-sidebar-foreground">MyPortal</h1>
