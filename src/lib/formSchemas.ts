@@ -301,3 +301,47 @@ export type AuditorFormData = BaseProviderFormData & {
   audit_types: string[];
   certifications: string[];
 };
+
+// Filing Type Schema
+export const filingTypeSchema = z.object({
+  code: z.string().trim().min(1, "Code is required").max(20, "Code must be 20 characters or less"),
+  name: z.string().trim().min(1, "Name is required").max(100, "Name must be 100 characters or less"),
+  category: z.string().trim().min(1, "Category is required"),
+  description: z.string().trim().max(500, "Description must be 500 characters or less").optional().or(z.literal("")),
+  default_frequency: z.string().trim().min(1, "Frequency is required"),
+});
+
+export type FilingTypeFormData = z.infer<typeof filingTypeSchema>;
+
+// Entity Filing Schema
+export const entityFilingSchema = z.object({
+  entity_id: z.string().uuid("Entity is required"),
+  filing_type_id: z.string().uuid("Filing type is required").optional().or(z.literal("")),
+  title: z.string().trim().min(1, "Title is required").max(200, "Title must be 200 characters or less"),
+  jurisdiction: z.string().trim().max(100, "Jurisdiction must be 100 characters or less").optional().or(z.literal("")),
+  due_date: z.string().min(1, "Due date is required"),
+  filing_date: z.string().optional().or(z.literal("")),
+  frequency: z.string().trim().min(1, "Frequency is required"),
+  amount: z.coerce.number().min(0, "Amount must be positive").default(0),
+  confirmation_number: z.string().trim().max(100, "Confirmation number must be 100 characters or less").optional().or(z.literal("")),
+  filed_by: z.string().trim().max(100, "Filed by must be 100 characters or less").optional().or(z.literal("")),
+  notes: z.string().trim().max(1000, "Notes must be 1000 characters or less").optional().or(z.literal("")),
+  status: z.enum(["pending", "filed", "overdue"]).default("pending"),
+  reminder_days: z.coerce.number().min(1).max(365).default(30),
+});
+
+export type EntityFilingFormData = z.infer<typeof entityFilingSchema>;
+
+// Filing Task Schema
+export const filingTaskSchema = z.object({
+  entity_id: z.string().uuid("Entity is required"),
+  filing_id: z.string().uuid().optional().or(z.literal("")),
+  title: z.string().trim().min(1, "Title is required").max(200, "Title must be 200 characters or less"),
+  description: z.string().trim().max(1000, "Description must be 1000 characters or less").optional().or(z.literal("")),
+  due_date: z.string().min(1, "Due date is required"),
+  priority: z.enum(["low", "medium", "high", "urgent"]).default("medium"),
+  status: z.enum(["pending", "in_progress", "completed", "cancelled"]).default("pending"),
+  assigned_to: z.string().trim().max(100, "Assigned to must be 100 characters or less").optional().or(z.literal("")),
+});
+
+export type FilingTaskFormData = z.infer<typeof filingTaskSchema>;

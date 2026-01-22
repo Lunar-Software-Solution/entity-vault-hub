@@ -21,6 +21,10 @@ export type Auditor = Tables<"auditors">;
 export type EntityProviderContract = Tables<"entity_provider_contracts">;
 export type DocumentType = Tables<"document_types">;
 export type EntityDocument = Tables<"entity_documents">;
+export type FilingType = Tables<"filing_types">;
+export type EntityFiling = Tables<"entity_filings">;
+export type FilingTask = Tables<"filing_tasks">;
+export type FilingDocument = Tables<"filing_documents">;
 
 export const useEntities = () => {
   return useQuery({
@@ -293,6 +297,158 @@ export const useEntityDocuments = () => {
   });
 };
 
+// Filing Types hooks
+export const useFilingTypes = () => {
+  return useQuery({
+    queryKey: ["filing_types"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("filing_types")
+        .select("*")
+        .order("category", { ascending: true });
+      if (error) throw error;
+      return data as FilingType[];
+    },
+  });
+};
+
+// Entity Filings hooks
+export const useEntityFilings = () => {
+  return useQuery({
+    queryKey: ["entity_filings"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("entity_filings")
+        .select("*")
+        .order("due_date", { ascending: true });
+      if (error) throw error;
+      return data as EntityFiling[];
+    },
+  });
+};
+
+// Filings for a specific entity
+export const useFilingsForEntity = (entityId?: string) => {
+  return useQuery({
+    queryKey: ["entity_filings", "by_entity", entityId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("entity_filings")
+        .select("*")
+        .eq("entity_id", entityId!)
+        .order("due_date", { ascending: true });
+      if (error) throw error;
+      return data as EntityFiling[];
+    },
+    enabled: !!entityId,
+  });
+};
+
+// Upcoming filings (next 90 days)
+export const useUpcomingFilings = () => {
+  return useQuery({
+    queryKey: ["entity_filings", "upcoming"],
+    queryFn: async () => {
+      const today = new Date().toISOString().split("T")[0];
+      const future = new Date();
+      future.setDate(future.getDate() + 90);
+      const futureDate = future.toISOString().split("T")[0];
+      
+      const { data, error } = await supabase
+        .from("entity_filings")
+        .select("*")
+        .gte("due_date", today)
+        .lte("due_date", futureDate)
+        .neq("status", "filed")
+        .order("due_date", { ascending: true });
+      if (error) throw error;
+      return data as EntityFiling[];
+    },
+  });
+};
+
+// Filing Tasks hooks
+export const useFilingTasks = () => {
+  return useQuery({
+    queryKey: ["filing_tasks"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("filing_tasks")
+        .select("*")
+        .order("due_date", { ascending: true });
+      if (error) throw error;
+      return data as FilingTask[];
+    },
+  });
+};
+
+// Tasks for a specific entity
+export const useTasksForEntity = (entityId?: string) => {
+  return useQuery({
+    queryKey: ["filing_tasks", "by_entity", entityId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("filing_tasks")
+        .select("*")
+        .eq("entity_id", entityId!)
+        .order("due_date", { ascending: true });
+      if (error) throw error;
+      return data as FilingTask[];
+    },
+    enabled: !!entityId,
+  });
+};
+
+// Open/pending tasks
+export const useOpenTasks = () => {
+  return useQuery({
+    queryKey: ["filing_tasks", "open"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("filing_tasks")
+        .select("*")
+        .in("status", ["pending", "in_progress"])
+        .order("due_date", { ascending: true });
+      if (error) throw error;
+      return data as FilingTask[];
+    },
+  });
+};
+
+// Overdue tasks
+export const useOverdueTasks = () => {
+  return useQuery({
+    queryKey: ["filing_tasks", "overdue"],
+    queryFn: async () => {
+      const today = new Date().toISOString().split("T")[0];
+      const { data, error } = await supabase
+        .from("filing_tasks")
+        .select("*")
+        .lt("due_date", today)
+        .in("status", ["pending", "in_progress"])
+        .order("due_date", { ascending: true });
+      if (error) throw error;
+      return data as FilingTask[];
+    },
+  });
+};
+
+// Filing Documents hooks
+export const useFilingDocuments = (filingId?: string) => {
+  return useQuery({
+    queryKey: ["filing_documents", filingId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("filing_documents")
+        .select("*")
+        .eq("filing_id", filingId!);
+      if (error) throw error;
+      return data as FilingDocument[];
+    },
+    enabled: !!filingId,
+  });
+};
+
 // Dashboard stats hook
 export const useDashboardStats = () => {
   const { data: bankAccounts } = useBankAccounts();
@@ -301,6 +457,9 @@ export const useDashboardStats = () => {
   const { data: contracts } = useContracts();
   const { data: addresses } = useAddresses();
   const { data: entities } = useEntities();
+  const { data: upcomingFilings } = useUpcomingFilings();
+  const { data: openTasks } = useOpenTasks();
+  const { data: overdueTasks } = useOverdueTasks();
 
   const totalCreditLimit = creditCards?.reduce((sum, card) => sum + Number(card.credit_limit), 0) ?? 0;
   const activeContracts = contracts?.filter(c => c.status === "active").length ?? 0;
@@ -316,5 +475,8 @@ export const useDashboardStats = () => {
     addressCount: addresses?.length ?? 0,
     entityStatus: entities?.[0]?.status ?? "No Entity",
     entityFoundedDate: entities?.[0]?.founded_date,
+    upcomingFilingsCount: upcomingFilings?.length ?? 0,
+    openTasksCount: openTasks?.length ?? 0,
+    overdueTasksCount: overdueTasks?.length ?? 0,
   };
 };
