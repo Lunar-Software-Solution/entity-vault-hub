@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import type { CreditCard } from "@/hooks/usePortalData";
+import { useEntities } from "@/hooks/usePortalData";
 
 interface CreditCardFormProps {
   card?: CreditCard | null;
@@ -24,6 +25,8 @@ const cardColors = [
 ];
 
 const CreditCardForm = ({ card, onSubmit, onCancel, isLoading }: CreditCardFormProps) => {
+  const { data: entities } = useEntities();
+  
   const form = useForm<CreditCardFormData>({
     resolver: zodResolver(creditCardSchema),
     defaultValues: {
@@ -36,6 +39,7 @@ const CreditCardForm = ({ card, onSubmit, onCancel, isLoading }: CreditCardFormP
       minimum_payment: card?.minimum_payment ? Number(card.minimum_payment) : undefined,
       due_date: card?.due_date ?? "",
       card_color: card?.card_color ?? "from-zinc-800 to-zinc-600",
+      entity_id: (card as any)?.entity_id ?? "",
     },
   });
 
@@ -43,6 +47,22 @@ const CreditCardForm = ({ card, onSubmit, onCancel, isLoading }: CreditCardFormP
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <FormField control={form.control} name="entity_id" render={({ field }) => (
+            <FormItem className="md:col-span-2">
+              <FormLabel>Linked Entity</FormLabel>
+              <Select onValueChange={field.onChange} defaultValue={field.value}>
+                <FormControl><SelectTrigger><SelectValue placeholder="Select entity (optional)" /></SelectTrigger></FormControl>
+                <SelectContent>
+                  <SelectItem value="">No entity</SelectItem>
+                  {entities?.map((entity) => (
+                    <SelectItem key={entity.id} value={entity.id}>{entity.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <FormMessage />
+            </FormItem>
+          )} />
+          
           <FormField control={form.control} name="name" render={({ field }) => (
             <FormItem>
               <FormLabel>Card Name *</FormLabel>

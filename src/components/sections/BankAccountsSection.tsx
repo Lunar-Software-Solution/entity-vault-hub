@@ -26,6 +26,7 @@ const BankAccountsSection = () => {
     const cleanData = {
       ...data,
       routing_number: data.routing_number || null,
+      entity_id: data.entity_id || null,
     };
     
     if (editingAccount) {

@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import type { Address } from "@/hooks/usePortalData";
+import { useEntities } from "@/hooks/usePortalData";
 
 interface AddressFormProps {
   address?: Address | null;
@@ -16,6 +17,8 @@ interface AddressFormProps {
 }
 
 const AddressForm = ({ address, onSubmit, onCancel, isLoading }: AddressFormProps) => {
+  const { data: entities } = useEntities();
+  
   const form = useForm<AddressFormData>({
     resolver: zodResolver(addressSchema),
     defaultValues: {
@@ -27,6 +30,7 @@ const AddressForm = ({ address, onSubmit, onCancel, isLoading }: AddressFormProp
       zip: address?.zip ?? "",
       country: address?.country ?? "United States",
       is_primary: address?.is_primary ?? false,
+      entity_id: (address as any)?.entity_id ?? "",
     },
   });
 
@@ -34,6 +38,22 @@ const AddressForm = ({ address, onSubmit, onCancel, isLoading }: AddressFormProp
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <FormField control={form.control} name="entity_id" render={({ field }) => (
+            <FormItem className="md:col-span-2">
+              <FormLabel>Linked Entity</FormLabel>
+              <Select onValueChange={field.onChange} defaultValue={field.value}>
+                <FormControl><SelectTrigger><SelectValue placeholder="Select entity (optional)" /></SelectTrigger></FormControl>
+                <SelectContent>
+                  <SelectItem value="">No entity</SelectItem>
+                  {entities?.map((entity) => (
+                    <SelectItem key={entity.id} value={entity.id}>{entity.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <FormMessage />
+            </FormItem>
+          )} />
+          
           <FormField control={form.control} name="label" render={({ field }) => (
             <FormItem>
               <FormLabel>Label *</FormLabel>

@@ -30,6 +30,7 @@ const ContractsSection = () => {
       end_date: data.end_date || null,
       value: data.value || null,
       value_numeric: data.value_numeric || null,
+      entity_id: data.entity_id || null,
     };
     
     if (editingContract) {

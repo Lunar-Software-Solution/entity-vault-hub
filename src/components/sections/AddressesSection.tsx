@@ -39,6 +39,7 @@ const AddressesSection = () => {
       ...data,
       state: data.state || null,
       zip: data.zip || null,
+      entity_id: data.entity_id || null,
     };
     
     if (editingAddress) {

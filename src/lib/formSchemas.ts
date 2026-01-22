@@ -23,6 +23,7 @@ export const bankAccountSchema = z.object({
   type: z.string().min(1, "Account type is required"),
   currency: z.string().min(1, "Currency is required"),
   balance: z.coerce.number().min(0, "Balance must be positive"),
+  entity_id: z.string().uuid().optional().or(z.literal("")),
 });
 
 export const creditCardSchema = z.object({
@@ -35,6 +36,7 @@ export const creditCardSchema = z.object({
   minimum_payment: z.coerce.number().min(0).optional(),
   due_date: z.string().optional().or(z.literal("")),
   card_color: z.string().default("from-zinc-800 to-zinc-600"),
+  entity_id: z.string().uuid().optional().or(z.literal("")),
 });
 
 export const addressSchema = z.object({
@@ -46,6 +48,7 @@ export const addressSchema = z.object({
   zip: z.string().trim().max(20).optional().or(z.literal("")),
   country: z.string().trim().min(1, "Country is required").max(100),
   is_primary: z.boolean().default(false),
+  entity_id: z.string().uuid().optional().or(z.literal("")),
 });
 
 export const contractSchema = z.object({
@@ -57,6 +60,7 @@ export const contractSchema = z.object({
   end_date: z.string().optional().or(z.literal("")),
   value: z.string().trim().max(50).optional().or(z.literal("")),
   value_numeric: z.coerce.number().min(0).optional(),
+  entity_id: z.string().uuid().optional().or(z.literal("")),
 });
 
 export const socialMediaSchema = z.object({
@@ -93,6 +97,7 @@ export type BankAccountFormData = {
   type: string;
   currency: string;
   balance: number;
+  entity_id?: string;
 };
 
 export type CreditCardFormData = {
@@ -105,6 +110,7 @@ export type CreditCardFormData = {
   minimum_payment?: number;
   due_date?: string;
   card_color: string;
+  entity_id?: string;
 };
 
 export type AddressFormData = {
@@ -116,6 +122,7 @@ export type AddressFormData = {
   zip?: string;
   country: string;
   is_primary: boolean;
+  entity_id?: string;
 };
 
 export type ContractFormData = {
@@ -127,6 +134,7 @@ export type ContractFormData = {
   end_date?: string;
   value?: string;
   value_numeric?: number;
+  entity_id?: string;
 };
 
 export type SocialMediaFormData = {
