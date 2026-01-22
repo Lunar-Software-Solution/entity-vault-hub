@@ -17,6 +17,12 @@ const sizeClasses = {
   lg: "w-16 h-16",
 };
 
+const iconSizes = {
+  sm: "w-4 h-4",
+  md: "w-6 h-6",
+  lg: "w-8 h-8",
+};
+
 const CompanyLogo = ({ 
   domain, 
   name, 
@@ -46,21 +52,21 @@ const CompanyLogo = ({
 
   if (!logoUrl || hasError) {
     return (
-      <div className={`${sizeClasses[size]} rounded-xl gradient-primary flex items-center justify-center flex-shrink-0 ${className}`}>
-        {fallbackIcon || <Building2 className="w-1/2 h-1/2 text-primary-foreground" />}
+      <div className={`${sizeClasses[size]} rounded-lg bg-gradient-to-br from-primary/20 to-primary/10 border border-primary/20 flex items-center justify-center flex-shrink-0 ${className}`}>
+        {fallbackIcon || <Building2 className={`${iconSizes[size]} text-primary`} />}
       </div>
     );
   }
 
   return (
-    <div className={`${sizeClasses[size]} rounded-xl overflow-hidden flex-shrink-0 bg-white border border-border ${className}`}>
+    <div className={`${sizeClasses[size]} rounded-lg overflow-hidden flex-shrink-0 bg-white/95 shadow-sm border border-border/50 ${className}`}>
       {isLoading && (
         <div className="w-full h-full animate-pulse bg-muted" />
       )}
       <img
         src={logoUrl}
         alt={`${name} logo`}
-        className={`w-full h-full object-contain p-1 ${isLoading ? "hidden" : "block"}`}
+        className={`w-full h-full object-contain p-1.5 ${isLoading ? "hidden" : "block"}`}
         onLoad={() => setIsLoading(false)}
         onError={() => {
           setHasError(true);

@@ -425,7 +425,16 @@ const ServiceProvidersSection = () => {
       <Dialog open={showForm} onOpenChange={handleCloseForm}>
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto bg-background">
           <DialogHeader>
-            <DialogTitle>{getFormTitle()}</DialogTitle>
+            <div className="flex items-center gap-3">
+              {editingItem && (
+                <CompanyLogo 
+                  domain={editingItem.website} 
+                  name={editingItem.name} 
+                  size="md"
+                />
+              )}
+              <DialogTitle>{getFormTitle()}</DialogTitle>
+            </div>
           </DialogHeader>
           {renderForm()}
         </DialogContent>
