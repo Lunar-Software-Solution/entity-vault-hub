@@ -128,9 +128,10 @@ const ServiceProvidersSection = () => {
 
   // Handle form submit - clean empty strings to null for date fields
   const handleSubmit = (data: any) => {
-    // Clean data - convert empty strings to null for optional fields
-    const cleanData = {
-      ...data,
+    // Common fields across all provider types
+    const baseCleanData = {
+      name: data.name,
+      entity_id: data.entity_id,
       contact_name: data.contact_name || null,
       email: data.email || null,
       phone: data.phone || null,
@@ -141,14 +142,39 @@ const ServiceProvidersSection = () => {
       engagement_end_date: data.engagement_end_date || null,
       fee_structure: data.fee_structure || null,
       notes: data.notes || null,
-      // Type-specific fields
-      bar_number: data.bar_number || null,
-      license_number: data.license_number || null,
-      advisor_type: data.advisor_type || null,
-      consultant_type: data.consultant_type || null,
-      agent_type: data.agent_type || null,
-      project_scope: data.project_scope || null,
+      is_active: data.is_active ?? true,
     };
+
+    // Type-specific field mappings
+    const typeSpecificFields: Record<ProviderType, Record<string, any>> = {
+      law_firms: {
+        bar_number: data.bar_number || null,
+        practice_areas: data.practice_areas || [],
+      },
+      accountants: {
+        license_number: data.license_number || null,
+        specializations: data.specializations || [],
+      },
+      auditors: {
+        license_number: data.license_number || null,
+        audit_types: data.audit_types || [],
+        certifications: data.certifications || [],
+      },
+      advisors: {
+        advisor_type: data.advisor_type || null,
+        certifications: data.certifications || [],
+      },
+      consultants: {
+        consultant_type: data.consultant_type || null,
+        project_scope: data.project_scope || null,
+      },
+      registration_agents: {
+        agent_type: data.agent_type || null,
+        jurisdictions_covered: data.jurisdictions_covered || [],
+      },
+    };
+
+    const cleanData = { ...baseCleanData, ...typeSpecificFields[activeTab] };
 
     const mutations = {
       law_firms: { create: createLawFirm, update: updateLawFirm },
