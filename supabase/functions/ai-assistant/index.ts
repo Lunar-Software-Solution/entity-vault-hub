@@ -137,13 +137,114 @@ const tools = [
   {
     type: "function",
     function: {
+      name: "add_law_firm",
+      description: "Add a law firm for an entity",
+      parameters: {
+        type: "object",
+        properties: {
+          entity_name: { type: "string", description: "Name of the entity this law firm works for" },
+          name: { type: "string", description: "Law firm name" },
+          contact_name: { type: "string", description: "Primary contact name" },
+          email: { type: "string", description: "Contact email" },
+          phone: { type: "string", description: "Phone number" },
+          address: { type: "string", description: "Office address" },
+          website: { type: "string", description: "Website URL" },
+          bar_number: { type: "string", description: "Bar number" },
+          practice_areas: { type: "array", items: { type: "string" }, description: "Practice areas (e.g., Corporate Law, IP, Litigation)" },
+          fee_structure: { type: "string", description: "Fee structure (e.g., Hourly, Retainer, Contingency)" },
+          linkedin_url: { type: "string", description: "LinkedIn URL" },
+          notes: { type: "string", description: "Additional notes" },
+        },
+        required: ["entity_name", "name"],
+        additionalProperties: false,
+      },
+    },
+  },
+  {
+    type: "function",
+    function: {
+      name: "add_accountant_firm",
+      description: "Add an accounting firm for an entity",
+      parameters: {
+        type: "object",
+        properties: {
+          entity_name: { type: "string", description: "Name of the entity this accountant works for" },
+          name: { type: "string", description: "Accounting firm name" },
+          contact_name: { type: "string", description: "Primary contact name" },
+          email: { type: "string", description: "Contact email" },
+          phone: { type: "string", description: "Phone number" },
+          address: { type: "string", description: "Office address" },
+          website: { type: "string", description: "Website URL" },
+          license_number: { type: "string", description: "CPA license number" },
+          specializations: { type: "array", items: { type: "string" }, description: "Specializations (e.g., Tax, Audit, Bookkeeping)" },
+          fee_structure: { type: "string", description: "Fee structure" },
+          notes: { type: "string", description: "Additional notes" },
+        },
+        required: ["entity_name", "name"],
+        additionalProperties: false,
+      },
+    },
+  },
+  {
+    type: "function",
+    function: {
+      name: "add_consultant",
+      description: "Add a consultant for an entity",
+      parameters: {
+        type: "object",
+        properties: {
+          entity_name: { type: "string", description: "Name of the entity" },
+          name: { type: "string", description: "Consultant or firm name" },
+          consultant_type: { type: "string", description: "Type (e.g., Management, IT, Strategy, HR)" },
+          contact_name: { type: "string", description: "Primary contact name" },
+          email: { type: "string", description: "Contact email" },
+          phone: { type: "string", description: "Phone number" },
+          address: { type: "string", description: "Address" },
+          website: { type: "string", description: "Website URL" },
+          project_scope: { type: "string", description: "Scope of work" },
+          fee_structure: { type: "string", description: "Fee structure" },
+          notes: { type: "string", description: "Additional notes" },
+        },
+        required: ["entity_name", "name"],
+        additionalProperties: false,
+      },
+    },
+  },
+  {
+    type: "function",
+    function: {
+      name: "add_registration_agent",
+      description: "Add a registered agent for an entity",
+      parameters: {
+        type: "object",
+        properties: {
+          entity_name: { type: "string", description: "Name of the entity" },
+          name: { type: "string", description: "Registered agent name" },
+          agent_type: { type: "string", description: "Type (e.g., Commercial, Individual)" },
+          contact_name: { type: "string", description: "Contact name" },
+          email: { type: "string", description: "Contact email" },
+          phone: { type: "string", description: "Phone number" },
+          address: { type: "string", description: "Registered address" },
+          website: { type: "string", description: "Website URL" },
+          jurisdictions_covered: { type: "array", items: { type: "string" }, description: "Jurisdictions covered" },
+          fee_structure: { type: "string", description: "Fee structure" },
+          notes: { type: "string", description: "Additional notes" },
+        },
+        required: ["entity_name", "name"],
+        additionalProperties: false,
+      },
+    },
+  },
+  {
+    type: "function",
+    function: {
       name: "search_data",
       description: "Search existing data in the database",
       parameters: {
         type: "object",
         properties: {
           query: { type: "string", description: "Search query" },
-          table: { type: "string", enum: ["entities", "addresses", "bank_accounts", "phone_numbers", "tax_ids", "entity_filings", "contracts"], description: "Table to search (optional, searches all if not specified)" },
+          table: { type: "string", enum: ["entities", "addresses", "bank_accounts", "phone_numbers", "tax_ids", "entity_filings", "contracts", "law_firms", "accountant_firms", "consultants", "registration_agents"], description: "Table to search (optional, searches all if not specified)" },
         },
         required: ["query"],
         additionalProperties: false,
@@ -177,15 +278,18 @@ serve(async (req) => {
 
 EXISTING ENTITIES in the database: ${entityList}
 
-When users paste information like company names, addresses, phone numbers, or other business data, you should:
-1. Parse the information intelligently
-2. Use the appropriate tool to add the data
-3. If an entity name is mentioned that doesn't exist, create the entity first
-4. Confirm what was added and ask if they want to add more
+IMPORTANT DISTINCTIONS:
+- ENTITIES are the main business companies (LLCs, Corporations, etc.) that the user manages
+- LAW FIRMS, ACCOUNTANT FIRMS, CONSULTANTS, REGISTRATION AGENTS are SERVICE PROVIDERS that work FOR the entities
+- When a user mentions a law firm, accounting firm, CPA, attorney, lawyer, registered agent, or consultant - these should be added as service providers linked to an entity, NOT as new entities
+
+When users paste information:
+1. Determine if it's an entity (business the user owns/manages) or a service provider (external firm helping the entity)
+2. For service providers, use add_law_firm, add_accountant_firm, add_consultant, or add_registration_agent
+3. Service providers must be linked to an existing entity - ask which entity if unclear
+4. If an entity doesn't exist yet, create it first before adding its service providers
 
 Be conversational and helpful. If information is ambiguous, ask for clarification.
-When adding addresses or other records that belong to an entity, try to match to existing entities first.
-
 Format dates as YYYY-MM-DD. For phone numbers, extract country codes if present.`;
 
     // Call Lovable AI with tools
@@ -400,6 +504,139 @@ Format dates as YYYY-MM-DD. For phone numbers, extract country codes if present.
               break;
             }
 
+            case "add_law_firm": {
+              const { data: entity } = await supabase
+                .from("entities")
+                .select("id")
+                .ilike("name", `%${args.entity_name}%`)
+                .limit(1)
+                .single();
+
+              if (!entity) {
+                result = { success: false, message: `Entity "${args.entity_name}" not found. Please create it first.` };
+                break;
+              }
+
+              const { data, error } = await supabase.from("law_firms").insert({
+                entity_id: entity.id,
+                name: args.name,
+                contact_name: args.contact_name || null,
+                email: args.email || null,
+                phone: args.phone || null,
+                address: args.address || null,
+                website: args.website || null,
+                bar_number: args.bar_number || null,
+                practice_areas: args.practice_areas || null,
+                fee_structure: args.fee_structure || null,
+                linkedin_url: args.linkedin_url || null,
+                notes: args.notes || null,
+                is_active: true,
+              }).select().single();
+
+              if (error) throw error;
+              result = { success: true, message: `Added law firm "${args.name}" for "${args.entity_name}"`, data };
+              break;
+            }
+
+            case "add_accountant_firm": {
+              const { data: entity } = await supabase
+                .from("entities")
+                .select("id")
+                .ilike("name", `%${args.entity_name}%`)
+                .limit(1)
+                .single();
+
+              if (!entity) {
+                result = { success: false, message: `Entity "${args.entity_name}" not found. Please create it first.` };
+                break;
+              }
+
+              const { data, error } = await supabase.from("accountant_firms").insert({
+                entity_id: entity.id,
+                name: args.name,
+                contact_name: args.contact_name || null,
+                email: args.email || null,
+                phone: args.phone || null,
+                address: args.address || null,
+                website: args.website || null,
+                license_number: args.license_number || null,
+                specializations: args.specializations || null,
+                fee_structure: args.fee_structure || null,
+                notes: args.notes || null,
+                is_active: true,
+              }).select().single();
+
+              if (error) throw error;
+              result = { success: true, message: `Added accountant firm "${args.name}" for "${args.entity_name}"`, data };
+              break;
+            }
+
+            case "add_consultant": {
+              const { data: entity } = await supabase
+                .from("entities")
+                .select("id")
+                .ilike("name", `%${args.entity_name}%`)
+                .limit(1)
+                .single();
+
+              if (!entity) {
+                result = { success: false, message: `Entity "${args.entity_name}" not found. Please create it first.` };
+                break;
+              }
+
+              const { data, error } = await supabase.from("consultants").insert({
+                entity_id: entity.id,
+                name: args.name,
+                consultant_type: args.consultant_type || null,
+                contact_name: args.contact_name || null,
+                email: args.email || null,
+                phone: args.phone || null,
+                address: args.address || null,
+                website: args.website || null,
+                project_scope: args.project_scope || null,
+                fee_structure: args.fee_structure || null,
+                notes: args.notes || null,
+                is_active: true,
+              }).select().single();
+
+              if (error) throw error;
+              result = { success: true, message: `Added consultant "${args.name}" for "${args.entity_name}"`, data };
+              break;
+            }
+
+            case "add_registration_agent": {
+              const { data: entity } = await supabase
+                .from("entities")
+                .select("id")
+                .ilike("name", `%${args.entity_name}%`)
+                .limit(1)
+                .single();
+
+              if (!entity) {
+                result = { success: false, message: `Entity "${args.entity_name}" not found. Please create it first.` };
+                break;
+              }
+
+              const { data, error } = await supabase.from("registration_agents").insert({
+                entity_id: entity.id,
+                name: args.name,
+                agent_type: args.agent_type || null,
+                contact_name: args.contact_name || null,
+                email: args.email || null,
+                phone: args.phone || null,
+                address: args.address || null,
+                website: args.website || null,
+                jurisdictions_covered: args.jurisdictions_covered || null,
+                fee_structure: args.fee_structure || null,
+                notes: args.notes || null,
+                is_active: true,
+              }).select().single();
+
+              if (error) throw error;
+              result = { success: true, message: `Added registration agent "${args.name}" for "${args.entity_name}"`, data };
+              break;
+            }
+
             case "search_data": {
               const searchResults: any = {};
               const query = args.query.toLowerCase();
@@ -412,6 +649,16 @@ Format dates as YYYY-MM-DD. For phone numbers, extract country codes if present.
               if (!args.table || args.table === "addresses") {
                 const { data } = await supabase.from("addresses").select("label, street, city, state, country").or(`street.ilike.%${query}%,city.ilike.%${query}%`).limit(5);
                 if (data?.length) searchResults.addresses = data;
+              }
+
+              if (!args.table || args.table === "law_firms") {
+                const { data } = await supabase.from("law_firms").select("name, contact_name, email, phone").ilike("name", `%${query}%`).limit(5);
+                if (data?.length) searchResults.law_firms = data;
+              }
+
+              if (!args.table || args.table === "accountant_firms") {
+                const { data } = await supabase.from("accountant_firms").select("name, contact_name, email, phone").ilike("name", `%${query}%`).limit(5);
+                if (data?.length) searchResults.accountant_firms = data;
               }
 
               result = { success: true, message: "Search complete", data: searchResults };

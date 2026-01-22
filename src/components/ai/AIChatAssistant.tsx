@@ -75,6 +75,12 @@ const AIChatAssistant = () => {
         queryClient.invalidateQueries({ queryKey: ["phone-numbers"] });
         queryClient.invalidateQueries({ queryKey: ["tax-ids"] });
         queryClient.invalidateQueries({ queryKey: ["entity-filings"] });
+        queryClient.invalidateQueries({ queryKey: ["law-firms"] });
+        queryClient.invalidateQueries({ queryKey: ["accountant-firms"] });
+        queryClient.invalidateQueries({ queryKey: ["consultants"] });
+        queryClient.invalidateQueries({ queryKey: ["registration-agents"] });
+        queryClient.invalidateQueries({ queryKey: ["advisors"] });
+        queryClient.invalidateQueries({ queryKey: ["auditors"] });
         toast.success("Data updated!", { description: `Used: ${data.toolsUsed.join(", ")}` });
       }
     } catch (error: any) {
