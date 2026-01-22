@@ -1,192 +1,218 @@
 
-# Database Setup Plan for BraxTech Portal
+
+# Professional Service Providers Implementation Plan
 
 ## Overview
-Set up a Supabase database with shared data access for all authenticated users. This enables your team to collaboratively manage entity details, bank accounts, credit cards, social media accounts, addresses, and contracts.
-
-## Database Schema
-
-### Core Tables
-
-#### 1. Entity (Business/Personal Details)
-Stores the main entity information displayed on the Entity Details page.
-
-| Column | Type | Description |
-|--------|------|-------------|
-| id | uuid (PK) | Primary key |
-| name | text | Entity name (e.g., "Acme Corporation") |
-| type | text | LLC, Corporation, Sole Proprietor, etc. |
-| status | text | Active, Inactive, Pending |
-| founded_date | date | Date entity was founded |
-| jurisdiction | text | State/Country of registration |
-| email | text | Contact email |
-| phone | text | Contact phone |
-| website | text | Website URL |
-| ein_tax_id | text | EIN or Tax ID (encrypted/masked) |
-| registration_number | text | Business registration number |
-| duns_number | text | DUNS number |
-| is_verified | boolean | Verification status |
-| created_at | timestamptz | Record creation timestamp |
-| updated_at | timestamptz | Last update timestamp |
-
-#### 2. Bank Accounts
-| Column | Type | Description |
-|--------|------|-------------|
-| id | uuid (PK) | Primary key |
-| name | text | Account nickname |
-| bank | text | Bank name |
-| account_number | text | Masked account number |
-| routing_number | text | Routing number |
-| balance | numeric | Current balance |
-| currency | text | Currency code (USD, EUR, etc.) |
-| type | text | Checking, Savings, etc. |
-| last_transaction_amount | numeric | Last transaction amount |
-| last_transaction_type | text | credit or debit |
-| created_at | timestamptz | Record creation timestamp |
-| updated_at | timestamptz | Last update timestamp |
-
-#### 3. Credit Cards
-| Column | Type | Description |
-|--------|------|-------------|
-| id | uuid (PK) | Primary key |
-| name | text | Card name |
-| card_number | text | Masked card number |
-| expiry_date | text | Expiration date (MM/YY) |
-| cardholder_name | text | Name on card |
-| credit_limit | numeric | Credit limit |
-| current_balance | numeric | Current balance |
-| minimum_payment | numeric | Minimum payment due |
-| due_date | date | Payment due date |
-| card_color | text | Card styling (gradient class) |
-| created_at | timestamptz | Record creation timestamp |
-| updated_at | timestamptz | Last update timestamp |
-
-#### 4. Social Media Accounts
-| Column | Type | Description |
-|--------|------|-------------|
-| id | uuid (PK) | Primary key |
-| platform | text | Platform name |
-| username | text | Username/handle |
-| profile_url | text | Full profile URL |
-| followers | text | Follower count display |
-| is_verified | boolean | Verification status |
-| icon | text | Icon display text |
-| color | text | Background color class |
-| created_at | timestamptz | Record creation timestamp |
-| updated_at | timestamptz | Last update timestamp |
-
-#### 5. Addresses
-| Column | Type | Description |
-|--------|------|-------------|
-| id | uuid (PK) | Primary key |
-| label | text | Address label (Home, Office) |
-| type | text | home, office, shipping, billing |
-| street | text | Street address |
-| city | text | City |
-| state | text | State/Province |
-| zip | text | ZIP/Postal code |
-| country | text | Country |
-| is_primary | boolean | Primary address flag |
-| created_at | timestamptz | Record creation timestamp |
-| updated_at | timestamptz | Last update timestamp |
-
-#### 6. Contracts
-| Column | Type | Description |
-|--------|------|-------------|
-| id | uuid (PK) | Primary key |
-| title | text | Contract title |
-| type | text | Real Estate, Technology, Employment, etc. |
-| parties | text[] | Array of party names |
-| start_date | date | Contract start date |
-| end_date | date | Contract end date (null for indefinite) |
-| status | text | active, expiring-soon, expired |
-| value | text | Contract value display |
-| value_numeric | numeric | Numeric value for calculations |
-| created_at | timestamptz | Record creation timestamp |
-| updated_at | timestamptz | Last update timestamp |
+Add the ability to track and manage professional service relationships for each entity, including **6 provider types**: Accountant Firms, Law Firms, Registration Agents, Advisors, Consultants, and Auditors. Each provider type will have its own dedicated table with full business profiles, **LinkedIn profiles**, and contract/engagement tracking.
 
 ---
 
-## Security Model (Row Level Security)
+## Database Schema
 
-Since all authenticated users should see the same shared data, the RLS policies will:
-- **Allow all authenticated users to SELECT** (read) all records
-- **Allow all authenticated users to INSERT/UPDATE/DELETE** (full access)
+### New Tables (6 provider tables + 1 junction table)
 
-This creates a collaborative environment where any team member can manage all data.
+Each table follows a consistent structure with type-specific fields:
 
-Example policy pattern for each table:
-```sql
--- Enable RLS
-ALTER TABLE public.bank_accounts ENABLE ROW LEVEL SECURITY;
+#### Common Fields (all 6 tables)
+| Column | Type | Description |
+|--------|------|-------------|
+| id | uuid (PK) | Primary key |
+| entity_id | uuid (FK) | Links to parent entity (CASCADE delete) |
+| name | text | Firm/company name |
+| contact_name | text | Primary contact person |
+| email | text | Contact email |
+| phone | text | Contact phone |
+| website | text | Website URL |
+| **linkedin_url** | text | LinkedIn profile URL |
+| address | text | Office address |
+| engagement_start_date | date | When relationship began |
+| engagement_end_date | date | When ended (null if active) |
+| fee_structure | text | Hourly, Retainer, Project-based |
+| notes | text | Additional notes |
+| is_active | boolean | Current engagement status |
+| created_at/updated_at | timestamptz | Timestamps |
 
--- All authenticated users can read
-CREATE POLICY "Authenticated users can view all bank accounts"
-  ON public.bank_accounts FOR SELECT
-  TO authenticated
-  USING (true);
+#### Type-Specific Fields
 
--- All authenticated users can insert
-CREATE POLICY "Authenticated users can create bank accounts"
-  ON public.bank_accounts FOR INSERT
-  TO authenticated
-  WITH CHECK (true);
+| Table | Additional Columns |
+|-------|-------------------|
+| **accountant_firms** | license_number, specializations (text[]) |
+| **law_firms** | bar_number, practice_areas (text[]) |
+| **registration_agents** | agent_type, jurisdictions_covered (text[]) |
+| **advisors** | advisor_type, certifications (text[]) |
+| **consultants** | consultant_type, project_scope |
+| **auditors** | license_number, audit_types (text[]), certifications (text[]) |
 
--- All authenticated users can update
-CREATE POLICY "Authenticated users can update bank accounts"
-  ON public.bank_accounts FOR UPDATE
-  TO authenticated
-  USING (true);
+#### Junction Table: entity_provider_contracts
+Links existing contracts to specific service providers.
 
--- All authenticated users can delete
-CREATE POLICY "Authenticated users can delete bank accounts"
-  ON public.bank_accounts FOR DELETE
-  TO authenticated
-  USING (true);
-```
+| Column | Type | Description |
+|--------|------|-------------|
+| id | uuid (PK) | Primary key |
+| provider_type | text | accountant_firm, law_firm, auditor, etc. |
+| provider_id | uuid | ID of the provider record |
+| contract_id | uuid (FK) | Links to contracts table |
+| created_at | timestamptz | Timestamp |
+
+---
+
+## Row Level Security
+All tables follow the existing shared-access pattern:
+- All authenticated users can SELECT, INSERT, UPDATE, DELETE
+- No user-specific scoping (collaborative team access)
 
 ---
 
 ## Implementation Steps
 
-### Step 1: Connect Supabase
-- Connect your existing Supabase project to Lovable
-- This will provide the database and authentication
+### Step 1: Database Migration
+Create all 7 tables with:
+- Proper column types and constraints
+- LinkedIn URL field on all provider tables
+- Foreign key to entities table with ON DELETE CASCADE
+- RLS policies for authenticated access
+- Automatic updated_at triggers
 
-### Step 2: Run Database Migrations
-Create all 6 tables with proper columns, constraints, and RLS policies
+### Step 2: TypeScript Types & Hooks
 
-### Step 3: Add Authentication
-- Create login/signup pages
-- Protect the portal so only authenticated users can access
-- Email/password authentication (OAuth optional)
+**New types in usePortalData.ts:**
+- AccountantFirm, LawFirm, RegistrationAgent, Advisor, Consultant, Auditor (all include linkedin_url)
+- EntityProviderContract
 
-### Step 4: Update Components
-Modify each section component to:
-- Fetch data from Supabase instead of static arrays
-- Add forms for creating new records
-- Enable editing existing records
-- Add delete functionality with confirmation
+**New query hooks:**
+- useAccountantFirms(), useLawFirms(), useRegistrationAgents()
+- useAdvisors(), useConsultants(), useAuditors()
+- Filtered versions: useAccountantFirmsForEntity(entityId), etc.
 
-### Step 5: Dashboard Updates
-- Update dashboard stats to reflect real database counts
-- Add recent activity based on actual record timestamps
+### Step 3: Mutation Hooks
+
+**In usePortalMutations.ts:**
+- CRUD hooks for each provider type (18 hooks total):
+  - useCreateAccountantFirm, useUpdateAccountantFirm, useDeleteAccountantFirm
+  - useCreateLawFirm, useUpdateLawFirm, useDeleteLawFirm
+  - useCreateRegistrationAgent, useUpdateRegistrationAgent, useDeleteRegistrationAgent
+  - useCreateAdvisor, useUpdateAdvisor, useDeleteAdvisor
+  - useCreateConsultant, useUpdateConsultant, useDeleteConsultant
+  - useCreateAuditor, useUpdateAuditor, useDeleteAuditor
+
+### Step 4: Zod Validation Schemas
+
+**In formSchemas.ts:**
+Add validation schemas for each provider type with linkedin_url validation:
+
+```typescript
+linkedin_url: z.string().trim().url("Invalid LinkedIn URL").optional().or(z.literal("")),
+```
+
+### Step 5: Form Components
+
+**New form components (6 files):**
+- `src/components/forms/AccountantFirmForm.tsx`
+- `src/components/forms/LawFirmForm.tsx`
+- `src/components/forms/RegistrationAgentForm.tsx`
+- `src/components/forms/AdvisorForm.tsx`
+- `src/components/forms/ConsultantForm.tsx`
+- `src/components/forms/AuditorForm.tsx`
+
+Each form includes:
+- Basic info fields (name, contact, email, phone, website, **LinkedIn URL**, address)
+- Type-specific fields (licenses, specializations, certifications)
+- Engagement dates and fee structure
+- Active status toggle
+- Notes textarea
+
+### Step 6: Entity Detail - Linked Components
+
+**New linked components (6 files):**
+- `src/components/entity-detail/LinkedAccountantFirms.tsx`
+- `src/components/entity-detail/LinkedLawFirms.tsx`
+- `src/components/entity-detail/LinkedRegistrationAgents.tsx`
+- `src/components/entity-detail/LinkedAdvisors.tsx`
+- `src/components/entity-detail/LinkedConsultants.tsx`
+- `src/components/entity-detail/LinkedAuditors.tsx`
+
+Each component displays:
+- Provider cards with firm name, contact, and key info
+- **LinkedIn icon/link** when profile URL is available
+- Active/inactive status badge
+- Specializations/certifications as badges
+- Engagement dates
+
+### Step 7: Update EntityDetail.tsx
+
+- Import new hooks to fetch all 6 provider types
+- Filter providers by entity_id
+- Add 6 new stat cards in the summary grid
+- Add 6 new linked sections in the detail grid
+
+---
+
+## UI Layout Changes
+
+### Stats Grid (expanded from 6 to 12 cards)
+
+```text
++----------------------------------------------------------+
+| Stats Grid (12 cards, 2 rows)                            |
+| Row 1: [Banks] [Cards] [Phones] [TaxIDs] [Addresses] [Contracts] |
+| Row 2: [Accountants] [Lawyers] [Agents] [Advisors] [Consultants] [Auditors] |
++----------------------------------------------------------+
+```
+
+### Provider Card Design (with LinkedIn)
+
+```text
++------------------------------------------+
+| [Icon] Firm Name               [Active]  |
+|        Primary Contact                   |
++------------------------------------------+
+| Email: contact@firm.com                  |
+| Phone: +1 (555) 123-4567                 |
+| LinkedIn: [in] View Profile  <- clickable|
+| Engagement: Jan 2023 - Present           |
++------------------------------------------+
+| [Tax] [Audit] [Bookkeeping]  <- badges   |
++------------------------------------------+
+```
+
+---
+
+## Files Summary
+
+### New Files (14 total)
+| File | Purpose |
+|------|---------|
+| src/components/forms/AccountantFirmForm.tsx | Accountant firm add/edit form |
+| src/components/forms/LawFirmForm.tsx | Law firm add/edit form |
+| src/components/forms/RegistrationAgentForm.tsx | Registration agent add/edit form |
+| src/components/forms/AdvisorForm.tsx | Advisor add/edit form |
+| src/components/forms/ConsultantForm.tsx | Consultant add/edit form |
+| src/components/forms/AuditorForm.tsx | Auditor add/edit form |
+| src/components/entity-detail/LinkedAccountantFirms.tsx | Display linked accountants |
+| src/components/entity-detail/LinkedLawFirms.tsx | Display linked law firms |
+| src/components/entity-detail/LinkedRegistrationAgents.tsx | Display linked agents |
+| src/components/entity-detail/LinkedAdvisors.tsx | Display linked advisors |
+| src/components/entity-detail/LinkedConsultants.tsx | Display linked consultants |
+| src/components/entity-detail/LinkedAuditors.tsx | Display linked auditors |
+| Database migration | Creates 7 new tables |
+
+### Modified Files (4 total)
+| File | Changes |
+|------|---------|
+| src/hooks/usePortalData.ts | Add 6 types + 6 query hooks |
+| src/hooks/usePortalMutations.ts | Add 18 mutation hooks |
+| src/lib/formSchemas.ts | Add 6 validation schemas with linkedin_url |
+| src/pages/EntityDetail.tsx | Integrate all 6 provider sections |
 
 ---
 
 ## Technical Notes
 
-- **No user_id columns**: Since data is shared, we don't need to scope by user
-- **Timestamps**: All tables have created_at/updated_at for audit trails
-- **Encryption**: Sensitive data (account numbers, tax IDs) are stored masked in the UI but you may want to consider additional encryption for the full values
-- **Supabase Client**: Will use the existing Tanstack Query setup for data fetching
+1. **LinkedIn URL Field**: Added to all 6 provider tables for tracking professional profiles
+2. **LinkedIn UI**: Will display as a clickable LinkedIn icon that opens the profile in a new tab
+3. **URL Validation**: LinkedIn URLs validated using Zod's URL validator
+4. **Auditor-Specific Fields**: Includes `audit_types` (Financial, Compliance, Operational, IT, Tax) and `certifications` (CPA, CIA, CISA, etc.)
+5. **Specialization Arrays**: Using text[] for flexible tagging without additional lookup tables
+6. **Entity Cascade**: All provider records auto-delete when parent entity is deleted
+7. **Pattern Consistency**: All components follow the existing LinkedBankAccounts design pattern
 
----
-
-## Next Steps After Approval
-
-1. Connect your Supabase project to Lovable
-2. I'll create the database migrations for all tables
-3. Add authentication UI (login/signup)
-4. Convert each section from static data to live database queries
-5. Add CRUD forms for managing all data types
