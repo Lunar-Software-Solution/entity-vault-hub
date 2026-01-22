@@ -1,58 +1,53 @@
 
 
-# Professional Service Providers Implementation Plan
+# Corporate Document Management Implementation Plan
 
 ## Overview
-Add the ability to track and manage professional service relationships for each entity, including **6 provider types**: Accountant Firms, Law Firms, Registration Agents, Advisors, Consultants, and Auditors. Each provider type will have its own dedicated table with full business profiles, **LinkedIn profiles**, and contract/engagement tracking.
+Add a comprehensive corporate document management system that allows users to:
+1. **Define custom document types** in Settings (e.g., Incorporation Documents, Tax Forms, Share Certificates, Bylaws, SS4 Letters, Operating Agreements)
+2. **Upload and manage documents** linked to each entity with PDF file storage
+3. **Track document metadata** including issue dates, expiration dates, and notes
+
+This follows the existing patterns used for Tax ID Types/Issuing Authorities in Settings, and the contract file upload functionality.
 
 ---
 
 ## Database Schema
 
-### New Tables (6 provider tables + 1 junction table)
+### New Tables (2 tables)
 
-Each table follows a consistent structure with type-specific fields:
+#### 1. document_types (Settings lookup table)
+| Column | Type | Description |
+|--------|------|-------------|
+| id | uuid (PK) | Primary key |
+| code | text | Short code (e.g., "SS4", "COI", "BYLAWS") |
+| name | text | Display name (e.g., "SS4 Letter", "Certificate of Incorporation") |
+| category | text | Category grouping (Formation, Tax, Governance, Legal) |
+| description | text | Optional description |
+| created_at/updated_at | timestamptz | Timestamps |
 
-#### Common Fields (all 6 tables)
+#### 2. entity_documents (Documents linked to entities)
 | Column | Type | Description |
 |--------|------|-------------|
 | id | uuid (PK) | Primary key |
 | entity_id | uuid (FK) | Links to parent entity (CASCADE delete) |
-| name | text | Firm/company name |
-| contact_name | text | Primary contact person |
-| email | text | Contact email |
-| phone | text | Contact phone |
-| website | text | Website URL |
-| **linkedin_url** | text | LinkedIn profile URL |
-| address | text | Office address |
-| engagement_start_date | date | When relationship began |
-| engagement_end_date | date | When ended (null if active) |
-| fee_structure | text | Hourly, Retainer, Project-based |
+| document_type_id | uuid (FK) | Links to document_types table |
+| title | text | Document title/name |
+| file_path | text | Storage path for the file |
+| file_name | text | Original file name |
+| issued_date | date | When document was issued |
+| expiry_date | date | Expiration date (if applicable) |
+| issuing_authority | text | Who issued it (e.g., "Delaware Secretary of State") |
+| reference_number | text | Document/filing reference number |
 | notes | text | Additional notes |
-| is_active | boolean | Current engagement status |
+| status | text | current, superseded, expired |
 | created_at/updated_at | timestamptz | Timestamps |
 
-#### Type-Specific Fields
+---
 
-| Table | Additional Columns |
-|-------|-------------------|
-| **accountant_firms** | license_number, specializations (text[]) |
-| **law_firms** | bar_number, practice_areas (text[]) |
-| **registration_agents** | agent_type, jurisdictions_covered (text[]) |
-| **advisors** | advisor_type, certifications (text[]) |
-| **consultants** | consultant_type, project_scope |
-| **auditors** | license_number, audit_types (text[]), certifications (text[]) |
+## Storage Bucket
 
-#### Junction Table: entity_provider_contracts
-Links existing contracts to specific service providers.
-
-| Column | Type | Description |
-|--------|------|-------------|
-| id | uuid (PK) | Primary key |
-| provider_type | text | accountant_firm, law_firm, auditor, etc. |
-| provider_id | uuid | ID of the provider record |
-| contract_id | uuid (FK) | Links to contracts table |
-| created_at | timestamptz | Timestamp |
+Create a new storage bucket `entity-documents` for storing uploaded PDFs (following the existing `contract-files` pattern).
 
 ---
 
@@ -66,153 +61,203 @@ All tables follow the existing shared-access pattern:
 ## Implementation Steps
 
 ### Step 1: Database Migration
-Create all 7 tables with:
-- Proper column types and constraints
-- LinkedIn URL field on all provider tables
-- Foreign key to entities table with ON DELETE CASCADE
-- RLS policies for authenticated access
-- Automatic updated_at triggers
+- Create `document_types` table with RLS policies
+- Create `entity_documents` table with RLS policies and foreign keys
+- Create storage bucket `entity-documents` with appropriate RLS
+- Add `updated_at` triggers
+- Seed initial document types (common corporate documents)
 
 ### Step 2: TypeScript Types & Hooks
 
 **New types in usePortalData.ts:**
-- AccountantFirm, LawFirm, RegistrationAgent, Advisor, Consultant, Auditor (all include linkedin_url)
-- EntityProviderContract
+- DocumentType
+- EntityDocument
 
 **New query hooks:**
-- useAccountantFirms(), useLawFirms(), useRegistrationAgents()
-- useAdvisors(), useConsultants(), useAuditors()
-- Filtered versions: useAccountantFirmsForEntity(entityId), etc.
+- useDocumentTypes()
+- useEntityDocuments()
 
 ### Step 3: Mutation Hooks
 
 **In usePortalMutations.ts:**
-- CRUD hooks for each provider type (18 hooks total):
-  - useCreateAccountantFirm, useUpdateAccountantFirm, useDeleteAccountantFirm
-  - useCreateLawFirm, useUpdateLawFirm, useDeleteLawFirm
-  - useCreateRegistrationAgent, useUpdateRegistrationAgent, useDeleteRegistrationAgent
-  - useCreateAdvisor, useUpdateAdvisor, useDeleteAdvisor
-  - useCreateConsultant, useUpdateConsultant, useDeleteConsultant
-  - useCreateAuditor, useUpdateAuditor, useDeleteAuditor
+- CRUD hooks for document types:
+  - useCreateDocumentType, useUpdateDocumentType, useDeleteDocumentType
+- CRUD hooks for entity documents:
+  - useCreateEntityDocument, useUpdateEntityDocument, useDeleteEntityDocument
 
 ### Step 4: Zod Validation Schemas
 
 **In formSchemas.ts:**
-Add validation schemas for each provider type with linkedin_url validation:
+- documentTypeSchema (code, name, category, description)
+- entityDocumentSchema (entity_id, document_type_id, title, dates, notes, status)
 
-```typescript
-linkedin_url: z.string().trim().url("Invalid LinkedIn URL").optional().or(z.literal("")),
-```
+### Step 5: Settings Section - Document Types Tab
 
-### Step 5: Form Components
+**Update SettingsSection.tsx:**
+- Add a new tab "Document Types" alongside Tax ID Types and Issuing Authorities
+- Include search, sort, add/edit/delete functionality
+- Display category badges for organization
 
-**New form components (6 files):**
-- `src/components/forms/AccountantFirmForm.tsx`
-- `src/components/forms/LawFirmForm.tsx`
-- `src/components/forms/RegistrationAgentForm.tsx`
-- `src/components/forms/AdvisorForm.tsx`
-- `src/components/forms/ConsultantForm.tsx`
-- `src/components/forms/AuditorForm.tsx`
+### Step 6: Document Upload Component
 
-Each form includes:
-- Basic info fields (name, contact, email, phone, website, **LinkedIn URL**, address)
-- Type-specific fields (licenses, specializations, certifications)
-- Engagement dates and fee structure
-- Active status toggle
-- Notes textarea
+**New component:**
+- `src/components/documents/DocumentFileUpload.tsx`
+- Similar to ContractFileUpload but for entity documents
+- Supports PDF upload to `entity-documents` bucket
 
-### Step 6: Entity Detail - Linked Components
+### Step 7: Entity Document Form
 
-**New linked components (6 files):**
-- `src/components/entity-detail/LinkedAccountantFirms.tsx`
-- `src/components/entity-detail/LinkedLawFirms.tsx`
-- `src/components/entity-detail/LinkedRegistrationAgents.tsx`
-- `src/components/entity-detail/LinkedAdvisors.tsx`
-- `src/components/entity-detail/LinkedConsultants.tsx`
-- `src/components/entity-detail/LinkedAuditors.tsx`
+**New form component:**
+- `src/components/forms/EntityDocumentForm.tsx`
+- Fields: Document Type (dropdown), Title, File Upload, Issued Date, Expiry Date, Issuing Authority, Reference Number, Notes, Status
 
-Each component displays:
-- Provider cards with firm name, contact, and key info
-- **LinkedIn icon/link** when profile URL is available
-- Active/inactive status badge
-- Specializations/certifications as badges
-- Engagement dates
+### Step 8: Entity Detail - Linked Documents
 
-### Step 7: Update EntityDetail.tsx
+**New linked component:**
+- `src/components/entity-detail/LinkedDocuments.tsx`
+- Display document cards with:
+  - Document type badge (with category color)
+  - Title and file name
+  - Issue/expiry dates
+  - Status indicator (current/superseded/expired)
+  - View PDF button
+  - Edit/Delete actions
 
-- Import new hooks to fetch all 6 provider types
-- Filter providers by entity_id
-- Add 6 new stat cards in the summary grid
-- Add 6 new linked sections in the detail grid
+### Step 9: Documents Section (Optional top-level view)
+
+**New section component:**
+- `src/components/sections/DocumentsSection.tsx`
+- Table view of all documents across entities
+- Filter by entity, document type, category, status
+- Search functionality
+
+### Step 10: Update EntityDetail.tsx
+
+- Import and use new hooks
+- Add document count stat card
+- Add LinkedDocuments section to the grid
+
+### Step 11: Update Sidebar & Index.tsx
+
+- Add "Documents" menu item to sidebar
+- Add DocumentsSection to route handling
 
 ---
 
 ## UI Layout Changes
 
-### Stats Grid (expanded from 6 to 12 cards)
+### Settings - New Tab
 
 ```text
-+----------------------------------------------------------+
-| Stats Grid (12 cards, 2 rows)                            |
-| Row 1: [Banks] [Cards] [Phones] [TaxIDs] [Addresses] [Contracts] |
-| Row 2: [Accountants] [Lawyers] [Agents] [Advisors] [Consultants] [Auditors] |
-+----------------------------------------------------------+
++--------------------------------------------------+
+| Settings                                         |
++--------------------------------------------------+
+| [Tax ID Types] [Issuing Authorities] [Document Types] |
++--------------------------------------------------+
+| Document Types                        [+ Add Type] |
+|                                                    |
+| Search: [__________________]                       |
+|                                                    |
+| Code    | Name                      | Category     |
+|---------|---------------------------|--------------|
+| COI     | Certificate of Inc.       | [Formation]  |
+| SS4     | SS4 Letter                | [Tax]        |
+| BYLAWS  | Bylaws                    | [Governance] |
+| SHARES  | Share Certificate         | [Governance] |
+| OA      | Operating Agreement       | [Legal]      |
++--------------------------------------------------+
 ```
 
-### Provider Card Design (with LinkedIn)
+### Entity Detail - Document Cards
 
 ```text
 +------------------------------------------+
-| [Icon] Firm Name               [Active]  |
-|        Primary Contact                   |
+| [FileText] Documents                     |
+|          5 linked                        |
 +------------------------------------------+
-| Email: contact@firm.com                  |
-| Phone: +1 (555) 123-4567                 |
-| LinkedIn: [in] View Profile  <- clickable|
-| Engagement: Jan 2023 - Present           |
-+------------------------------------------+
-| [Tax] [Audit] [Bookkeeping]  <- badges   |
+| +--------------------------------------+ |
+| | [Formation] Certificate of Inc.      | |
+| | Delaware Certificate of Formation    | |
+| | Filed: Jan 15, 2020                  | |
+| | Ref: 12345678              [Current] | |
+| | [View PDF] [Edit] [Delete]           | |
+| +--------------------------------------+ |
+| +--------------------------------------+ |
+| | [Tax] SS4 Letter                     | |
+| | EIN Assignment Letter                | |
+| | Issued: Feb 1, 2020                  | |
+| | Ref: EIN 12-3456789        [Current] | |
+| | [View PDF] [Edit] [Delete]           | |
+| +--------------------------------------+ |
 +------------------------------------------+
 ```
+
+### Category Color Coding
+
+| Category | Color |
+|----------|-------|
+| Formation | Blue |
+| Tax | Orange |
+| Governance | Purple |
+| Legal | Green |
+| Other | Gray |
+
+---
+
+## Pre-seeded Document Types
+
+The migration will include common corporate document types:
+
+| Code | Name | Category |
+|------|------|----------|
+| COI | Certificate of Incorporation | Formation |
+| COF | Certificate of Formation | Formation |
+| AOI | Articles of Incorporation | Formation |
+| AOO | Articles of Organization | Formation |
+| SS4 | SS4 Letter (EIN Assignment) | Tax |
+| 2553 | Form 2553 (S-Corp Election) | Tax |
+| BYLAWS | Corporate Bylaws | Governance |
+| OA | Operating Agreement | Governance |
+| SHARES | Share Certificate | Governance |
+| RESOLUTIONS | Board Resolutions | Governance |
+| MINUTES | Meeting Minutes | Governance |
+| NDA | Non-Disclosure Agreement | Legal |
+| COG | Certificate of Good Standing | Legal |
+| FA | Foreign Qualification | Legal |
 
 ---
 
 ## Files Summary
 
-### New Files (14 total)
+### New Files (6 total)
 | File | Purpose |
 |------|---------|
-| src/components/forms/AccountantFirmForm.tsx | Accountant firm add/edit form |
-| src/components/forms/LawFirmForm.tsx | Law firm add/edit form |
-| src/components/forms/RegistrationAgentForm.tsx | Registration agent add/edit form |
-| src/components/forms/AdvisorForm.tsx | Advisor add/edit form |
-| src/components/forms/ConsultantForm.tsx | Consultant add/edit form |
-| src/components/forms/AuditorForm.tsx | Auditor add/edit form |
-| src/components/entity-detail/LinkedAccountantFirms.tsx | Display linked accountants |
-| src/components/entity-detail/LinkedLawFirms.tsx | Display linked law firms |
-| src/components/entity-detail/LinkedRegistrationAgents.tsx | Display linked agents |
-| src/components/entity-detail/LinkedAdvisors.tsx | Display linked advisors |
-| src/components/entity-detail/LinkedConsultants.tsx | Display linked consultants |
-| src/components/entity-detail/LinkedAuditors.tsx | Display linked auditors |
-| Database migration | Creates 7 new tables |
+| src/components/documents/DocumentFileUpload.tsx | File upload for entity documents |
+| src/components/forms/EntityDocumentForm.tsx | Add/edit document form |
+| src/components/entity-detail/LinkedDocuments.tsx | Display linked documents |
+| src/components/sections/DocumentsSection.tsx | Top-level documents view |
+| Database migration | Creates tables, bucket, seeds data |
 
-### Modified Files (4 total)
+### Modified Files (6 total)
 | File | Changes |
 |------|---------|
-| src/hooks/usePortalData.ts | Add 6 types + 6 query hooks |
-| src/hooks/usePortalMutations.ts | Add 18 mutation hooks |
-| src/lib/formSchemas.ts | Add 6 validation schemas with linkedin_url |
-| src/pages/EntityDetail.tsx | Integrate all 6 provider sections |
+| src/hooks/usePortalData.ts | Add DocumentType, EntityDocument types + hooks |
+| src/hooks/usePortalMutations.ts | Add 6 mutation hooks |
+| src/lib/formSchemas.ts | Add 2 validation schemas |
+| src/components/sections/SettingsSection.tsx | Add Document Types tab |
+| src/components/layout/Sidebar.tsx | Add Documents menu item |
+| src/pages/Index.tsx | Add DocumentsSection route |
+| src/pages/EntityDetail.tsx | Integrate LinkedDocuments |
 
 ---
 
 ## Technical Notes
 
-1. **LinkedIn URL Field**: Added to all 6 provider tables for tracking professional profiles
-2. **LinkedIn UI**: Will display as a clickable LinkedIn icon that opens the profile in a new tab
-3. **URL Validation**: LinkedIn URLs validated using Zod's URL validator
-4. **Auditor-Specific Fields**: Includes `audit_types` (Financial, Compliance, Operational, IT, Tax) and `certifications` (CPA, CIA, CISA, etc.)
-5. **Specialization Arrays**: Using text[] for flexible tagging without additional lookup tables
-6. **Entity Cascade**: All provider records auto-delete when parent entity is deleted
-7. **Pattern Consistency**: All components follow the existing LinkedBankAccounts design pattern
+1. **Storage Pattern**: Following the existing `contract-files` bucket pattern for `entity-documents`
+2. **PDF Viewer**: Reuse the existing PdfViewerDialog component for viewing documents
+3. **Document Types**: Settings-managed lookup table allows users to add custom document types
+4. **Category System**: Provides visual organization with color-coded badges
+5. **Status Tracking**: Supports document versioning (current, superseded, expired)
+6. **Entity Cascade**: All documents auto-delete when parent entity is deleted
+7. **Pre-seeded Data**: Common corporate document types included in migration for immediate use
 
