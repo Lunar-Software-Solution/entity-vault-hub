@@ -21,6 +21,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import DeleteConfirmDialog from "@/components/shared/DeleteConfirmDialog";
+import CompanyLogo from "@/components/shared/CompanyLogo";
 import LawFirmForm from "@/components/forms/LawFirmForm";
 import AccountantFirmForm from "@/components/forms/AccountantFirmForm";
 import AuditorForm from "@/components/forms/AuditorForm";
@@ -302,7 +303,16 @@ const ServiceProvidersSection = () => {
               <TableBody>
                 {filteredData.map((item: any) => (
                   <TableRow key={item.id}>
-                    <TableCell className="font-medium text-foreground">{item.name}</TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-3">
+                        <CompanyLogo 
+                          domain={item.website} 
+                          name={item.name} 
+                          size="sm"
+                        />
+                        <span className="font-medium text-foreground">{item.name}</span>
+                      </div>
+                    </TableCell>
                     <TableCell className="text-muted-foreground">{item.contact_name || "—"}</TableCell>
                     <TableCell>
                       <Button
