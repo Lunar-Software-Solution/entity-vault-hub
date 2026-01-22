@@ -152,6 +152,36 @@ export const useIssuingAuthorities = () => {
   });
 };
 
+// Fetch authority-tax-id-type relationships
+export const useAuthorityTaxIdTypes = (authorityId?: string) => {
+  return useQuery({
+    queryKey: ["authority_tax_id_types", authorityId],
+    queryFn: async () => {
+      let query = supabase.from("authority_tax_id_types").select("*");
+      if (authorityId) {
+        query = query.eq("authority_id", authorityId);
+      }
+      const { data, error } = await query;
+      if (error) throw error;
+      return data;
+    },
+    enabled: authorityId !== undefined,
+  });
+};
+
+export const useAllAuthorityTaxIdTypes = () => {
+  return useQuery({
+    queryKey: ["authority_tax_id_types"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("authority_tax_id_types")
+        .select("*");
+      if (error) throw error;
+      return data;
+    },
+  });
+};
+
 // Dashboard stats hook
 export const useDashboardStats = () => {
   const { data: bankAccounts } = useBankAccounts();

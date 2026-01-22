@@ -67,6 +67,42 @@ export type Database = {
           },
         ]
       }
+      authority_tax_id_types: {
+        Row: {
+          authority_id: string
+          created_at: string
+          id: string
+          tax_id_type_id: string
+        }
+        Insert: {
+          authority_id: string
+          created_at?: string
+          id?: string
+          tax_id_type_id: string
+        }
+        Update: {
+          authority_id?: string
+          created_at?: string
+          id?: string
+          tax_id_type_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "authority_tax_id_types_authority_id_fkey"
+            columns: ["authority_id"]
+            isOneToOne: false
+            referencedRelation: "issuing_authorities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "authority_tax_id_types_tax_id_type_id_fkey"
+            columns: ["tax_id_type_id"]
+            isOneToOne: false
+            referencedRelation: "tax_id_types"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       bank_accounts: {
         Row: {
           account_number: string
