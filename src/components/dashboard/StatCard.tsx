@@ -11,6 +11,7 @@ interface StatCardProps {
     isPositive: boolean;
   };
   variant?: "default" | "primary" | "success" | "warning";
+  onClick?: () => void;
 }
 
 const StatCard = ({ 
@@ -19,10 +20,17 @@ const StatCard = ({
   subtitle, 
   icon: Icon, 
   trend,
-  variant = "default" 
+  variant = "default",
+  onClick
 }: StatCardProps) => {
   return (
-    <div className="glass-card rounded-xl p-6 hover:border-primary/30 transition-all duration-300 group">
+    <div 
+      className={cn(
+        "glass-card rounded-xl p-6 hover:border-primary/30 transition-all duration-300 group",
+        onClick && "cursor-pointer"
+      )}
+      onClick={onClick}
+    >
       <div className="flex items-start justify-between">
         <div className="space-y-3">
           <p className="text-sm text-muted-foreground font-medium">{title}</p>
