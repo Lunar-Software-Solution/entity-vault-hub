@@ -197,12 +197,8 @@ const SocialMediaSection = ({ entityFilter }: SocialMediaSectionProps) => {
                   </div>
                 )}
 
-                <div className="flex items-center justify-between pt-4 border-t border-border">
-                  <div>
-                    <p className="text-xs text-muted-foreground">Followers</p>
-                    <p className="font-semibold text-foreground">{account.followers || "—"}</p>
-                  </div>
-                  {account.profile_url && (
+                {account.profile_url && (
+                  <div className="flex items-center justify-end pt-4 border-t border-border">
                     <a 
                       href={account.profile_url.startsWith("http") ? account.profile_url : `https://${account.profile_url}`}
                       target="_blank"
@@ -211,8 +207,8 @@ const SocialMediaSection = ({ entityFilter }: SocialMediaSectionProps) => {
                     >
                       Visit <ExternalLink className="w-3 h-3" />
                     </a>
-                  )}
-                </div>
+                  </div>
+                )}
               </div>
             );
           })}
