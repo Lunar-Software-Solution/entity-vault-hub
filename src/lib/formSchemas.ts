@@ -68,6 +68,15 @@ export const socialMediaSchema = z.object({
   icon: z.string().max(10).optional().or(z.literal("")),
 });
 
+export const phoneNumberSchema = z.object({
+  entity_id: z.string().uuid("Entity is required"),
+  phone_number: z.string().trim().min(1, "Phone number is required").max(30),
+  country_code: z.string().trim().min(1, "Country code is required").max(10),
+  label: z.string().trim().min(1, "Label is required").max(50),
+  purpose: z.string().trim().max(100).optional().or(z.literal("")),
+  is_primary: z.boolean().default(false),
+});
+
 // Use explicit types to ensure required fields are properly typed
 export type EntityFormData = {
   name: string;
@@ -135,4 +144,13 @@ export type SocialMediaFormData = {
   is_verified: boolean;
   color: string;
   icon?: string;
+};
+
+export type PhoneNumberFormData = {
+  entity_id: string;
+  phone_number: string;
+  country_code: string;
+  label: string;
+  purpose?: string;
+  is_primary: boolean;
 };

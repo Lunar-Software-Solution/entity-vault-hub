@@ -4,7 +4,8 @@ import {
   useBankAccounts, 
   useCreditCards, 
   useAddresses, 
-  useContracts 
+  useContracts,
+  usePhoneNumbers
 } from "@/hooks/usePortalData";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -27,6 +28,7 @@ import LinkedBankAccounts from "@/components/entity-detail/LinkedBankAccounts";
 import LinkedCreditCards from "@/components/entity-detail/LinkedCreditCards";
 import LinkedAddresses from "@/components/entity-detail/LinkedAddresses";
 import LinkedContracts from "@/components/entity-detail/LinkedContracts";
+import LinkedPhoneNumbers from "@/components/entity-detail/LinkedPhoneNumbers";
 
 const EntityDetail = () => {
   const { id } = useParams<{ id: string }>();
@@ -37,14 +39,16 @@ const EntityDetail = () => {
   const { data: creditCards, isLoading: cardsLoading } = useCreditCards();
   const { data: addresses, isLoading: addressesLoading } = useAddresses();
   const { data: contracts, isLoading: contractsLoading } = useContracts();
+  const { data: phoneNumbers, isLoading: phonesLoading } = usePhoneNumbers();
 
   const entity = entities?.find(e => e.id === id);
   const linkedBankAccounts = bankAccounts?.filter(b => b.entity_id === id) ?? [];
   const linkedCreditCards = creditCards?.filter(c => c.entity_id === id) ?? [];
   const linkedAddresses = addresses?.filter(a => a.entity_id === id) ?? [];
   const linkedContracts = contracts?.filter(c => c.entity_id === id) ?? [];
+  const linkedPhoneNumbers = phoneNumbers?.filter(p => p.entity_id === id) ?? [];
 
-  const isLoading = entitiesLoading || bankLoading || cardsLoading || addressesLoading || contractsLoading;
+  const isLoading = entitiesLoading || bankLoading || cardsLoading || addressesLoading || contractsLoading || phonesLoading;
 
   if (isLoading) {
     return (
@@ -188,7 +192,7 @@ const EntityDetail = () => {
       </div>
 
       {/* Stats Summary */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8">
         <div className="glass-card rounded-xl p-4 text-center">
           <Wallet className="w-6 h-6 text-primary mx-auto mb-2" />
           <p className="text-2xl font-bold text-foreground">{linkedBankAccounts.length}</p>
@@ -198,6 +202,11 @@ const EntityDetail = () => {
           <CreditCard className="w-6 h-6 text-primary mx-auto mb-2" />
           <p className="text-2xl font-bold text-foreground">{linkedCreditCards.length}</p>
           <p className="text-sm text-muted-foreground">Credit Cards</p>
+        </div>
+        <div className="glass-card rounded-xl p-4 text-center">
+          <Phone className="w-6 h-6 text-primary mx-auto mb-2" />
+          <p className="text-2xl font-bold text-foreground">{linkedPhoneNumbers.length}</p>
+          <p className="text-sm text-muted-foreground">Phone Numbers</p>
         </div>
         <div className="glass-card rounded-xl p-4 text-center">
           <MapPin className="w-6 h-6 text-primary mx-auto mb-2" />
@@ -215,6 +224,7 @@ const EntityDetail = () => {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <LinkedBankAccounts accounts={linkedBankAccounts} />
         <LinkedCreditCards cards={linkedCreditCards} />
+        <LinkedPhoneNumbers phones={linkedPhoneNumbers} entityId={id!} />
         <LinkedAddresses addresses={linkedAddresses} />
         <LinkedContracts contracts={linkedContracts} />
       </div>

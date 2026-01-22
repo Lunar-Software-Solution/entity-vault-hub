@@ -8,7 +8,7 @@ export type CreditCard = Tables<"credit_cards">;
 export type SocialMediaAccount = Tables<"social_media_accounts">;
 export type Address = Tables<"addresses">;
 export type Contract = Tables<"contracts">;
-
+export type PhoneNumber = Tables<"phone_numbers">;
 export const useEntities = () => {
   return useQuery({
     queryKey: ["entities"],
@@ -89,6 +89,20 @@ export const useContracts = () => {
         .order("created_at", { ascending: false });
       if (error) throw error;
       return data as Contract[];
+    },
+  });
+};
+
+export const usePhoneNumbers = () => {
+  return useQuery({
+    queryKey: ["phone_numbers"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("phone_numbers")
+        .select("*")
+        .order("is_primary", { ascending: false });
+      if (error) throw error;
+      return data as PhoneNumber[];
     },
   });
 };

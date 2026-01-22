@@ -290,3 +290,51 @@ export const useDeleteSocialMediaAccount = () => {
     onError: (error) => toast.error(`Failed to remove account: ${error.message}`),
   });
 };
+
+// Phone Number mutations
+export const useCreatePhoneNumber = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (phone: TablesInsert<"phone_numbers">) => {
+      const { data, error } = await supabase.from("phone_numbers").insert(phone).select().single();
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["phone_numbers"] });
+      toast.success("Phone number added successfully");
+    },
+    onError: (error) => toast.error(`Failed to add phone number: ${error.message}`),
+  });
+};
+
+export const useUpdatePhoneNumber = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, ...phone }: TablesUpdate<"phone_numbers"> & { id: string }) => {
+      const { data, error } = await supabase.from("phone_numbers").update(phone).eq("id", id).select().single();
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["phone_numbers"] });
+      toast.success("Phone number updated successfully");
+    },
+    onError: (error) => toast.error(`Failed to update phone number: ${error.message}`),
+  });
+};
+
+export const useDeletePhoneNumber = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from("phone_numbers").delete().eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["phone_numbers"] });
+      toast.success("Phone number deleted successfully");
+    },
+    onError: (error) => toast.error(`Failed to delete phone number: ${error.message}`),
+  });
+};
