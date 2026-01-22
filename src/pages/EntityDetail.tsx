@@ -12,7 +12,8 @@ import {
   useRegistrationAgents,
   useAdvisors,
   useConsultants,
-  useAuditors
+  useAuditors,
+  useEntityDocuments
 } from "@/hooks/usePortalData";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -35,7 +36,8 @@ import {
   FileCheck,
   Lightbulb,
   Briefcase,
-  ClipboardCheck
+  ClipboardCheck,
+  FolderOpen
 } from "lucide-react";
 import { format } from "date-fns";
 import LinkedBankAccounts from "@/components/entity-detail/LinkedBankAccounts";
@@ -50,6 +52,7 @@ import LinkedRegistrationAgents from "@/components/entity-detail/LinkedRegistrat
 import LinkedAdvisors from "@/components/entity-detail/LinkedAdvisors";
 import LinkedConsultants from "@/components/entity-detail/LinkedConsultants";
 import LinkedAuditors from "@/components/entity-detail/LinkedAuditors";
+import LinkedDocuments from "@/components/entity-detail/LinkedDocuments";
 
 const EntityDetail = () => {
   const { id } = useParams<{ id: string }>();
@@ -68,6 +71,7 @@ const EntityDetail = () => {
   const { data: advisors, isLoading: advisorsLoading } = useAdvisors();
   const { data: consultants, isLoading: consultantsLoading } = useConsultants();
   const { data: auditors, isLoading: auditorsLoading } = useAuditors();
+  const { data: entityDocuments, isLoading: docsLoading } = useEntityDocuments();
 
   const entity = entities?.find(e => e.id === id);
   const linkedBankAccounts = bankAccounts?.filter(b => b.entity_id === id) ?? [];
@@ -82,10 +86,11 @@ const EntityDetail = () => {
   const linkedAdvisors = advisors?.filter(a => a.entity_id === id) ?? [];
   const linkedConsultants = consultants?.filter(c => c.entity_id === id) ?? [];
   const linkedAuditors = auditors?.filter(a => a.entity_id === id) ?? [];
+  const linkedDocuments = entityDocuments?.filter(d => d.entity_id === id) ?? [];
 
   const isLoading = entitiesLoading || bankLoading || cardsLoading || addressesLoading || 
     contractsLoading || phonesLoading || taxIdsLoading || accountantsLoading || 
-    lawFirmsLoading || agentsLoading || advisorsLoading || consultantsLoading || auditorsLoading;
+    lawFirmsLoading || agentsLoading || advisorsLoading || consultantsLoading || auditorsLoading || docsLoading;
 
   if (isLoading) {
     return (
@@ -256,6 +261,11 @@ const EntityDetail = () => {
           <p className="text-sm text-muted-foreground">Addresses</p>
         </div>
         <div className="glass-card rounded-xl p-4 text-center">
+          <FolderOpen className="w-6 h-6 text-primary mx-auto mb-2" />
+          <p className="text-2xl font-bold text-foreground">{linkedDocuments.length}</p>
+          <p className="text-sm text-muted-foreground">Documents</p>
+        </div>
+        <div className="glass-card rounded-xl p-4 text-center">
           <FileText className="w-6 h-6 text-primary mx-auto mb-2" />
           <p className="text-2xl font-bold text-foreground">{linkedContracts.length}</p>
           <p className="text-sm text-muted-foreground">Contracts</p>
@@ -303,6 +313,7 @@ const EntityDetail = () => {
         <LinkedPhoneNumbers phones={linkedPhoneNumbers} entityId={id!} />
         <LinkedTaxIds taxIds={linkedTaxIds} entityId={id!} />
         <LinkedAddresses addresses={linkedAddresses} />
+        <LinkedDocuments documents={linkedDocuments} entityId={id!} />
         <LinkedContracts contracts={linkedContracts} />
         <LinkedAccountantFirms firms={linkedAccountantFirms} entityId={id!} />
         <LinkedLawFirms firms={linkedLawFirms} entityId={id!} />

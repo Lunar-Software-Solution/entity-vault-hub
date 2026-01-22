@@ -19,6 +19,9 @@ export type Advisor = Tables<"advisors">;
 export type Consultant = Tables<"consultants">;
 export type Auditor = Tables<"auditors">;
 export type EntityProviderContract = Tables<"entity_provider_contracts">;
+export type DocumentType = Tables<"document_types">;
+export type EntityDocument = Tables<"entity_documents">;
+
 export const useEntities = () => {
   return useQuery({
     queryKey: ["entities"],
@@ -256,6 +259,36 @@ export const useAuditors = () => {
         .order("created_at", { ascending: false });
       if (error) throw error;
       return data as Auditor[];
+    },
+  });
+};
+
+// Document Type hooks
+export const useDocumentTypes = () => {
+  return useQuery({
+    queryKey: ["document_types"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("document_types")
+        .select("*")
+        .order("category", { ascending: true });
+      if (error) throw error;
+      return data as DocumentType[];
+    },
+  });
+};
+
+// Entity Documents hooks
+export const useEntityDocuments = () => {
+  return useQuery({
+    queryKey: ["entity_documents"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("entity_documents")
+        .select("*")
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+      return data as EntityDocument[];
     },
   });
 };

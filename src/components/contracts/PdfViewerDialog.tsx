@@ -13,9 +13,10 @@ interface PdfViewerDialogProps {
   onOpenChange: (open: boolean) => void;
   filePath: string | null;
   fileName: string | null;
+  bucketName?: string;
 }
 
-const PdfViewerDialog = ({ open, onOpenChange, filePath, fileName }: PdfViewerDialogProps) => {
+const PdfViewerDialog = ({ open, onOpenChange, filePath, fileName, bucketName = "contract-files" }: PdfViewerDialogProps) => {
   const [pdfBytes, setPdfBytes] = useState<number[] | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -34,7 +35,7 @@ const PdfViewerDialog = ({ open, onOpenChange, filePath, fileName }: PdfViewerDi
         
         try {
           const { data, error: downloadError } = await supabase.storage
-            .from('contract-files')
+            .from(bucketName)
             .download(filePath);
           
           if (downloadError) {

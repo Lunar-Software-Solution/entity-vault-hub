@@ -40,6 +40,7 @@ const menuItems = [
   { id: "tax-ids", label: "Tax IDs", icon: Receipt },
   { id: "social-media", label: "Social Media", icon: Share2 },
   { id: "addresses", label: "Addresses", icon: MapPin },
+  { id: "documents", label: "Documents", icon: FileText },
   { id: "contracts", label: "Contracts", icon: FileText },
   { id: "settings", label: "Settings", icon: Settings },
 ];

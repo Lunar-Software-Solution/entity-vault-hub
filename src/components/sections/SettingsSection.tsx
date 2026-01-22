@@ -1,8 +1,9 @@
 import { useState, useMemo } from "react";
-import { useTaxIdTypes, useIssuingAuthorities, type TaxIdType, type IssuingAuthority } from "@/hooks/usePortalData";
+import { useTaxIdTypes, useIssuingAuthorities, useDocumentTypes, type TaxIdType, type IssuingAuthority, type DocumentType } from "@/hooks/usePortalData";
 import { 
   useCreateTaxIdType, useUpdateTaxIdType, useDeleteTaxIdType,
-  useCreateIssuingAuthority, useUpdateIssuingAuthority, useDeleteIssuingAuthority
+  useCreateIssuingAuthority, useUpdateIssuingAuthority, useDeleteIssuingAuthority,
+  useCreateDocumentType, useUpdateDocumentType, useDeleteDocumentType
 } from "@/hooks/usePortalMutations";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -14,7 +15,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 
 import { Badge } from "@/components/ui/badge";
 import DeleteConfirmDialog from "@/components/shared/DeleteConfirmDialog";
-import { Plus, Edit, Trash2, FileText, Building2, Search, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
+import { Plus, Edit, Trash2, FileText, Building2, Search, ArrowUpDown, ArrowUp, ArrowDown, FolderOpen } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Textarea } from "@/components/ui/textarea";
@@ -228,7 +229,104 @@ const IssuingAuthorityForm = ({
 
 type AuthoritySortKey = "name" | "country" | "province_state" | "description";
 type TypeSortKey = "code" | "label" | "description";
+type DocTypeSortKey = "code" | "name" | "category" | "description";
 type SortDirection = "asc" | "desc";
+
+// Document Type Form
+interface DocumentTypeFormData {
+  code: string;
+  name: string;
+  category: string;
+  description?: string;
+}
+
+const categoryColors: Record<string, string> = {
+  Formation: "bg-blue-500/20 text-blue-400",
+  Tax: "bg-orange-500/20 text-orange-400",
+  Governance: "bg-purple-500/20 text-purple-400",
+  Legal: "bg-green-500/20 text-green-400",
+  Other: "bg-zinc-500/20 text-zinc-400",
+};
+
+const categories = ["Formation", "Tax", "Governance", "Legal", "Other"];
+
+const DocumentTypeForm = ({ 
+  item, 
+  onSubmit, 
+  onCancel, 
+  isLoading
+}: { 
+  item?: DocumentType | null; 
+  onSubmit: (data: DocumentTypeFormData) => void; 
+  onCancel: () => void; 
+  isLoading?: boolean;
+}) => {
+  const form = useForm<DocumentTypeFormData>({
+    defaultValues: {
+      code: item?.code ?? "",
+      name: item?.name ?? "",
+      category: item?.category ?? "Other",
+      description: item?.description ?? "",
+    },
+  });
+
+  return (
+    <Form {...form}>
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+        <FormField control={form.control} name="code" render={({ field }) => (
+          <FormItem>
+            <FormLabel>Code *</FormLabel>
+            <FormControl><Input placeholder="e.g., COI, SS4, BYLAWS" {...field} /></FormControl>
+            <FormMessage />
+          </FormItem>
+        )} />
+        <FormField control={form.control} name="name" render={({ field }) => (
+          <FormItem>
+            <FormLabel>Name *</FormLabel>
+            <FormControl><Input placeholder="e.g., Certificate of Incorporation" {...field} /></FormControl>
+            <FormMessage />
+          </FormItem>
+        )} />
+        <FormField control={form.control} name="category" render={({ field }) => (
+          <FormItem>
+            <FormLabel>Category *</FormLabel>
+            <Select onValueChange={field.onChange} value={field.value || "Other"}>
+              <FormControl>
+                <SelectTrigger className="bg-background">
+                  <SelectValue placeholder="Select a category" />
+                </SelectTrigger>
+              </FormControl>
+              <SelectContent className="bg-background">
+                {categories.map((cat) => (
+                  <SelectItem key={cat} value={cat}>
+                    <div className="flex items-center gap-2">
+                      <span className={`w-2 h-2 rounded-full ${categoryColors[cat]?.split(' ')[0] || 'bg-zinc-500'}`}></span>
+                      {cat}
+                    </div>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <FormMessage />
+          </FormItem>
+        )} />
+        <FormField control={form.control} name="description" render={({ field }) => (
+          <FormItem>
+            <FormLabel>Description</FormLabel>
+            <FormControl><Textarea placeholder="Optional description..." rows={2} {...field} /></FormControl>
+            <FormMessage />
+          </FormItem>
+        )} />
+        <div className="flex justify-end gap-3 pt-4">
+          <Button type="button" variant="outline" onClick={onCancel}>Cancel</Button>
+          <Button type="submit" disabled={isLoading}>
+            {isLoading ? "Saving..." : item ? "Update" : "Add Type"}
+          </Button>
+        </div>
+      </form>
+    </Form>
+  );
+};
 
 const SettingsSection = () => {
   const [showTypeForm, setShowTypeForm] = useState(false);
@@ -238,6 +336,10 @@ const SettingsSection = () => {
   const [showAuthorityForm, setShowAuthorityForm] = useState(false);
   const [editingAuthority, setEditingAuthority] = useState<IssuingAuthority | null>(null);
   const [deletingAuthority, setDeletingAuthority] = useState<IssuingAuthority | null>(null);
+  
+  const [showDocTypeForm, setShowDocTypeForm] = useState(false);
+  const [editingDocType, setEditingDocType] = useState<DocumentType | null>(null);
+  const [deletingDocType, setDeletingDocType] = useState<DocumentType | null>(null);
   
   // Search and sort state for Tax ID Types
   const [typeSearch, setTypeSearch] = useState("");
@@ -249,8 +351,14 @@ const SettingsSection = () => {
   const [authoritySortKey, setAuthoritySortKey] = useState<AuthoritySortKey>("name");
   const [authoritySortDirection, setAuthoritySortDirection] = useState<SortDirection>("asc");
 
+  // Search and sort state for Document Types
+  const [docTypeSearch, setDocTypeSearch] = useState("");
+  const [docTypeSortKey, setDocTypeSortKey] = useState<DocTypeSortKey>("code");
+  const [docTypeSortDirection, setDocTypeSortDirection] = useState<SortDirection>("asc");
+
   const { data: taxIdTypes, isLoading: typesLoading } = useTaxIdTypes();
   const { data: issuingAuthorities, isLoading: authoritiesLoading } = useIssuingAuthorities();
+  const { data: documentTypes, isLoading: docTypesLoading } = useDocumentTypes();
 
   const createTypeMutation = useCreateTaxIdType();
   const updateTypeMutation = useUpdateTaxIdType();
@@ -259,6 +367,10 @@ const SettingsSection = () => {
   const createAuthorityMutation = useCreateIssuingAuthority();
   const updateAuthorityMutation = useUpdateIssuingAuthority();
   const deleteAuthorityMutation = useDeleteIssuingAuthority();
+
+  const createDocTypeMutation = useCreateDocumentType();
+  const updateDocTypeMutation = useUpdateDocumentType();
+  const deleteDocTypeMutation = useDeleteDocumentType();
   
   // Get authority name for a tax id type
   const getAuthorityName = (authorityId: string | null | undefined) => {
