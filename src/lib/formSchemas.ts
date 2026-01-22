@@ -94,6 +94,7 @@ export const socialMediaSchema = z.object({
   color: z.string().default("bg-zinc-800"),
   icon: z.string().max(10).optional().or(z.literal("")),
   entity_id: z.string().uuid().optional().or(z.literal("")),
+  avatar_url: z.string().trim().url("Invalid URL").optional().or(z.literal("")),
 });
 
 export const phoneNumberSchema = z.object({
@@ -233,6 +234,7 @@ export type SocialMediaFormData = {
   color: string;
   icon?: string;
   entity_id?: string;
+  avatar_url?: string;
 };
 
 export type PhoneNumberFormData = {

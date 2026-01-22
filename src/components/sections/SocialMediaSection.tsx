@@ -1,6 +1,7 @@
 import { useState, useMemo } from "react";
-import { Plus, ExternalLink, MoreVertical, CheckCircle2, Edit2, Trash2, Building2 } from "lucide-react";
+import { Plus, ExternalLink, MoreVertical, CheckCircle2, Edit2, Trash2, Building2, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { useSocialMediaAccounts, useEntities } from "@/hooks/usePortalData";
 import { useCreateSocialMediaAccount, useUpdateSocialMediaAccount, useDeleteSocialMediaAccount } from "@/hooks/usePortalMutations";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -47,6 +48,7 @@ const SocialMediaSection = ({ entityFilter }: SocialMediaSectionProps) => {
       followers: data.followers || null,
       icon: data.icon || null,
       entity_id: data.entity_id || null,
+      avatar_url: data.avatar_url || null,
     };
     
     if (editingAccount) {
@@ -126,9 +128,22 @@ const SocialMediaSection = ({ entityFilter }: SocialMediaSectionProps) => {
               <div key={account.id} className="glass-card rounded-xl p-5 hover:border-primary/30 transition-all duration-300">
                 <div className="flex items-start justify-between mb-4">
                   <div className="flex items-center gap-3">
-                    <div className={`w-12 h-12 rounded-xl ${account.color} flex items-center justify-center text-white font-bold text-sm`}>
-                      {account.icon || account.platform.charAt(0)}
-                    </div>
+                    {account.avatar_url ? (
+                      <Avatar className="w-12 h-12 rounded-xl">
+                        <AvatarImage 
+                          src={account.avatar_url} 
+                          alt={account.username}
+                          className="object-cover"
+                        />
+                        <AvatarFallback className={`${account.color} text-white font-bold text-sm rounded-xl`}>
+                          {account.icon || account.platform.charAt(0)}
+                        </AvatarFallback>
+                      </Avatar>
+                    ) : (
+                      <div className={`w-12 h-12 rounded-xl ${account.color} flex items-center justify-center text-white font-bold text-sm`}>
+                        {account.icon || account.platform.charAt(0)}
+                      </div>
+                    )}
                     <div>
                       <div className="flex items-center gap-1.5">
                         <h3 className="font-semibold text-foreground">{account.platform}</h3>
