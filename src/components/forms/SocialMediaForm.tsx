@@ -10,6 +10,7 @@ import { Switch } from "@/components/ui/switch";
 import { supabase } from "@/integrations/supabase/client";
 import { Loader2, Wand2 } from "lucide-react";
 import { toast } from "sonner";
+import { useEntities } from "@/hooks/usePortalData";
 import type { SocialMediaAccount } from "@/hooks/usePortalData";
 
 interface SocialMediaFormProps {
@@ -35,6 +36,7 @@ const platformColors = [
 
 const SocialMediaForm = ({ account, onSubmit, onCancel, isLoading }: SocialMediaFormProps) => {
   const [isFetching, setIsFetching] = useState(false);
+  const { data: entities } = useEntities();
   
   const form = useForm<SocialMediaFormData>({
     resolver: zodResolver(socialMediaSchema),
@@ -46,6 +48,7 @@ const SocialMediaForm = ({ account, onSubmit, onCancel, isLoading }: SocialMedia
       is_verified: account?.is_verified ?? false,
       color: account?.color ?? "bg-zinc-800",
       icon: account?.icon ?? "",
+      entity_id: account?.entity_id ?? "",
     },
   });
 
@@ -88,6 +91,26 @@ const SocialMediaForm = ({ account, onSubmit, onCancel, isLoading }: SocialMedia
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <FormField control={form.control} name="entity_id" render={({ field }) => (
+            <FormItem className="md:col-span-2">
+              <FormLabel>Entity</FormLabel>
+              <Select onValueChange={field.onChange} defaultValue={field.value}>
+                <FormControl>
+                  <SelectTrigger className="bg-background">
+                    <SelectValue placeholder="Select entity (optional)" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent className="bg-background">
+                  <SelectItem value="">No entity</SelectItem>
+                  {entities?.map((entity) => (
+                    <SelectItem key={entity.id} value={entity.id}>{entity.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <FormMessage />
+            </FormItem>
+          )} />
+
           <FormField control={form.control} name="platform" render={({ field }) => (
             <FormItem>
               <FormLabel>Platform *</FormLabel>

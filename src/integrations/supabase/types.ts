@@ -1576,6 +1576,7 @@ export type Database = {
         Row: {
           color: string
           created_at: string
+          entity_id: string | null
           followers: string | null
           icon: string | null
           id: string
@@ -1588,6 +1589,7 @@ export type Database = {
         Insert: {
           color?: string
           created_at?: string
+          entity_id?: string | null
           followers?: string | null
           icon?: string | null
           id?: string
@@ -1600,6 +1602,7 @@ export type Database = {
         Update: {
           color?: string
           created_at?: string
+          entity_id?: string | null
           followers?: string | null
           icon?: string | null
           id?: string
@@ -1609,7 +1612,15 @@ export type Database = {
           updated_at?: string
           username?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "social_media_accounts_entity_id_fkey"
+            columns: ["entity_id"]
+            isOneToOne: false
+            referencedRelation: "entities"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       tax_id_types: {
         Row: {

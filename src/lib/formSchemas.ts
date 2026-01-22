@@ -93,6 +93,7 @@ export const socialMediaSchema = z.object({
   is_verified: z.boolean().default(false),
   color: z.string().default("bg-zinc-800"),
   icon: z.string().max(10).optional().or(z.literal("")),
+  entity_id: z.string().uuid().optional().or(z.literal("")),
 });
 
 export const phoneNumberSchema = z.object({
@@ -231,6 +232,7 @@ export type SocialMediaFormData = {
   is_verified: boolean;
   color: string;
   icon?: string;
+  entity_id?: string;
 };
 
 export type PhoneNumberFormData = {

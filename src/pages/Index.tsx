@@ -25,7 +25,7 @@ const Index = () => {
   const [selectedEntityId, setSelectedEntityId] = useState<string | null>(null);
 
   // Sections that support entity filtering
-  const filterableSections = ["bank-accounts", "credit-cards", "addresses", "contracts", "phone-numbers", "tax-ids", "documents", "filings"];
+  const filterableSections = ["bank-accounts", "credit-cards", "addresses", "contracts", "phone-numbers", "tax-ids", "documents", "filings", "social-media"];
   const showFilter = filterableSections.includes(activeSection);
 
   const renderSection = () => {
@@ -51,7 +51,7 @@ const Index = () => {
       case "emails":
         return <EmailSection />;
       case "social-media":
-        return <SocialMediaSection />;
+        return <SocialMediaSection entityFilter={selectedEntityId} />;
       case "addresses":
         return <AddressesSection entityFilter={selectedEntityId} />;
       case "documents":
