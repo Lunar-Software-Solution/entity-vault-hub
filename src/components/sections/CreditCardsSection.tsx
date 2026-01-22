@@ -30,6 +30,7 @@ const CreditCardsSection = () => {
       expiry_date: data.expiry_date || null,
       minimum_payment: data.minimum_payment || null,
       due_date: data.due_date || null,
+      entity_id: data.entity_id || null,
     };
     
     if (editingCard) {

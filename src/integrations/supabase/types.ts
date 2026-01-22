@@ -19,6 +19,7 @@ export type Database = {
           city: string
           country: string
           created_at: string
+          entity_id: string | null
           id: string
           is_primary: boolean
           label: string
@@ -32,6 +33,7 @@ export type Database = {
           city: string
           country?: string
           created_at?: string
+          entity_id?: string | null
           id?: string
           is_primary?: boolean
           label: string
@@ -45,6 +47,7 @@ export type Database = {
           city?: string
           country?: string
           created_at?: string
+          entity_id?: string | null
           id?: string
           is_primary?: boolean
           label?: string
@@ -54,7 +57,15 @@ export type Database = {
           updated_at?: string
           zip?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "addresses_entity_id_fkey"
+            columns: ["entity_id"]
+            isOneToOne: false
+            referencedRelation: "entities"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       bank_accounts: {
         Row: {
@@ -63,6 +74,7 @@ export type Database = {
           bank: string
           created_at: string
           currency: string
+          entity_id: string | null
           id: string
           last_transaction_amount: number | null
           last_transaction_type: string | null
@@ -77,6 +89,7 @@ export type Database = {
           bank: string
           created_at?: string
           currency?: string
+          entity_id?: string | null
           id?: string
           last_transaction_amount?: number | null
           last_transaction_type?: string | null
@@ -91,6 +104,7 @@ export type Database = {
           bank?: string
           created_at?: string
           currency?: string
+          entity_id?: string | null
           id?: string
           last_transaction_amount?: number | null
           last_transaction_type?: string | null
@@ -99,12 +113,21 @@ export type Database = {
           type?: string
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "bank_accounts_entity_id_fkey"
+            columns: ["entity_id"]
+            isOneToOne: false
+            referencedRelation: "entities"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       contracts: {
         Row: {
           created_at: string
           end_date: string | null
+          entity_id: string | null
           id: string
           parties: string[]
           start_date: string | null
@@ -118,6 +141,7 @@ export type Database = {
         Insert: {
           created_at?: string
           end_date?: string | null
+          entity_id?: string | null
           id?: string
           parties?: string[]
           start_date?: string | null
@@ -131,6 +155,7 @@ export type Database = {
         Update: {
           created_at?: string
           end_date?: string | null
+          entity_id?: string | null
           id?: string
           parties?: string[]
           start_date?: string | null
@@ -141,7 +166,15 @@ export type Database = {
           value?: string | null
           value_numeric?: number | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "contracts_entity_id_fkey"
+            columns: ["entity_id"]
+            isOneToOne: false
+            referencedRelation: "entities"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       credit_cards: {
         Row: {
@@ -152,6 +185,7 @@ export type Database = {
           credit_limit: number
           current_balance: number
           due_date: string | null
+          entity_id: string | null
           expiry_date: string | null
           id: string
           minimum_payment: number | null
@@ -166,6 +200,7 @@ export type Database = {
           credit_limit?: number
           current_balance?: number
           due_date?: string | null
+          entity_id?: string | null
           expiry_date?: string | null
           id?: string
           minimum_payment?: number | null
@@ -180,13 +215,22 @@ export type Database = {
           credit_limit?: number
           current_balance?: number
           due_date?: string | null
+          entity_id?: string | null
           expiry_date?: string | null
           id?: string
           minimum_payment?: number | null
           name?: string
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "credit_cards_entity_id_fkey"
+            columns: ["entity_id"]
+            isOneToOne: false
+            referencedRelation: "entities"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       entities: {
         Row: {

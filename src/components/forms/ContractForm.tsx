@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import type { Contract } from "@/hooks/usePortalData";
+import { useEntities } from "@/hooks/usePortalData";
 
 interface ContractFormProps {
   contract?: Contract | null;
@@ -15,6 +16,8 @@ interface ContractFormProps {
 }
 
 const ContractForm = ({ contract, onSubmit, onCancel, isLoading }: ContractFormProps) => {
+  const { data: entities } = useEntities();
+  
   const form = useForm<ContractFormData>({
     resolver: zodResolver(contractSchema),
     defaultValues: {
@@ -26,6 +29,7 @@ const ContractForm = ({ contract, onSubmit, onCancel, isLoading }: ContractFormP
       end_date: contract?.end_date ?? "",
       value: contract?.value ?? "",
       value_numeric: contract?.value_numeric ? Number(contract.value_numeric) : undefined,
+      entity_id: (contract as any)?.entity_id ?? "",
     },
   });
 
@@ -41,6 +45,22 @@ const ContractForm = ({ contract, onSubmit, onCancel, isLoading }: ContractFormP
     <Form {...form}>
       <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <FormField control={form.control} name="entity_id" render={({ field }) => (
+            <FormItem className="md:col-span-2">
+              <FormLabel>Linked Entity</FormLabel>
+              <Select onValueChange={field.onChange} defaultValue={field.value}>
+                <FormControl><SelectTrigger><SelectValue placeholder="Select entity (optional)" /></SelectTrigger></FormControl>
+                <SelectContent>
+                  <SelectItem value="">No entity</SelectItem>
+                  {entities?.map((entity) => (
+                    <SelectItem key={entity.id} value={entity.id}>{entity.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <FormMessage />
+            </FormItem>
+          )} />
+          
           <FormField control={form.control} name="title" render={({ field }) => (
             <FormItem className="md:col-span-2">
               <FormLabel>Contract Title *</FormLabel>
