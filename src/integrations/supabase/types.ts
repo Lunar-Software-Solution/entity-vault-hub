@@ -14,7 +14,273 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      addresses: {
+        Row: {
+          city: string
+          country: string
+          created_at: string
+          id: string
+          is_primary: boolean
+          label: string
+          state: string | null
+          street: string
+          type: string
+          updated_at: string
+          zip: string | null
+        }
+        Insert: {
+          city: string
+          country?: string
+          created_at?: string
+          id?: string
+          is_primary?: boolean
+          label: string
+          state?: string | null
+          street: string
+          type?: string
+          updated_at?: string
+          zip?: string | null
+        }
+        Update: {
+          city?: string
+          country?: string
+          created_at?: string
+          id?: string
+          is_primary?: boolean
+          label?: string
+          state?: string | null
+          street?: string
+          type?: string
+          updated_at?: string
+          zip?: string | null
+        }
+        Relationships: []
+      }
+      bank_accounts: {
+        Row: {
+          account_number: string
+          balance: number
+          bank: string
+          created_at: string
+          currency: string
+          id: string
+          last_transaction_amount: number | null
+          last_transaction_type: string | null
+          name: string
+          routing_number: string | null
+          type: string
+          updated_at: string
+        }
+        Insert: {
+          account_number: string
+          balance?: number
+          bank: string
+          created_at?: string
+          currency?: string
+          id?: string
+          last_transaction_amount?: number | null
+          last_transaction_type?: string | null
+          name: string
+          routing_number?: string | null
+          type?: string
+          updated_at?: string
+        }
+        Update: {
+          account_number?: string
+          balance?: number
+          bank?: string
+          created_at?: string
+          currency?: string
+          id?: string
+          last_transaction_amount?: number | null
+          last_transaction_type?: string | null
+          name?: string
+          routing_number?: string | null
+          type?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      contracts: {
+        Row: {
+          created_at: string
+          end_date: string | null
+          id: string
+          parties: string[]
+          start_date: string | null
+          status: string
+          title: string
+          type: string
+          updated_at: string
+          value: string | null
+          value_numeric: number | null
+        }
+        Insert: {
+          created_at?: string
+          end_date?: string | null
+          id?: string
+          parties?: string[]
+          start_date?: string | null
+          status?: string
+          title: string
+          type?: string
+          updated_at?: string
+          value?: string | null
+          value_numeric?: number | null
+        }
+        Update: {
+          created_at?: string
+          end_date?: string | null
+          id?: string
+          parties?: string[]
+          start_date?: string | null
+          status?: string
+          title?: string
+          type?: string
+          updated_at?: string
+          value?: string | null
+          value_numeric?: number | null
+        }
+        Relationships: []
+      }
+      credit_cards: {
+        Row: {
+          card_color: string
+          card_number: string
+          cardholder_name: string | null
+          created_at: string
+          credit_limit: number
+          current_balance: number
+          due_date: string | null
+          expiry_date: string | null
+          id: string
+          minimum_payment: number | null
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          card_color?: string
+          card_number: string
+          cardholder_name?: string | null
+          created_at?: string
+          credit_limit?: number
+          current_balance?: number
+          due_date?: string | null
+          expiry_date?: string | null
+          id?: string
+          minimum_payment?: number | null
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          card_color?: string
+          card_number?: string
+          cardholder_name?: string | null
+          created_at?: string
+          credit_limit?: number
+          current_balance?: number
+          due_date?: string | null
+          expiry_date?: string | null
+          id?: string
+          minimum_payment?: number | null
+          name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      entities: {
+        Row: {
+          created_at: string
+          duns_number: string | null
+          ein_tax_id: string | null
+          email: string | null
+          founded_date: string | null
+          id: string
+          is_verified: boolean
+          jurisdiction: string | null
+          name: string
+          phone: string | null
+          registration_number: string | null
+          status: string
+          type: string
+          updated_at: string
+          website: string | null
+        }
+        Insert: {
+          created_at?: string
+          duns_number?: string | null
+          ein_tax_id?: string | null
+          email?: string | null
+          founded_date?: string | null
+          id?: string
+          is_verified?: boolean
+          jurisdiction?: string | null
+          name: string
+          phone?: string | null
+          registration_number?: string | null
+          status?: string
+          type?: string
+          updated_at?: string
+          website?: string | null
+        }
+        Update: {
+          created_at?: string
+          duns_number?: string | null
+          ein_tax_id?: string | null
+          email?: string | null
+          founded_date?: string | null
+          id?: string
+          is_verified?: boolean
+          jurisdiction?: string | null
+          name?: string
+          phone?: string | null
+          registration_number?: string | null
+          status?: string
+          type?: string
+          updated_at?: string
+          website?: string | null
+        }
+        Relationships: []
+      }
+      social_media_accounts: {
+        Row: {
+          color: string
+          created_at: string
+          followers: string | null
+          icon: string | null
+          id: string
+          is_verified: boolean
+          platform: string
+          profile_url: string | null
+          updated_at: string
+          username: string
+        }
+        Insert: {
+          color?: string
+          created_at?: string
+          followers?: string | null
+          icon?: string | null
+          id?: string
+          is_verified?: boolean
+          platform: string
+          profile_url?: string | null
+          updated_at?: string
+          username: string
+        }
+        Update: {
+          color?: string
+          created_at?: string
+          followers?: string | null
+          icon?: string | null
+          id?: string
+          is_verified?: boolean
+          platform?: string
+          profile_url?: string | null
+          updated_at?: string
+          username?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
