@@ -190,7 +190,7 @@ const LinkedFilingTasks = ({ entityId }: LinkedFilingTasksProps) => {
       {/* Delete Confirm */}
       <DeleteConfirmDialog
         open={!!deleting}
-        onClose={() => setDeleting(null)}
+        onOpenChange={(open) => !open && setDeleting(null)}
         onConfirm={() => {
           if (deleting) {
             deleteTask.mutate(deleting.id);
