@@ -126,8 +126,30 @@ const ServiceProvidersSection = () => {
     return data;
   }, [activeTab, lawFirms, accountants, auditors, advisors, consultants, registrationAgents, searchQuery, entityFilter, statusFilter]);
 
-  // Handle form submit
+  // Handle form submit - clean empty strings to null for date fields
   const handleSubmit = (data: any) => {
+    // Clean data - convert empty strings to null for optional fields
+    const cleanData = {
+      ...data,
+      contact_name: data.contact_name || null,
+      email: data.email || null,
+      phone: data.phone || null,
+      website: data.website || null,
+      linkedin_url: data.linkedin_url || null,
+      address: data.address || null,
+      engagement_start_date: data.engagement_start_date || null,
+      engagement_end_date: data.engagement_end_date || null,
+      fee_structure: data.fee_structure || null,
+      notes: data.notes || null,
+      // Type-specific fields
+      bar_number: data.bar_number || null,
+      license_number: data.license_number || null,
+      advisor_type: data.advisor_type || null,
+      consultant_type: data.consultant_type || null,
+      agent_type: data.agent_type || null,
+      project_scope: data.project_scope || null,
+    };
+
     const mutations = {
       law_firms: { create: createLawFirm, update: updateLawFirm },
       accountants: { create: createAccountant, update: updateAccountant },
@@ -139,11 +161,11 @@ const ServiceProvidersSection = () => {
 
     const mutation = mutations[activeTab];
     if (editingItem) {
-      mutation.update.mutate({ id: editingItem.id, ...data }, {
+      mutation.update.mutate({ id: editingItem.id, ...cleanData }, {
         onSuccess: () => { setShowForm(false); setEditingItem(null); }
       });
     } else {
-      mutation.create.mutate(data, {
+      mutation.create.mutate(cleanData, {
         onSuccess: () => setShowForm(false)
       });
     }
