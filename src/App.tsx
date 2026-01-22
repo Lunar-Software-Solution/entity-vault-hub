@@ -8,6 +8,7 @@ import ProtectedRoute from "@/components/ProtectedRoute";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
+import EntityDetail from "./pages/EntityDetail";
 
 const queryClient = new QueryClient();
 
@@ -25,6 +26,14 @@ const App = () => (
               element={
                 <ProtectedRoute>
                   <Index />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/entity/:id"
+              element={
+                <ProtectedRoute>
+                  <EntityDetail />
                 </ProtectedRoute>
               }
             />

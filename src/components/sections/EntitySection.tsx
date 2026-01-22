@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { Building2, Calendar, MapPin, Mail, Phone, Globe, Edit, Plus, Trash2 } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { Building2, Calendar, MapPin, Mail, Phone, Globe, Edit, Plus, Trash2, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useEntities } from "@/hooks/usePortalData";
 import { useCreateEntity, useUpdateEntity, useDeleteEntity } from "@/hooks/usePortalMutations";
@@ -11,6 +12,7 @@ import { format } from "date-fns";
 import type { EntityFormData } from "@/lib/formSchemas";
 
 const EntitySection = () => {
+  const navigate = useNavigate();
   const { data: entities, isLoading } = useEntities();
   const entity = entities?.[0];
   
@@ -74,6 +76,10 @@ const EntitySection = () => {
             <Button variant="outline" className="gap-2" onClick={() => setIsDeleteOpen(true)}>
               <Trash2 className="w-4 h-4" />
               Delete
+            </Button>
+            <Button variant="outline" className="gap-2" onClick={() => navigate(`/entity/${entity.id}`)}>
+              <ExternalLink className="w-4 h-4" />
+              View Details
             </Button>
             <Button className="gap-2" onClick={() => setIsFormOpen(true)}>
               <Edit className="w-4 h-4" />
