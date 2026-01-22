@@ -36,6 +36,7 @@ const platformColors = [
 
 const SocialMediaForm = ({ account, onSubmit, onCancel, isLoading }: SocialMediaFormProps) => {
   const [isFetching, setIsFetching] = useState(false);
+  const [avatarPreview, setAvatarPreview] = useState<string | null>(account?.avatar_url || null);
   const { data: entities } = useEntities();
   
   const form = useForm<SocialMediaFormData>({
@@ -49,6 +50,7 @@ const SocialMediaForm = ({ account, onSubmit, onCancel, isLoading }: SocialMedia
       color: account?.color ?? "bg-zinc-800",
       icon: account?.icon ?? "",
       entity_id: account?.entity_id ?? "",
+      avatar_url: account?.avatar_url ?? "",
     },
   });
 
@@ -78,6 +80,10 @@ const SocialMediaForm = ({ account, onSubmit, onCancel, isLoading }: SocialMedia
       if (profile.username) form.setValue("username", profile.username);
       if (profile.icon) form.setValue("icon", profile.icon);
       if (profile.color) form.setValue("color", profile.color);
+      if (profile.avatar_url) {
+        form.setValue("avatar_url", profile.avatar_url);
+        setAvatarPreview(profile.avatar_url);
+      }
       
       toast.success(`Detected ${profile.platform} profile`);
     } catch (error) {
@@ -142,6 +148,35 @@ const SocialMediaForm = ({ account, onSubmit, onCancel, isLoading }: SocialMedia
                 >
                   {isFetching ? <Loader2 className="w-4 h-4 animate-spin" /> : <Wand2 className="w-4 h-4" />}
                 </Button>
+              </div>
+              <FormMessage />
+            </FormItem>
+          )} />
+
+          <FormField control={form.control} name="avatar_url" render={({ field }) => (
+            <FormItem className="md:col-span-2">
+              <FormLabel>Avatar URL</FormLabel>
+              <div className="flex gap-3 items-start">
+                <FormControl>
+                  <Input 
+                    placeholder="https://example.com/avatar.jpg" 
+                    {...field} 
+                    onChange={(e) => {
+                      field.onChange(e);
+                      setAvatarPreview(e.target.value || null);
+                    }}
+                  />
+                </FormControl>
+                {avatarPreview && (
+                  <div className="flex-shrink-0">
+                    <img 
+                      src={avatarPreview} 
+                      alt="Avatar preview" 
+                      className="w-10 h-10 rounded-lg object-cover border border-border"
+                      onError={() => setAvatarPreview(null)}
+                    />
+                  </div>
+                )}
               </div>
               <FormMessage />
             </FormItem>

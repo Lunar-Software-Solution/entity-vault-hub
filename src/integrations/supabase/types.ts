@@ -1574,6 +1574,7 @@ export type Database = {
       }
       social_media_accounts: {
         Row: {
+          avatar_url: string | null
           color: string
           created_at: string
           entity_id: string | null
@@ -1587,6 +1588,7 @@ export type Database = {
           username: string
         }
         Insert: {
+          avatar_url?: string | null
           color?: string
           created_at?: string
           entity_id?: string | null
@@ -1600,6 +1602,7 @@ export type Database = {
           username: string
         }
         Update: {
+          avatar_url?: string | null
           color?: string
           created_at?: string
           entity_id?: string | null
