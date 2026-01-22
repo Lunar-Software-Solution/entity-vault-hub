@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { Plus, FileText, Download, Eye, Calendar, AlertCircle, CheckCircle2, Edit2, Trash2, Building2 } from "lucide-react";
+import { useState, useMemo } from "react";
+import { Plus, FileText, Download, Eye, Calendar, AlertCircle, CheckCircle2, Edit2, Trash2, Building2, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useContracts, useEntities } from "@/hooks/usePortalData";
@@ -14,6 +14,9 @@ import { supabase } from "@/integrations/supabase/client";
 import type { Contract } from "@/hooks/usePortalData";
 import type { ContractFormData } from "@/lib/formSchemas";
 
+type SortField = "title" | "type" | "entity" | "file" | "start_date" | "status";
+type SortDirection = "asc" | "desc";
+
 interface ContractsSectionProps {
   entityFilter?: string | null;
 }
@@ -26,6 +29,8 @@ const ContractsSection = ({ entityFilter }: ContractsSectionProps) => {
   const [editingContract, setEditingContract] = useState<Contract | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [viewingContract, setViewingContract] = useState<Contract | null>(null);
+  const [sortField, setSortField] = useState<SortField>("title");
+  const [sortDirection, setSortDirection] = useState<SortDirection>("asc");
   
   const createContract = useCreateContract();
   const updateContract = useUpdateContract();
@@ -66,6 +71,82 @@ const ContractsSection = ({ entityFilter }: ContractsSectionProps) => {
     setEditingContract(null);
   };
 
+  const handleSort = (field: SortField) => {
+    if (sortField === field) {
+      setSortDirection(sortDirection === "asc" ? "desc" : "asc");
+    } else {
+      setSortField(field);
+      setSortDirection("asc");
+    }
+  };
+
+  const getEntityName = (entityId: string | null) => {
+    if (!entityId) return "";
+    return entities?.find(e => e.id === entityId)?.name || "";
+  };
+
+  const sortedContracts = useMemo(() => {
+    const filtered = entityFilter 
+      ? (contracts ?? []).filter(c => c.entity_id === entityFilter)
+      : (contracts ?? []);
+
+    return [...filtered].sort((a, b) => {
+      let aVal: string | number = "";
+      let bVal: string | number = "";
+
+      switch (sortField) {
+        case "title":
+          aVal = a.title.toLowerCase();
+          bVal = b.title.toLowerCase();
+          break;
+        case "type":
+          aVal = a.type.toLowerCase();
+          bVal = b.type.toLowerCase();
+          break;
+        case "entity":
+          aVal = getEntityName(a.entity_id).toLowerCase();
+          bVal = getEntityName(b.entity_id).toLowerCase();
+          break;
+        case "file":
+          aVal = (a.file_name || "").toLowerCase();
+          bVal = (b.file_name || "").toLowerCase();
+          break;
+        case "start_date":
+          aVal = a.start_date || "";
+          bVal = b.start_date || "";
+          break;
+        case "status":
+          aVal = a.status.toLowerCase();
+          bVal = b.status.toLowerCase();
+          break;
+      }
+
+      if (aVal < bVal) return sortDirection === "asc" ? -1 : 1;
+      if (aVal > bVal) return sortDirection === "asc" ? 1 : -1;
+      return 0;
+    });
+  }, [contracts, entityFilter, entities, sortField, sortDirection]);
+
+  const SortableHeader = ({ field, children }: { field: SortField; children: React.ReactNode }) => (
+    <th 
+      className="text-left p-4 text-sm font-medium text-muted-foreground cursor-pointer hover:text-foreground transition-colors select-none"
+      onClick={() => handleSort(field)}
+    >
+      <div className="flex items-center gap-1">
+        {children}
+        {sortField === field ? (
+          sortDirection === "asc" ? (
+            <ArrowUp className="w-3 h-3" />
+          ) : (
+            <ArrowDown className="w-3 h-3" />
+          )
+        ) : (
+          <ArrowUpDown className="w-3 h-3 opacity-40" />
+        )}
+      </div>
+    </th>
+  );
+
   if (isLoading) {
     return (
       <div className="space-y-8">
@@ -86,13 +167,9 @@ const ContractsSection = ({ entityFilter }: ContractsSectionProps) => {
     );
   }
 
-  const filteredContracts = entityFilter 
-    ? (contracts ?? []).filter(c => c.entity_id === entityFilter)
-    : (contracts ?? []);
-
-  const isEmpty = filteredContracts.length === 0;
-  const activeContracts = filteredContracts.filter(c => c.status === "active").length;
-  const expiringContracts = filteredContracts.filter(c => c.status === "expiring-soon").length;
+  const isEmpty = sortedContracts.length === 0;
+  const activeContracts = sortedContracts.filter(c => c.status === "active").length;
+  const expiringContracts = sortedContracts.filter(c => c.status === "expiring-soon").length;
 
   return (
     <div className="space-y-8">
@@ -101,7 +178,7 @@ const ContractsSection = ({ entityFilter }: ContractsSectionProps) => {
           <h2 className="text-2xl font-bold text-foreground mb-2">Contracts</h2>
           <p className="text-muted-foreground">
             {entityFilter 
-              ? `Showing contracts for selected entity (${filteredContracts.length} of ${contracts?.length ?? 0})`
+              ? `Showing contracts for selected entity (${sortedContracts.length} of ${contracts?.length ?? 0})`
               : "Track and manage all your business and personal contracts."}
           </p>
         </div>
@@ -154,16 +231,17 @@ const ContractsSection = ({ entityFilter }: ContractsSectionProps) => {
             <table className="w-full">
               <thead>
                 <tr className="border-b border-border">
-                  <th className="text-left p-4 text-sm font-medium text-muted-foreground">Contract</th>
-                  <th className="text-left p-4 text-sm font-medium text-muted-foreground">Type</th>
-                  <th className="text-left p-4 text-sm font-medium text-muted-foreground">File</th>
-                  <th className="text-left p-4 text-sm font-medium text-muted-foreground">Duration</th>
-                  <th className="text-left p-4 text-sm font-medium text-muted-foreground">Status</th>
+                  <SortableHeader field="title">Contract</SortableHeader>
+                  <SortableHeader field="entity">Entity</SortableHeader>
+                  <SortableHeader field="type">Type</SortableHeader>
+                  <SortableHeader field="file">File</SortableHeader>
+                  <SortableHeader field="start_date">Duration</SortableHeader>
+                  <SortableHeader field="status">Status</SortableHeader>
                   <th className="text-right p-4 text-sm font-medium text-muted-foreground">Actions</th>
                 </tr>
               </thead>
               <tbody>
-                {filteredContracts.map((contract) => {
+                {sortedContracts.map((contract) => {
                   const daysUntilExpiry = contract.end_date 
                     ? differenceInDays(new Date(contract.end_date), new Date())
                     : null;
@@ -185,14 +263,18 @@ const ContractsSection = ({ entityFilter }: ContractsSectionProps) => {
                             <p className="text-xs text-muted-foreground">
                               {contract.parties?.join(" & ") || "—"}
                             </p>
-                            {linkedEntity && (
-                              <div className="flex items-center gap-1 mt-1">
-                                <Building2 className="w-3 h-3 text-primary" />
-                                <span className="text-xs text-primary">{linkedEntity.name}</span>
-                              </div>
-                            )}
                           </div>
                         </div>
+                      </td>
+                      <td className="p-4">
+                        {linkedEntity ? (
+                          <div className="flex items-center gap-1.5">
+                            <Building2 className="w-4 h-4 text-primary" />
+                            <span className="text-sm text-foreground">{linkedEntity.name}</span>
+                          </div>
+                        ) : (
+                          <span className="text-sm text-muted-foreground">—</span>
+                        )}
                       </td>
                       <td className="p-4">
                         <span className="px-2 py-1 rounded-full bg-muted text-muted-foreground text-xs">
