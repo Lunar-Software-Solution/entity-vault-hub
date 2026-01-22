@@ -1,6 +1,7 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Sidebar from "@/components/layout/Sidebar";
 import EntityFilter from "@/components/layout/EntityFilter";
+import GlobalSearch from "@/components/layout/GlobalSearch";
 import DashboardSection from "@/components/dashboard/DashboardSection";
 import EntitySection from "@/components/sections/EntitySection";
 import BankAccountsSection from "@/components/sections/BankAccountsSection";
@@ -43,14 +44,18 @@ const Index = () => {
       <Sidebar activeSection={activeSection} onSectionChange={setActiveSection} />
       <main className="ml-64 min-h-screen">
         <div className="p-8">
-          {showFilter && (
-            <div className="mb-6 pb-4 border-b border-border">
-              <EntityFilter 
-                selectedEntityId={selectedEntityId} 
-                onEntityChange={setSelectedEntityId} 
-              />
-            </div>
-          )}
+          {/* Top bar with search and optional filter */}
+          <div className="flex items-center gap-4 mb-6 pb-4 border-b border-border">
+            <GlobalSearch onNavigate={setActiveSection} />
+            {showFilter && (
+              <div className="ml-auto">
+                <EntityFilter 
+                  selectedEntityId={selectedEntityId} 
+                  onEntityChange={setSelectedEntityId} 
+                />
+              </div>
+            )}
+          </div>
           {renderSection()}
         </div>
       </main>
