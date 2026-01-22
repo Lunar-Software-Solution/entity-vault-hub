@@ -102,13 +102,11 @@ export const useDashboardStats = () => {
   const { data: addresses } = useAddresses();
   const { data: entities } = useEntities();
 
-  const totalBankBalance = bankAccounts?.reduce((sum, acc) => sum + Number(acc.balance), 0) ?? 0;
   const totalCreditLimit = creditCards?.reduce((sum, card) => sum + Number(card.credit_limit), 0) ?? 0;
   const activeContracts = contracts?.filter(c => c.status === "active").length ?? 0;
   const expiringContracts = contracts?.filter(c => c.status === "expiring-soon").length ?? 0;
 
   return {
-    totalBankBalance,
     totalCreditLimit,
     bankAccountCount: bankAccounts?.length ?? 0,
     creditCardCount: creditCards?.length ?? 0,

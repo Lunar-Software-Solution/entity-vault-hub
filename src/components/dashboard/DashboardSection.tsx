@@ -50,16 +50,16 @@ const DashboardSection = () => {
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         <StatCard
-          title="Total Bank Balance"
-          value={`$${stats.totalBankBalance.toLocaleString('en-US', { minimumFractionDigits: 2 })}`}
-          subtitle={`Across ${stats.bankAccountCount} account${stats.bankAccountCount !== 1 ? "s" : ""}`}
+          title="Bank Accounts"
+          value={stats.bankAccountCount.toString()}
+          subtitle="Connected accounts"
           icon={Wallet}
           variant="primary"
         />
         <StatCard
-          title="Credit Card Limit"
-          value={`$${stats.totalCreditLimit.toLocaleString('en-US', { minimumFractionDigits: 2 })}`}
-          subtitle={`${stats.creditCardCount} active card${stats.creditCardCount !== 1 ? "s" : ""}`}
+          title="Credit Cards"
+          value={stats.creditCardCount.toString()}
+          subtitle={`$${stats.totalCreditLimit.toLocaleString()} total limit`}
           icon={CreditCard}
           variant="warning"
         />

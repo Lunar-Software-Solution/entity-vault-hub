@@ -27,8 +27,6 @@ const ContractForm = ({ contract, onSubmit, onCancel, isLoading }: ContractFormP
       status: contract?.status ?? "active",
       start_date: contract?.start_date ?? "",
       end_date: contract?.end_date ?? "",
-      value: contract?.value ?? "",
-      value_numeric: contract?.value_numeric ? Number(contract.value_numeric) : undefined,
       entity_id: (contract as any)?.entity_id ?? "",
     },
   });
@@ -131,22 +129,6 @@ const ContractForm = ({ contract, onSubmit, onCancel, isLoading }: ContractFormP
             <FormItem>
               <FormLabel>End Date</FormLabel>
               <FormControl><Input type="date" {...field} /></FormControl>
-              <FormMessage />
-            </FormItem>
-          )} />
-
-          <FormField control={form.control} name="value" render={({ field }) => (
-            <FormItem>
-              <FormLabel>Value (Display)</FormLabel>
-              <FormControl><Input placeholder="$5,000/month" {...field} /></FormControl>
-              <FormMessage />
-            </FormItem>
-          )} />
-
-          <FormField control={form.control} name="value_numeric" render={({ field }) => (
-            <FormItem>
-              <FormLabel>Annual Value (Numeric)</FormLabel>
-              <FormControl><Input type="number" step="0.01" placeholder="60000" {...field} /></FormControl>
               <FormMessage />
             </FormItem>
           )} />

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Plus, MoreVertical, ArrowUpRight, ArrowDownRight, Edit2, Trash2 } from "lucide-react";
+import { Plus, MoreVertical, Edit2, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useBankAccounts } from "@/hooks/usePortalData";
 import { useCreateBankAccount, useUpdateBankAccount, useDeleteBankAccount } from "@/hooks/usePortalMutations";
@@ -80,7 +80,7 @@ const BankAccountsSection = () => {
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-2xl font-bold text-foreground mb-2">Bank Accounts</h2>
-          <p className="text-muted-foreground">Manage your connected bank accounts and view balances.</p>
+          <p className="text-muted-foreground">Manage your connected bank accounts.</p>
         </div>
         <Button className="gap-2" onClick={() => setIsFormOpen(true)}>
           <Plus className="w-4 h-4" />
@@ -141,34 +141,8 @@ const BankAccountsSection = () => {
                   <span className="px-2 py-0.5 rounded-full bg-muted text-muted-foreground text-xs">{account.type}</span>
                 </div>
                 <div>
-                  <p className="text-xs text-muted-foreground mb-1">Last Transaction</p>
-                  {account.last_transaction_amount ? (
-                    <div className="flex items-center gap-1">
-                      {account.last_transaction_type === "credit" ? (
-                        <ArrowUpRight className="w-4 h-4 text-success" />
-                      ) : (
-                        <ArrowDownRight className="w-4 h-4 text-destructive" />
-                      )}
-                      <span className={account.last_transaction_type === "credit" ? "text-success" : "text-destructive"}>
-                        {account.last_transaction_type === "credit" ? "+" : "-"}${Math.abs(account.last_transaction_amount).toLocaleString()}
-                      </span>
-                    </div>
-                  ) : (
-                    <span className="text-muted-foreground">—</span>
-                  )}
-                </div>
-              </div>
-
-              <div className="mt-6 pt-4 border-t border-border flex items-center justify-between">
-                <div>
-                  <p className="text-xs text-muted-foreground">Current Balance</p>
-                  <p className="text-2xl font-bold text-foreground">
-                    ${Number(account.balance).toLocaleString('en-US', { minimumFractionDigits: 2 })}
-                  </p>
-                </div>
-                <div className="flex gap-2">
-                  <Button variant="outline" size="sm">View Transactions</Button>
-                  <Button variant="outline" size="sm">Download Statement</Button>
+                  <p className="text-xs text-muted-foreground mb-1">Currency</p>
+                  <span className="px-2 py-0.5 rounded-full bg-muted text-muted-foreground text-xs">{account.currency}</span>
                 </div>
               </div>
             </div>
