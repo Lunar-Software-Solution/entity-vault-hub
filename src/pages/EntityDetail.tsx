@@ -5,7 +5,8 @@ import {
   useCreditCards, 
   useAddresses, 
   useContracts,
-  usePhoneNumbers
+  usePhoneNumbers,
+  useTaxIds
 } from "@/hooks/usePortalData";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -21,7 +22,8 @@ import {
   Wallet,
   CreditCard,
   FileText,
-  ExternalLink
+  ExternalLink,
+  Receipt
 } from "lucide-react";
 import { format } from "date-fns";
 import LinkedBankAccounts from "@/components/entity-detail/LinkedBankAccounts";
@@ -29,6 +31,7 @@ import LinkedCreditCards from "@/components/entity-detail/LinkedCreditCards";
 import LinkedAddresses from "@/components/entity-detail/LinkedAddresses";
 import LinkedContracts from "@/components/entity-detail/LinkedContracts";
 import LinkedPhoneNumbers from "@/components/entity-detail/LinkedPhoneNumbers";
+import LinkedTaxIds from "@/components/entity-detail/LinkedTaxIds";
 
 const EntityDetail = () => {
   const { id } = useParams<{ id: string }>();
@@ -40,6 +43,7 @@ const EntityDetail = () => {
   const { data: addresses, isLoading: addressesLoading } = useAddresses();
   const { data: contracts, isLoading: contractsLoading } = useContracts();
   const { data: phoneNumbers, isLoading: phonesLoading } = usePhoneNumbers();
+  const { data: taxIds, isLoading: taxIdsLoading } = useTaxIds();
 
   const entity = entities?.find(e => e.id === id);
   const linkedBankAccounts = bankAccounts?.filter(b => b.entity_id === id) ?? [];
@@ -47,8 +51,9 @@ const EntityDetail = () => {
   const linkedAddresses = addresses?.filter(a => a.entity_id === id) ?? [];
   const linkedContracts = contracts?.filter(c => c.entity_id === id) ?? [];
   const linkedPhoneNumbers = phoneNumbers?.filter(p => p.entity_id === id) ?? [];
+  const linkedTaxIds = taxIds?.filter(t => t.entity_id === id) ?? [];
 
-  const isLoading = entitiesLoading || bankLoading || cardsLoading || addressesLoading || contractsLoading || phonesLoading;
+  const isLoading = entitiesLoading || bankLoading || cardsLoading || addressesLoading || contractsLoading || phonesLoading || taxIdsLoading;
 
   if (isLoading) {
     return (
@@ -192,7 +197,7 @@ const EntityDetail = () => {
       </div>
 
       {/* Stats Summary */}
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8">
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-8">
         <div className="glass-card rounded-xl p-4 text-center">
           <Wallet className="w-6 h-6 text-primary mx-auto mb-2" />
           <p className="text-2xl font-bold text-foreground">{linkedBankAccounts.length}</p>
@@ -207,6 +212,11 @@ const EntityDetail = () => {
           <Phone className="w-6 h-6 text-primary mx-auto mb-2" />
           <p className="text-2xl font-bold text-foreground">{linkedPhoneNumbers.length}</p>
           <p className="text-sm text-muted-foreground">Phone Numbers</p>
+        </div>
+        <div className="glass-card rounded-xl p-4 text-center">
+          <Receipt className="w-6 h-6 text-primary mx-auto mb-2" />
+          <p className="text-2xl font-bold text-foreground">{linkedTaxIds.length}</p>
+          <p className="text-sm text-muted-foreground">Tax IDs</p>
         </div>
         <div className="glass-card rounded-xl p-4 text-center">
           <MapPin className="w-6 h-6 text-primary mx-auto mb-2" />
@@ -225,6 +235,7 @@ const EntityDetail = () => {
         <LinkedBankAccounts accounts={linkedBankAccounts} />
         <LinkedCreditCards cards={linkedCreditCards} />
         <LinkedPhoneNumbers phones={linkedPhoneNumbers} entityId={id!} />
+        <LinkedTaxIds taxIds={linkedTaxIds} entityId={id!} />
         <LinkedAddresses addresses={linkedAddresses} />
         <LinkedContracts contracts={linkedContracts} />
       </div>

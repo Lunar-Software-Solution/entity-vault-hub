@@ -360,6 +360,59 @@ export type Database = {
         }
         Relationships: []
       }
+      tax_ids: {
+        Row: {
+          authority: string
+          country: string
+          created_at: string
+          entity_id: string
+          expiry_date: string | null
+          id: string
+          is_primary: boolean
+          issued_date: string | null
+          notes: string | null
+          tax_id_number: string
+          type: string
+          updated_at: string
+        }
+        Insert: {
+          authority: string
+          country?: string
+          created_at?: string
+          entity_id: string
+          expiry_date?: string | null
+          id?: string
+          is_primary?: boolean
+          issued_date?: string | null
+          notes?: string | null
+          tax_id_number: string
+          type?: string
+          updated_at?: string
+        }
+        Update: {
+          authority?: string
+          country?: string
+          created_at?: string
+          entity_id?: string
+          expiry_date?: string | null
+          id?: string
+          is_primary?: boolean
+          issued_date?: string | null
+          notes?: string | null
+          tax_id_number?: string
+          type?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tax_ids_entity_id_fkey"
+            columns: ["entity_id"]
+            isOneToOne: false
+            referencedRelation: "entities"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never

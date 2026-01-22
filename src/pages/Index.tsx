@@ -10,13 +10,14 @@ import SocialMediaSection from "@/components/sections/SocialMediaSection";
 import AddressesSection from "@/components/sections/AddressesSection";
 import ContractsSection from "@/components/sections/ContractsSection";
 import PhoneNumbersSection from "@/components/sections/PhoneNumbersSection";
+import TaxIdsSection from "@/components/sections/TaxIdsSection";
 
 const Index = () => {
   const [activeSection, setActiveSection] = useState("dashboard");
   const [selectedEntityId, setSelectedEntityId] = useState<string | null>(null);
 
   // Sections that support entity filtering
-  const filterableSections = ["bank-accounts", "credit-cards", "addresses", "contracts", "phone-numbers"];
+  const filterableSections = ["bank-accounts", "credit-cards", "addresses", "contracts", "phone-numbers", "tax-ids"];
   const showFilter = filterableSections.includes(activeSection);
 
   const renderSection = () => {
@@ -31,6 +32,8 @@ const Index = () => {
         return <CreditCardsSection entityFilter={selectedEntityId} />;
       case "phone-numbers":
         return <PhoneNumbersSection entityFilter={selectedEntityId} />;
+      case "tax-ids":
+        return <TaxIdsSection entityFilter={selectedEntityId} />;
       case "social-media":
         return <SocialMediaSection />;
       case "addresses":

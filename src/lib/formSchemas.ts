@@ -77,6 +77,18 @@ export const phoneNumberSchema = z.object({
   is_primary: z.boolean().default(false),
 });
 
+export const taxIdSchema = z.object({
+  entity_id: z.string().uuid("Entity is required"),
+  tax_id_number: z.string().trim().min(1, "Tax ID number is required").max(50),
+  type: z.string().trim().min(1, "Type is required").max(50),
+  authority: z.string().trim().min(1, "Authority is required").max(100),
+  country: z.string().trim().min(1, "Country is required").max(100),
+  issued_date: z.string().optional().or(z.literal("")),
+  expiry_date: z.string().optional().or(z.literal("")),
+  notes: z.string().trim().max(500).optional().or(z.literal("")),
+  is_primary: z.boolean().default(false),
+});
+
 // Use explicit types to ensure required fields are properly typed
 export type EntityFormData = {
   name: string;
@@ -152,5 +164,17 @@ export type PhoneNumberFormData = {
   country_code: string;
   label: string;
   purpose?: string;
+  is_primary: boolean;
+};
+
+export type TaxIdFormData = {
+  entity_id: string;
+  tax_id_number: string;
+  type: string;
+  authority: string;
+  country: string;
+  issued_date?: string;
+  expiry_date?: string;
+  notes?: string;
   is_primary: boolean;
 };

@@ -338,3 +338,51 @@ export const useDeletePhoneNumber = () => {
     onError: (error) => toast.error(`Failed to delete phone number: ${error.message}`),
   });
 };
+
+// Tax ID mutations
+export const useCreateTaxId = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (taxId: TablesInsert<"tax_ids">) => {
+      const { data, error } = await supabase.from("tax_ids").insert(taxId).select().single();
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["tax_ids"] });
+      toast.success("Tax ID added successfully");
+    },
+    onError: (error) => toast.error(`Failed to add tax ID: ${error.message}`),
+  });
+};
+
+export const useUpdateTaxId = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, ...taxId }: TablesUpdate<"tax_ids"> & { id: string }) => {
+      const { data, error } = await supabase.from("tax_ids").update(taxId).eq("id", id).select().single();
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["tax_ids"] });
+      toast.success("Tax ID updated successfully");
+    },
+    onError: (error) => toast.error(`Failed to update tax ID: ${error.message}`),
+  });
+};
+
+export const useDeleteTaxId = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from("tax_ids").delete().eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["tax_ids"] });
+      toast.success("Tax ID deleted successfully");
+    },
+    onError: (error) => toast.error(`Failed to delete tax ID: ${error.message}`),
+  });
+};
