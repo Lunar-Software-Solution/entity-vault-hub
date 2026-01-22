@@ -9,6 +9,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import ContractForm from "@/components/forms/ContractForm";
 import DeleteConfirmDialog from "@/components/shared/DeleteConfirmDialog";
 import { format, differenceInDays } from "date-fns";
+import { supabase } from "@/integrations/supabase/client";
 import type { Contract } from "@/hooks/usePortalData";
 import type { ContractFormData } from "@/lib/formSchemas";
 
@@ -167,7 +168,11 @@ const ContractsSection = ({ entityFilter }: ContractsSectionProps) => {
                   const linkedEntity = entities?.find(e => e.id === contract.entity_id);
 
                   return (
-                    <tr key={contract.id} className="border-b border-border last:border-0 hover:bg-muted/50 transition-colors">
+                    <tr 
+                      key={contract.id} 
+                      className="border-b border-border last:border-0 hover:bg-muted/50 transition-colors cursor-pointer"
+                      onClick={() => handleEdit(contract)}
+                    >
                       <td className="p-4">
                         <div className="flex items-center gap-3">
                           <div className="w-10 h-10 rounded-lg bg-muted flex items-center justify-center">
@@ -231,9 +236,21 @@ const ContractsSection = ({ entityFilter }: ContractsSectionProps) => {
                           {!["active", "expiring-soon", "expired"].includes(contract.status) && contract.status}
                         </span>
                       </td>
-                      <td className="p-4">
+                      <td className="p-4" onClick={(e) => e.stopPropagation()}>
                         <div className="flex items-center justify-end gap-1">
-                          <button className="p-2 hover:bg-muted rounded-lg transition-colors">
+                          <button 
+                            className="p-2 hover:bg-muted rounded-lg transition-colors disabled:opacity-50"
+                            disabled={!contract.file_path}
+                            title={contract.file_path ? "View PDF" : "No file uploaded"}
+                            onClick={async () => {
+                              if (contract.file_path) {
+                                const { data } = supabase.storage
+                                  .from('contract-files')
+                                  .getPublicUrl(contract.file_path);
+                                window.open(data.publicUrl, '_blank');
+                              }
+                            }}
+                          >
                             <Eye className="w-4 h-4 text-muted-foreground" />
                           </button>
                           <button 
@@ -248,7 +265,22 @@ const ContractsSection = ({ entityFilter }: ContractsSectionProps) => {
                           >
                             <Trash2 className="w-4 h-4 text-destructive" />
                           </button>
-                          <button className="p-2 hover:bg-muted rounded-lg transition-colors">
+                          <button 
+                            className="p-2 hover:bg-muted rounded-lg transition-colors disabled:opacity-50"
+                            disabled={!contract.file_path}
+                            title={contract.file_path ? "Download PDF" : "No file uploaded"}
+                            onClick={async () => {
+                              if (contract.file_path) {
+                                const { data } = supabase.storage
+                                  .from('contract-files')
+                                  .getPublicUrl(contract.file_path);
+                                const link = document.createElement('a');
+                                link.href = data.publicUrl;
+                                link.download = contract.file_name || 'contract.pdf';
+                                link.click();
+                              }
+                            }}
+                          >
                             <Download className="w-4 h-4 text-muted-foreground" />
                           </button>
                         </div>
