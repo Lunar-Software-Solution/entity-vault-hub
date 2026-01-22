@@ -124,14 +124,33 @@ const SocialMediaSection = ({ entityFilter }: SocialMediaSectionProps) => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {filteredAccounts.map((account) => {
             const entityName = getEntityName(account.entity_id);
+            // Generate avatar URL from username if not stored
+            const getAvatarUrl = () => {
+              if (account.avatar_url) return account.avatar_url;
+              const username = account.username.replace(/^@/, '');
+              const platform = account.platform.toLowerCase();
+              if (platform.includes('twitter') || platform.includes('x')) return `https://unavatar.io/twitter/${username}`;
+              if (platform.includes('github')) return `https://github.com/${username}.png`;
+              if (platform.includes('linkedin')) return `https://unavatar.io/linkedin/${username}`;
+              if (platform.includes('instagram')) return `https://unavatar.io/instagram/${username}`;
+              if (platform.includes('facebook')) return `https://unavatar.io/facebook/${username}`;
+              if (platform.includes('youtube')) return `https://unavatar.io/youtube/${username}`;
+              if (platform.includes('tiktok')) return `https://unavatar.io/tiktok/${username}`;
+              if (platform.includes('twitch')) return `https://unavatar.io/twitch/${username}`;
+              if (platform.includes('reddit')) return `https://unavatar.io/reddit/${username}`;
+              if (platform.includes('telegram')) return `https://unavatar.io/telegram/${username}`;
+              return null;
+            };
+            const avatarUrl = getAvatarUrl();
+            
             return (
               <div key={account.id} className="glass-card rounded-xl p-5 hover:border-primary/30 transition-all duration-300">
                 <div className="flex items-start justify-between mb-4">
                   <div className="flex items-center gap-3">
-                    {account.avatar_url ? (
+                    {avatarUrl ? (
                       <Avatar className="w-12 h-12 rounded-xl">
                         <AvatarImage 
-                          src={account.avatar_url} 
+                          src={avatarUrl} 
                           alt={account.username}
                           className="object-cover"
                         />
