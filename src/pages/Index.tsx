@@ -14,6 +14,9 @@ import TaxIdsSection from "@/components/sections/TaxIdsSection";
 import DocumentsSection from "@/components/sections/DocumentsSection";
 import FilingsSection from "@/components/sections/FilingsSection";
 import SettingsSection from "@/components/sections/SettingsSection";
+import ServiceProvidersSection from "@/components/sections/ServiceProvidersSection";
+import EmailSection from "@/components/sections/EmailSection";
+import UserManagementSection from "@/components/sections/UserManagementSection";
 import AIChatAssistant from "@/components/ai/AIChatAssistant";
 
 const Index = () => {
@@ -30,6 +33,8 @@ const Index = () => {
         return <DashboardSection onNavigate={setActiveSection} />;
       case "entity":
         return <EntitySection />;
+      case "service-providers":
+        return <ServiceProvidersSection />;
       case "filings":
         return <FilingsSection entityFilter={selectedEntityId} />;
       case "bank-accounts":
@@ -40,6 +45,8 @@ const Index = () => {
         return <PhoneNumbersSection entityFilter={selectedEntityId} />;
       case "tax-ids":
         return <TaxIdsSection entityFilter={selectedEntityId} />;
+      case "emails":
+        return <EmailSection />;
       case "social-media":
         return <SocialMediaSection />;
       case "addresses":
@@ -48,6 +55,8 @@ const Index = () => {
         return <DocumentsSection entityFilter={selectedEntityId} />;
       case "contracts":
         return <ContractsSection entityFilter={selectedEntityId} />;
+      case "users":
+        return <UserManagementSection />;
       case "settings":
         return <SettingsSection />;
       default:
