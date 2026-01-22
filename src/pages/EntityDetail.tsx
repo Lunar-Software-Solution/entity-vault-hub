@@ -346,7 +346,7 @@ const EntityDetail = () => {
         <LinkedAddresses addresses={linkedAddresses} />
         <LinkedDocuments documents={linkedDocuments} entityId={id!} />
         <LinkedContracts contracts={linkedContracts} />
-        <LinkedSocialMedia accounts={linkedSocialMedia} />
+        <LinkedSocialMedia accounts={linkedSocialMedia} entityId={id!} />
         <LinkedFilings entityId={id!} />
         <LinkedFilingTasks entityId={id!} />
         <LinkedAccountantFirms firms={linkedAccountantFirms} entityId={id!} />
