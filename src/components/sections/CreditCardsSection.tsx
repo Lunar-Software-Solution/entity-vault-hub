@@ -28,7 +28,6 @@ const CreditCardsSection = () => {
       ...data,
       cardholder_name: data.cardholder_name || null,
       expiry_date: data.expiry_date || null,
-      minimum_payment: data.minimum_payment || null,
       due_date: data.due_date || null,
       entity_id: data.entity_id || null,
     };
@@ -84,7 +83,7 @@ const CreditCardsSection = () => {
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-2xl font-bold text-foreground mb-2">Credit Cards</h2>
-          <p className="text-muted-foreground">View and manage your credit cards and payments.</p>
+          <p className="text-muted-foreground">View and manage your credit cards.</p>
         </div>
         <Button className="gap-2" onClick={() => setIsFormOpen(true)}>
           <Plus className="w-4 h-4" />
@@ -102,94 +101,63 @@ const CreditCardsSection = () => {
         </div>
       ) : (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {creditCards.map((card) => {
-            const availableCredit = Number(card.credit_limit) - Number(card.current_balance);
-            const usagePercent = (Number(card.current_balance) / Number(card.credit_limit)) * 100;
-
-            return (
-              <div key={card.id} className="glass-card rounded-xl overflow-hidden">
-                {/* Card Visual */}
-                <div className={`p-6 bg-gradient-to-br ${card.card_color} text-white relative overflow-hidden`}>
-                  <div className="absolute top-0 right-0 w-40 h-40 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/2" />
-                  <div className="relative">
-                    <div className="flex items-center justify-between mb-8">
-                      <CreditCard className="w-10 h-10" />
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <button className="p-1 hover:bg-white/20 rounded transition-colors">
-                            <MoreVertical className="w-5 h-5" />
-                          </button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem onClick={() => handleEdit(card)}>
-                            <Edit2 className="w-4 h-4 mr-2" /> Edit
-                          </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => setDeletingId(card.id)} className="text-destructive">
-                            <Trash2 className="w-4 h-4 mr-2" /> Delete
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </div>
-                    <p className="font-mono text-lg tracking-wider mb-4">{card.card_number}</p>
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-xs text-white/60">Card Holder</p>
-                        <p className="font-medium">{card.cardholder_name || "CARD HOLDER"}</p>
-                      </div>
-                      <div>
-                        <p className="text-xs text-white/60">Expires</p>
-                        <p className="font-medium">{card.expiry_date || "—"}</p>
-                      </div>
-                    </div>
+          {creditCards.map((card) => (
+            <div key={card.id} className="glass-card rounded-xl overflow-hidden">
+              {/* Card Visual */}
+              <div className={`p-6 bg-gradient-to-br ${card.card_color} text-white relative overflow-hidden`}>
+                <div className="absolute top-0 right-0 w-40 h-40 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/2" />
+                <div className="relative">
+                  <div className="flex items-center justify-between mb-8">
+                    <CreditCard className="w-10 h-10" />
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <button className="p-1 hover:bg-white/20 rounded transition-colors">
+                          <MoreVertical className="w-5 h-5" />
+                        </button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem onClick={() => handleEdit(card)}>
+                          <Edit2 className="w-4 h-4 mr-2" /> Edit
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => setDeletingId(card.id)} className="text-destructive">
+                          <Trash2 className="w-4 h-4 mr-2" /> Delete
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
                   </div>
-                </div>
-
-                {/* Card Details */}
-                <div className="p-6 space-y-4">
-                  <h3 className="font-semibold text-foreground">{card.name}</h3>
-                  
-                  <div className="space-y-3">
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm text-muted-foreground">Credit Limit</span>
-                      <span className="font-medium text-foreground">${Number(card.credit_limit).toLocaleString()}</span>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm text-muted-foreground">Current Balance</span>
-                      <span className="font-medium text-warning">${Number(card.current_balance).toLocaleString()}</span>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm text-muted-foreground">Available Credit</span>
-                      <span className="font-medium text-success">${availableCredit.toLocaleString()}</span>
-                    </div>
-                    
-                    {/* Credit Usage Bar */}
-                    <div className="pt-2">
-                      <div className="h-2 bg-muted rounded-full overflow-hidden">
-                        <div 
-                          className="h-full bg-primary rounded-full transition-all duration-500"
-                          style={{ width: `${Math.min(usagePercent, 100)}%` }}
-                        />
-                      </div>
-                      <p className="text-xs text-muted-foreground mt-1 text-right">
-                        {usagePercent.toFixed(1)}% used
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="pt-4 border-t border-border flex items-center justify-between">
+                  <p className="font-mono text-lg tracking-wider mb-4">{card.card_number}</p>
+                  <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-xs text-muted-foreground">Min. Payment Due</p>
-                      <p className="font-semibold text-foreground">
-                        ${card.minimum_payment?.toLocaleString() || 0}
-                        {card.due_date && ` by ${format(new Date(card.due_date), "MMM d, yyyy")}`}
-                      </p>
+                      <p className="text-xs text-white/60">Card Holder</p>
+                      <p className="font-medium">{card.cardholder_name || "CARD HOLDER"}</p>
                     </div>
-                    <Button size="sm">Pay Now</Button>
+                    <div>
+                      <p className="text-xs text-white/60">Expires</p>
+                      <p className="font-medium">{card.expiry_date || "—"}</p>
+                    </div>
                   </div>
                 </div>
               </div>
-            );
-          })}
+
+              {/* Card Details */}
+              <div className="p-6 space-y-4">
+                <h3 className="font-semibold text-foreground">{card.name}</h3>
+                
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-muted-foreground">Credit Limit</span>
+                    <span className="font-medium text-foreground">${Number(card.credit_limit).toLocaleString()}</span>
+                  </div>
+                  {card.due_date && (
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-muted-foreground">Due Date</span>
+                      <span className="font-medium text-foreground">{format(new Date(card.due_date), "MMM d, yyyy")}</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          ))}
         </div>
       )}
 

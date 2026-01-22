@@ -27,7 +27,6 @@ const BankAccountForm = ({ account, onSubmit, onCancel, isLoading }: BankAccount
       routing_number: account?.routing_number ?? "",
       type: account?.type ?? "Checking",
       currency: account?.currency ?? "USD",
-      balance: account?.balance ? Number(account.balance) : 0,
       entity_id: (account as any)?.entity_id ?? "",
     },
   });
@@ -112,14 +111,6 @@ const BankAccountForm = ({ account, onSubmit, onCancel, isLoading }: BankAccount
                   <SelectItem value="CAD">CAD</SelectItem>
                 </SelectContent>
               </Select>
-              <FormMessage />
-            </FormItem>
-          )} />
-
-          <FormField control={form.control} name="balance" render={({ field }) => (
-            <FormItem className="md:col-span-2">
-              <FormLabel>Current Balance *</FormLabel>
-              <FormControl><Input type="number" step="0.01" placeholder="0.00" {...field} /></FormControl>
               <FormMessage />
             </FormItem>
           )} />

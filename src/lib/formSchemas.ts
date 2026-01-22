@@ -22,7 +22,6 @@ export const bankAccountSchema = z.object({
   routing_number: z.string().trim().max(50).optional().or(z.literal("")),
   type: z.string().min(1, "Account type is required"),
   currency: z.string().min(1, "Currency is required"),
-  balance: z.coerce.number().min(0, "Balance must be positive"),
   entity_id: z.string().uuid().optional().or(z.literal("")),
 });
 
@@ -32,8 +31,6 @@ export const creditCardSchema = z.object({
   cardholder_name: z.string().trim().max(100).optional().or(z.literal("")),
   expiry_date: z.string().trim().max(10).optional().or(z.literal("")),
   credit_limit: z.coerce.number().min(0, "Credit limit must be positive"),
-  current_balance: z.coerce.number().min(0, "Balance must be positive"),
-  minimum_payment: z.coerce.number().min(0).optional(),
   due_date: z.string().optional().or(z.literal("")),
   card_color: z.string().default("from-zinc-800 to-zinc-600"),
   entity_id: z.string().uuid().optional().or(z.literal("")),
@@ -58,8 +55,6 @@ export const contractSchema = z.object({
   status: z.string().min(1, "Status is required"),
   start_date: z.string().optional().or(z.literal("")),
   end_date: z.string().optional().or(z.literal("")),
-  value: z.string().trim().max(50).optional().or(z.literal("")),
-  value_numeric: z.coerce.number().min(0).optional(),
   entity_id: z.string().uuid().optional().or(z.literal("")),
 });
 
@@ -96,7 +91,6 @@ export type BankAccountFormData = {
   routing_number?: string;
   type: string;
   currency: string;
-  balance: number;
   entity_id?: string;
 };
 
@@ -106,8 +100,6 @@ export type CreditCardFormData = {
   cardholder_name?: string;
   expiry_date?: string;
   credit_limit: number;
-  current_balance: number;
-  minimum_payment?: number;
   due_date?: string;
   card_color: string;
   entity_id?: string;
@@ -132,8 +124,6 @@ export type ContractFormData = {
   status: string;
   start_date?: string;
   end_date?: string;
-  value?: string;
-  value_numeric?: number;
   entity_id?: string;
 };
 

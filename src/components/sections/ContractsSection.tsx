@@ -28,8 +28,6 @@ const ContractsSection = () => {
       ...data,
       start_date: data.start_date || null,
       end_date: data.end_date || null,
-      value: data.value || null,
-      value_numeric: data.value_numeric || null,
       entity_id: data.entity_id || null,
     };
     
@@ -68,8 +66,8 @@ const ContractsSection = () => {
           </div>
           <Skeleton className="h-10 w-32" />
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {[1, 2, 3].map((i) => (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {[1, 2].map((i) => (
             <Skeleton key={i} className="h-24 w-full rounded-xl" />
           ))}
         </div>
@@ -81,7 +79,6 @@ const ContractsSection = () => {
   const isEmpty = !contracts || contracts.length === 0;
   const activeContracts = contracts?.filter(c => c.status === "active").length ?? 0;
   const expiringContracts = contracts?.filter(c => c.status === "expiring-soon").length ?? 0;
-  const totalValue = contracts?.reduce((sum, c) => sum + (Number(c.value_numeric) || 0), 0) ?? 0;
 
   return (
     <div className="space-y-8">
@@ -97,7 +94,7 @@ const ContractsSection = () => {
       </div>
 
       {/* Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="glass-card rounded-xl p-4">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-lg bg-success/10 flex items-center justify-center">
@@ -117,19 +114,6 @@ const ContractsSection = () => {
             <div>
               <p className="text-2xl font-bold text-foreground">{expiringContracts}</p>
               <p className="text-sm text-muted-foreground">Expiring Soon</p>
-            </div>
-          </div>
-        </div>
-        <div className="glass-card rounded-xl p-4">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
-              <FileText className="w-5 h-5 text-primary" />
-            </div>
-            <div>
-              <p className="text-2xl font-bold text-foreground">
-                ${totalValue.toLocaleString()}
-              </p>
-              <p className="text-sm text-muted-foreground">Total Annual Value</p>
             </div>
           </div>
         </div>
@@ -153,7 +137,6 @@ const ContractsSection = () => {
                   <th className="text-left p-4 text-sm font-medium text-muted-foreground">Contract</th>
                   <th className="text-left p-4 text-sm font-medium text-muted-foreground">Type</th>
                   <th className="text-left p-4 text-sm font-medium text-muted-foreground">Duration</th>
-                  <th className="text-left p-4 text-sm font-medium text-muted-foreground">Value</th>
                   <th className="text-left p-4 text-sm font-medium text-muted-foreground">Status</th>
                   <th className="text-right p-4 text-sm font-medium text-muted-foreground">Actions</th>
                 </tr>
@@ -200,9 +183,6 @@ const ContractsSection = () => {
                             </p>
                           </div>
                         </div>
-                      </td>
-                      <td className="p-4">
-                        <p className="font-medium text-foreground">{contract.value || "—"}</p>
                       </td>
                       <td className="p-4">
                         <span className={cn(

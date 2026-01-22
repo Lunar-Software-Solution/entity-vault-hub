@@ -35,8 +35,6 @@ const CreditCardForm = ({ card, onSubmit, onCancel, isLoading }: CreditCardFormP
       cardholder_name: card?.cardholder_name ?? "",
       expiry_date: card?.expiry_date ?? "",
       credit_limit: card?.credit_limit ? Number(card.credit_limit) : 0,
-      current_balance: card?.current_balance ? Number(card.current_balance) : 0,
-      minimum_payment: card?.minimum_payment ? Number(card.minimum_payment) : undefined,
       due_date: card?.due_date ?? "",
       card_color: card?.card_color ?? "from-zinc-800 to-zinc-600",
       entity_id: (card as any)?.entity_id ?? "",
@@ -99,22 +97,6 @@ const CreditCardForm = ({ card, onSubmit, onCancel, isLoading }: CreditCardFormP
             <FormItem>
               <FormLabel>Credit Limit *</FormLabel>
               <FormControl><Input type="number" step="0.01" placeholder="10000" {...field} /></FormControl>
-              <FormMessage />
-            </FormItem>
-          )} />
-
-          <FormField control={form.control} name="current_balance" render={({ field }) => (
-            <FormItem>
-              <FormLabel>Current Balance *</FormLabel>
-              <FormControl><Input type="number" step="0.01" placeholder="0.00" {...field} /></FormControl>
-              <FormMessage />
-            </FormItem>
-          )} />
-
-          <FormField control={form.control} name="minimum_payment" render={({ field }) => (
-            <FormItem>
-              <FormLabel>Minimum Payment</FormLabel>
-              <FormControl><Input type="number" step="0.01" placeholder="25.00" {...field} /></FormControl>
               <FormMessage />
             </FormItem>
           )} />

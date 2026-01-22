@@ -70,14 +70,11 @@ export type Database = {
       bank_accounts: {
         Row: {
           account_number: string
-          balance: number
           bank: string
           created_at: string
           currency: string
           entity_id: string | null
           id: string
-          last_transaction_amount: number | null
-          last_transaction_type: string | null
           name: string
           routing_number: string | null
           type: string
@@ -85,14 +82,11 @@ export type Database = {
         }
         Insert: {
           account_number: string
-          balance?: number
           bank: string
           created_at?: string
           currency?: string
           entity_id?: string | null
           id?: string
-          last_transaction_amount?: number | null
-          last_transaction_type?: string | null
           name: string
           routing_number?: string | null
           type?: string
@@ -100,14 +94,11 @@ export type Database = {
         }
         Update: {
           account_number?: string
-          balance?: number
           bank?: string
           created_at?: string
           currency?: string
           entity_id?: string | null
           id?: string
-          last_transaction_amount?: number | null
-          last_transaction_type?: string | null
           name?: string
           routing_number?: string | null
           type?: string
@@ -135,8 +126,6 @@ export type Database = {
           title: string
           type: string
           updated_at: string
-          value: string | null
-          value_numeric: number | null
         }
         Insert: {
           created_at?: string
@@ -149,8 +138,6 @@ export type Database = {
           title: string
           type?: string
           updated_at?: string
-          value?: string | null
-          value_numeric?: number | null
         }
         Update: {
           created_at?: string
@@ -163,8 +150,6 @@ export type Database = {
           title?: string
           type?: string
           updated_at?: string
-          value?: string | null
-          value_numeric?: number | null
         }
         Relationships: [
           {
@@ -183,12 +168,10 @@ export type Database = {
           cardholder_name: string | null
           created_at: string
           credit_limit: number
-          current_balance: number
           due_date: string | null
           entity_id: string | null
           expiry_date: string | null
           id: string
-          minimum_payment: number | null
           name: string
           updated_at: string
         }
@@ -198,12 +181,10 @@ export type Database = {
           cardholder_name?: string | null
           created_at?: string
           credit_limit?: number
-          current_balance?: number
           due_date?: string | null
           entity_id?: string | null
           expiry_date?: string | null
           id?: string
-          minimum_payment?: number | null
           name: string
           updated_at?: string
         }
@@ -213,12 +194,10 @@ export type Database = {
           cardholder_name?: string | null
           created_at?: string
           credit_limit?: number
-          current_balance?: number
           due_date?: string | null
           entity_id?: string | null
           expiry_date?: string | null
           id?: string
-          minimum_payment?: number | null
           name?: string
           updated_at?: string
         }
