@@ -51,8 +51,14 @@ serve(async (req) => {
     const arrayBuffer = await fileData.arrayBuffer();
     const uint8Array = new Uint8Array(arrayBuffer);
     
-    // Convert to base64 for AI processing
-    const base64Content = btoa(String.fromCharCode(...uint8Array));
+    // Convert to base64 safely for large files (avoid stack overflow)
+    const chunkSize = 8192;
+    let base64Content = "";
+    for (let i = 0; i < uint8Array.length; i += chunkSize) {
+      const chunk = uint8Array.subarray(i, i + chunkSize);
+      base64Content += String.fromCharCode.apply(null, Array.from(chunk));
+    }
+    base64Content = btoa(base64Content);
     
     // Use Lovable AI to summarize the contract
     const aiResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
