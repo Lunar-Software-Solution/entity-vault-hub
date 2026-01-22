@@ -1,6 +1,6 @@
-import { Wallet, CreditCard, Share2, FileText, MapPin, Building2 } from "lucide-react";
+import { Wallet, CreditCard, Share2, FileText, MapPin, Building2, Calendar, CheckSquare } from "lucide-react";
 import StatCard from "./StatCard";
-import { useDashboardStats, useBankAccounts, useContracts } from "@/hooks/usePortalData";
+import { useDashboardStats, useBankAccounts, useContracts, useUpcomingFilings, useOpenTasks } from "@/hooks/usePortalData";
 import { Skeleton } from "@/components/ui/skeleton";
 import { format } from "date-fns";
 
@@ -12,8 +12,13 @@ const DashboardSection = ({ onNavigate }: DashboardSectionProps) => {
   const stats = useDashboardStats();
   const { data: bankAccounts, isLoading: loadingBanks } = useBankAccounts();
   const { data: contracts, isLoading: loadingContracts } = useContracts();
+  const { data: upcomingFilings, isLoading: loadingFilings } = useUpcomingFilings();
+  const { data: openTasks, isLoading: loadingTasks } = useOpenTasks();
 
-  const isLoading = loadingBanks || loadingContracts;
+  const isLoading = loadingBanks || loadingContracts || loadingFilings || loadingTasks;
+  
+  const overdueFilings = upcomingFilings?.filter(f => f.status === "overdue" || new Date(f.due_date) < new Date()).length || 0;
+  const urgentTasks = openTasks?.filter(t => t.priority === "urgent" || t.priority === "high").length || 0;
 
   // Build recent activity from actual data
   const recentActivity = [
@@ -103,6 +108,22 @@ const DashboardSection = ({ onNavigate }: DashboardSectionProps) => {
           variant={stats.entityStatus === "Active" ? "success" : "default"}
           onClick={() => onNavigate?.("entity")}
         />
+        <StatCard
+          title="Upcoming Filings"
+          value={(upcomingFilings?.length || 0).toString()}
+          subtitle={overdueFilings > 0 ? `${overdueFilings} overdue` : "All filings current"}
+          icon={Calendar}
+          variant={overdueFilings > 0 ? "warning" : "default"}
+          onClick={() => onNavigate?.("filings")}
+        />
+        <StatCard
+          title="Open Tasks"
+          value={(openTasks?.length || 0).toString()}
+          subtitle={urgentTasks > 0 ? `${urgentTasks} high priority` : "No urgent tasks"}
+          icon={CheckSquare}
+          variant={urgentTasks > 0 ? "warning" : "success"}
+          onClick={() => onNavigate?.("filings")}
+        />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -131,7 +152,7 @@ const DashboardSection = ({ onNavigate }: DashboardSectionProps) => {
             {[
               { label: "Add Bank Account", icon: Wallet, section: "bank-accounts" },
               { label: "New Contract", icon: FileText, section: "contracts" },
-              { label: "Link Social", icon: Share2, section: "social-media" },
+              { label: "Add Filing", icon: Calendar, section: "filings" },
               { label: "Add Address", icon: MapPin, section: "addresses" },
             ].map((action, index) => (
               <button
