@@ -1,9 +1,8 @@
-import { useState, useMemo, useEffect } from "react";
-import { useTaxIdTypes, useIssuingAuthorities, useAllAuthorityTaxIdTypes, type TaxIdType, type IssuingAuthority } from "@/hooks/usePortalData";
+import { useState, useMemo } from "react";
+import { useTaxIdTypes, useIssuingAuthorities, type TaxIdType, type IssuingAuthority } from "@/hooks/usePortalData";
 import { 
   useCreateTaxIdType, useUpdateTaxIdType, useDeleteTaxIdType,
-  useCreateIssuingAuthority, useUpdateIssuingAuthority, useDeleteIssuingAuthority,
-  useUpdateAuthorityTaxIdTypes
+  useCreateIssuingAuthority, useUpdateIssuingAuthority, useDeleteIssuingAuthority
 } from "@/hooks/usePortalMutations";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -12,7 +11,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Checkbox } from "@/components/ui/checkbox";
+
 import { Badge } from "@/components/ui/badge";
 import DeleteConfirmDialog from "@/components/shared/DeleteConfirmDialog";
 import { Plus, Edit, Trash2, FileText, Building2, Search, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
@@ -27,24 +26,28 @@ interface TaxIdTypeFormData {
   code: string;
   label: string;
   description?: string;
+  authority_id?: string;
 }
 
 const TaxIdTypeForm = ({ 
   item, 
   onSubmit, 
   onCancel, 
-  isLoading 
+  isLoading,
+  authorities 
 }: { 
   item?: TaxIdType | null; 
   onSubmit: (data: TaxIdTypeFormData) => void; 
   onCancel: () => void; 
   isLoading?: boolean;
+  authorities?: IssuingAuthority[];
 }) => {
   const form = useForm<TaxIdTypeFormData>({
     defaultValues: {
       code: item?.code ?? "",
       label: item?.label ?? "",
       description: item?.description ?? "",
+      authority_id: (item as any)?.authority_id ?? "",
     },
   });
 
@@ -62,6 +65,27 @@ const TaxIdTypeForm = ({
           <FormItem>
             <FormLabel>Label *</FormLabel>
             <FormControl><Input placeholder="e.g., Employer Identification Number" {...field} /></FormControl>
+            <FormMessage />
+          </FormItem>
+        )} />
+        <FormField control={form.control} name="authority_id" render={({ field }) => (
+          <FormItem>
+            <FormLabel>Issuing Authority</FormLabel>
+            <Select onValueChange={field.onChange} value={field.value || ""}>
+              <FormControl>
+                <SelectTrigger className="bg-background">
+                  <SelectValue placeholder="Select an authority" />
+                </SelectTrigger>
+              </FormControl>
+              <SelectContent className="bg-background max-h-[300px]">
+                <SelectItem value="__none__">None</SelectItem>
+                {authorities?.map((auth) => (
+                  <SelectItem key={auth.id} value={auth.id}>
+                    {auth.name} ({auth.country})
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
             <FormMessage />
           </FormItem>
         )} />
@@ -89,31 +113,20 @@ interface IssuingAuthorityFormData {
   country: string;
   province_state?: string;
   description?: string;
-  tax_id_type_ids: string[];
 }
 
 const IssuingAuthorityForm = ({ 
   item, 
   onSubmit, 
   onCancel, 
-  isLoading,
-  taxIdTypes,
-  initialTaxIdTypeIds
+  isLoading
 }: { 
   item?: IssuingAuthority | null; 
   onSubmit: (data: IssuingAuthorityFormData) => void; 
   onCancel: () => void; 
   isLoading?: boolean;
-  taxIdTypes?: TaxIdType[];
-  initialTaxIdTypeIds?: string[];
 }) => {
-  const [selectedTypeIds, setSelectedTypeIds] = useState<string[]>(initialTaxIdTypeIds || []);
-  
-  useEffect(() => {
-    setSelectedTypeIds(initialTaxIdTypeIds || []);
-  }, [initialTaxIdTypeIds]);
-
-  const form = useForm<Omit<IssuingAuthorityFormData, 'tax_id_type_ids'>>({
+  const form = useForm<IssuingAuthorityFormData>({
     defaultValues: {
       name: item?.name ?? "",
       country: item?.country ?? "",
@@ -136,21 +149,9 @@ const IssuingAuthorityForm = ({
 
   const provinceStateOptions = getProvinceStateOptions();
 
-  const handleTypeToggle = (typeId: string) => {
-    setSelectedTypeIds(prev => 
-      prev.includes(typeId) 
-        ? prev.filter(id => id !== typeId)
-        : [...prev, typeId]
-    );
-  };
-
-  const handleSubmit = (data: Omit<IssuingAuthorityFormData, 'tax_id_type_ids'>) => {
-    onSubmit({ ...data, tax_id_type_ids: selectedTypeIds });
-  };
-
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
         <FormField control={form.control} name="name" render={({ field }) => (
           <FormItem>
             <FormLabel>Name *</FormLabel>
@@ -207,34 +208,6 @@ const IssuingAuthorityForm = ({
             <FormMessage />
           </FormItem>
         )} />
-        
-        {/* Tax ID Types multi-select */}
-        <div className="space-y-2">
-          <FormLabel>Tax ID Types Issued</FormLabel>
-          <div className="border border-border rounded-md p-3 max-h-[150px] overflow-y-auto space-y-2 bg-background">
-            {taxIdTypes?.length ? (
-              taxIdTypes.map((type) => (
-                <div key={type.id} className="flex items-center space-x-2">
-                  <Checkbox
-                    id={`type-${type.id}`}
-                    checked={selectedTypeIds.includes(type.id)}
-                    onCheckedChange={() => handleTypeToggle(type.id)}
-                  />
-                  <label 
-                    htmlFor={`type-${type.id}`} 
-                    className="text-sm text-foreground cursor-pointer flex-1"
-                  >
-                    <span className="font-mono font-medium">{type.code}</span>
-                    <span className="text-muted-foreground ml-2">— {type.label}</span>
-                  </label>
-                </div>
-              ))
-            ) : (
-              <p className="text-sm text-muted-foreground">No tax ID types defined yet</p>
-            )}
-          </div>
-        </div>
-        
         <FormField control={form.control} name="description" render={({ field }) => (
           <FormItem>
             <FormLabel>Description</FormLabel>
@@ -278,7 +251,6 @@ const SettingsSection = () => {
 
   const { data: taxIdTypes, isLoading: typesLoading } = useTaxIdTypes();
   const { data: issuingAuthorities, isLoading: authoritiesLoading } = useIssuingAuthorities();
-  const { data: authorityTaxIdTypes } = useAllAuthorityTaxIdTypes();
 
   const createTypeMutation = useCreateTaxIdType();
   const updateTypeMutation = useUpdateTaxIdType();
@@ -287,20 +259,18 @@ const SettingsSection = () => {
   const createAuthorityMutation = useCreateIssuingAuthority();
   const updateAuthorityMutation = useUpdateIssuingAuthority();
   const deleteAuthorityMutation = useDeleteIssuingAuthority();
-  const updateAuthorityTypesMutation = useUpdateAuthorityTaxIdTypes();
   
-  // Get tax id type ids for an authority
-  const getAuthorityTypeIds = (authorityId: string) => {
-    return authorityTaxIdTypes
-      ?.filter(rel => rel.authority_id === authorityId)
-      .map(rel => rel.tax_id_type_id) || [];
+  // Get authority name for a tax id type
+  const getAuthorityName = (authorityId: string | null | undefined) => {
+    if (!authorityId) return null;
+    const authority = issuingAuthorities?.find(a => a.id === authorityId);
+    return authority ? authority.name : null;
   };
   
-  // Get tax id type codes for display
+  // Get tax id type codes for an authority (via authority_id on tax_id_types)
   const getAuthorityTypeCodes = (authorityId: string) => {
-    const typeIds = getAuthorityTypeIds(authorityId);
     return taxIdTypes
-      ?.filter(type => typeIds.includes(type.id))
+      ?.filter(type => (type as any).authority_id === authorityId)
       .map(type => type.code) || [];
   };
 
@@ -404,7 +374,12 @@ const SettingsSection = () => {
   };
 
   const handleTypeSubmit = (data: TaxIdTypeFormData) => {
-    const payload = { ...data, description: data.description || null };
+    const authorityId = data.authority_id === "__none__" ? null : (data.authority_id || null);
+    const payload = { 
+      ...data, 
+      description: data.description || null,
+      authority_id: authorityId,
+    };
     if (editingType) {
       updateTypeMutation.mutate({ id: editingType.id, ...payload }, {
         onSuccess: () => { setShowTypeForm(false); setEditingType(null); },
@@ -418,9 +393,8 @@ const SettingsSection = () => {
 
   const handleAuthoritySubmit = (data: IssuingAuthorityFormData) => {
     const provinceState = data.province_state === "__none__" ? null : (data.province_state || null);
-    const { tax_id_type_ids, ...rest } = data;
     const payload = { 
-      ...rest, 
+      ...data, 
       description: data.description || null,
       province_state: provinceState,
     };
@@ -428,25 +402,13 @@ const SettingsSection = () => {
     if (editingAuthority) {
       updateAuthorityMutation.mutate({ id: editingAuthority.id, ...payload }, {
         onSuccess: () => {
-          // Update tax id type relationships
-          updateAuthorityTypesMutation.mutate({
-            authorityId: editingAuthority.id,
-            taxIdTypeIds: tax_id_type_ids,
-          });
           setShowAuthorityForm(false);
           setEditingAuthority(null);
         },
       });
     } else {
       createAuthorityMutation.mutate(payload, {
-        onSuccess: (newAuthority) => {
-          // Create tax id type relationships for new authority
-          if (newAuthority && tax_id_type_ids.length > 0) {
-            updateAuthorityTypesMutation.mutate({
-              authorityId: newAuthority.id,
-              taxIdTypeIds: tax_id_type_ids,
-            });
-          }
+        onSuccess: () => {
           setShowAuthorityForm(false);
         },
       });
@@ -506,7 +468,7 @@ const SettingsSection = () => {
               <Table className="table-fixed w-full">
                 <TableHeader>
                   <TableRow>
-                    <TableHead className="w-[120px]">
+                    <TableHead className="w-[100px]">
                       <button 
                         onClick={() => handleTypeSort("code")} 
                         className="flex items-center hover:text-foreground transition-colors text-foreground"
@@ -514,7 +476,7 @@ const SettingsSection = () => {
                         Code {getTypeSortIcon("code")}
                       </button>
                     </TableHead>
-                    <TableHead className="w-[200px]">
+                    <TableHead className="w-[180px]">
                       <button 
                         onClick={() => handleTypeSort("label")} 
                         className="flex items-center hover:text-foreground transition-colors text-foreground"
@@ -522,6 +484,7 @@ const SettingsSection = () => {
                         Label {getTypeSortIcon("label")}
                       </button>
                     </TableHead>
+                    <TableHead className="w-[150px] text-foreground">Authority</TableHead>
                     <TableHead className="w-auto">
                       <button 
                         onClick={() => handleTypeSort("description")} 
@@ -534,36 +497,48 @@ const SettingsSection = () => {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {filteredAndSortedTypes.map((type) => (
-                    <TableRow key={type.id}>
-                      <TableCell className="font-mono font-medium text-foreground">{type.code}</TableCell>
-                      <TableCell className="text-foreground">{type.label}</TableCell>
-                      <TableCell className="text-muted-foreground text-sm">{type.description || "—"}</TableCell>
-                      <TableCell>
-                        <div className="flex gap-1">
-                          <Button 
-                            variant="ghost" 
-                            size="icon" 
-                            className="h-8 w-8 text-primary hover:text-primary"
-                            onClick={() => { setEditingType(type); setShowTypeForm(true); }}
-                          >
-                            <Edit className="w-4 h-4" />
-                          </Button>
-                          <Button 
-                            variant="ghost" 
-                            size="icon" 
-                            className="h-8 w-8 text-destructive hover:text-destructive"
-                            onClick={() => setDeletingType(type)}
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </Button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))}
+                  {filteredAndSortedTypes.map((type) => {
+                    const authorityName = getAuthorityName((type as any).authority_id);
+                    return (
+                      <TableRow key={type.id}>
+                        <TableCell className="font-mono font-medium text-foreground">{type.code}</TableCell>
+                        <TableCell className="text-foreground">{type.label}</TableCell>
+                        <TableCell>
+                          {authorityName ? (
+                            <Badge variant="secondary" className="text-xs">
+                              {authorityName}
+                            </Badge>
+                          ) : (
+                            <span className="text-muted-foreground text-sm">—</span>
+                          )}
+                        </TableCell>
+                        <TableCell className="text-muted-foreground text-sm">{type.description || "—"}</TableCell>
+                        <TableCell>
+                          <div className="flex gap-1">
+                            <Button 
+                              variant="ghost" 
+                              size="icon" 
+                              className="h-8 w-8 text-primary hover:text-primary"
+                              onClick={() => { setEditingType(type); setShowTypeForm(true); }}
+                            >
+                              <Edit className="w-4 h-4" />
+                            </Button>
+                            <Button 
+                              variant="ghost" 
+                              size="icon" 
+                              className="h-8 w-8 text-destructive hover:text-destructive"
+                              onClick={() => setDeletingType(type)}
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
                   {!filteredAndSortedTypes.length && (
                     <TableRow>
-                      <TableCell colSpan={4} className="text-center text-muted-foreground py-8">
+                      <TableCell colSpan={5} className="text-center text-muted-foreground py-8">
                         {typeSearch ? "No types match your search" : "No tax ID types defined yet"}
                       </TableCell>
                     </TableRow>
@@ -705,6 +680,7 @@ const SettingsSection = () => {
             onSubmit={handleTypeSubmit}
             onCancel={() => { setShowTypeForm(false); setEditingType(null); }}
             isLoading={createTypeMutation.isPending || updateTypeMutation.isPending}
+            authorities={issuingAuthorities}
           />
         </DialogContent>
       </Dialog>
@@ -720,8 +696,6 @@ const SettingsSection = () => {
             onSubmit={handleAuthoritySubmit}
             onCancel={() => { setShowAuthorityForm(false); setEditingAuthority(null); }}
             isLoading={createAuthorityMutation.isPending || updateAuthorityMutation.isPending}
-            taxIdTypes={taxIdTypes}
-            initialTaxIdTypeIds={editingAuthority ? getAuthorityTypeIds(editingAuthority.id) : []}
           />
         </DialogContent>
       </Dialog>

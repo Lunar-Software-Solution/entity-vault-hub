@@ -152,33 +152,19 @@ export const useIssuingAuthorities = () => {
   });
 };
 
-// Fetch authority-tax-id-type relationships
-export const useAuthorityTaxIdTypes = (authorityId?: string) => {
+// Get tax id types for an authority (via authority_id foreign key on tax_id_types)
+export const useTaxIdTypesForAuthority = (authorityId?: string) => {
   return useQuery({
-    queryKey: ["authority_tax_id_types", authorityId],
-    queryFn: async () => {
-      let query = supabase.from("authority_tax_id_types").select("*");
-      if (authorityId) {
-        query = query.eq("authority_id", authorityId);
-      }
-      const { data, error } = await query;
-      if (error) throw error;
-      return data;
-    },
-    enabled: authorityId !== undefined,
-  });
-};
-
-export const useAllAuthorityTaxIdTypes = () => {
-  return useQuery({
-    queryKey: ["authority_tax_id_types"],
+    queryKey: ["tax_id_types", "by_authority", authorityId],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from("authority_tax_id_types")
-        .select("*");
+        .from("tax_id_types")
+        .select("*")
+        .eq("authority_id", authorityId!);
       if (error) throw error;
-      return data;
+      return data as TaxIdType[];
     },
+    enabled: !!authorityId,
   });
 };
 
