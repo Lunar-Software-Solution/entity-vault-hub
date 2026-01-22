@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import Sidebar from "@/components/layout/Sidebar";
 import EntityFilter from "@/components/layout/EntityFilter";
 import GlobalSearch from "@/components/layout/GlobalSearch";
@@ -12,6 +12,7 @@ import ContractsSection from "@/components/sections/ContractsSection";
 import PhoneNumbersSection from "@/components/sections/PhoneNumbersSection";
 import TaxIdsSection from "@/components/sections/TaxIdsSection";
 import DocumentsSection from "@/components/sections/DocumentsSection";
+import FilingsSection from "@/components/sections/FilingsSection";
 import SettingsSection from "@/components/sections/SettingsSection";
 
 const Index = () => {
@@ -19,7 +20,7 @@ const Index = () => {
   const [selectedEntityId, setSelectedEntityId] = useState<string | null>(null);
 
   // Sections that support entity filtering
-  const filterableSections = ["bank-accounts", "credit-cards", "addresses", "contracts", "phone-numbers", "tax-ids", "documents"];
+  const filterableSections = ["bank-accounts", "credit-cards", "addresses", "contracts", "phone-numbers", "tax-ids", "documents", "filings"];
   const showFilter = filterableSections.includes(activeSection);
 
   const renderSection = () => {
@@ -28,6 +29,8 @@ const Index = () => {
         return <DashboardSection onNavigate={setActiveSection} />;
       case "entity":
         return <EntitySection />;
+      case "filings":
+        return <FilingsSection entityFilter={selectedEntityId} />;
       case "bank-accounts":
         return <BankAccountsSection entityFilter={selectedEntityId} />;
       case "credit-cards":
