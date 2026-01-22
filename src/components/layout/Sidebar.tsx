@@ -12,7 +12,10 @@ import {
   ChevronUp,
   Phone,
   Receipt,
-  Calendar
+  Calendar,
+  Briefcase,
+  Mail,
+  Users
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
@@ -35,15 +38,18 @@ interface SidebarProps {
 const menuItems = [
   { id: "dashboard", label: "Dashboard", icon: LayoutDashboard },
   { id: "entity", label: "Entities", icon: Building2 },
+  { id: "service-providers", label: "Service Providers", icon: Briefcase },
   { id: "filings", label: "Filings", icon: Calendar },
   { id: "bank-accounts", label: "Bank Accounts", icon: Wallet },
   { id: "credit-cards", label: "Credit Cards", icon: CreditCard },
   { id: "phone-numbers", label: "Phone Numbers", icon: Phone },
   { id: "tax-ids", label: "Tax IDs", icon: Receipt },
+  { id: "emails", label: "Emails", icon: Mail },
   { id: "social-media", label: "Social Media", icon: Share2 },
   { id: "addresses", label: "Addresses", icon: MapPin },
   { id: "documents", label: "Documents", icon: FileText },
   { id: "contracts", label: "Contracts", icon: FileText },
+  { id: "users", label: "Users", icon: Users },
   { id: "settings", label: "Settings", icon: Settings },
 ];
 

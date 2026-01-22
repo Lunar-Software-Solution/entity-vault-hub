@@ -209,6 +209,48 @@ export type Database = {
           },
         ]
       }
+      audit_logs: {
+        Row: {
+          action: string
+          created_at: string
+          id: string
+          ip_address: string | null
+          new_values: Json | null
+          old_values: Json | null
+          record_id: string | null
+          table_name: string | null
+          user_agent: string | null
+          user_email: string | null
+          user_id: string
+        }
+        Insert: {
+          action: string
+          created_at?: string
+          id?: string
+          ip_address?: string | null
+          new_values?: Json | null
+          old_values?: Json | null
+          record_id?: string | null
+          table_name?: string | null
+          user_agent?: string | null
+          user_email?: string | null
+          user_id: string
+        }
+        Update: {
+          action?: string
+          created_at?: string
+          id?: string
+          ip_address?: string | null
+          new_values?: Json | null
+          old_values?: Json | null
+          record_id?: string | null
+          table_name?: string | null
+          user_agent?: string | null
+          user_email?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       auditors: {
         Row: {
           address: string | null
@@ -539,6 +581,60 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      email_addresses: {
+        Row: {
+          created_at: string
+          email: string
+          entity_id: string | null
+          id: string
+          is_primary: boolean
+          is_verified: boolean
+          label: string
+          mail_server_id: string | null
+          purpose: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          entity_id?: string | null
+          id?: string
+          is_primary?: boolean
+          is_verified?: boolean
+          label: string
+          mail_server_id?: string | null
+          purpose?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          entity_id?: string | null
+          id?: string
+          is_primary?: boolean
+          is_verified?: boolean
+          label?: string
+          mail_server_id?: string | null
+          purpose?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "email_addresses_entity_id_fkey"
+            columns: ["entity_id"]
+            isOneToOne: false
+            referencedRelation: "entities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fk_email_mail_server"
+            columns: ["mail_server_id"]
+            isOneToOne: false
+            referencedRelation: "mail_servers"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       entities: {
         Row: {
@@ -997,6 +1093,57 @@ export type Database = {
           },
         ]
       }
+      mail_servers: {
+        Row: {
+          configuration: Json | null
+          created_at: string
+          domain: string | null
+          id: string
+          imap_host: string | null
+          imap_port: number | null
+          is_active: boolean
+          is_verified: boolean
+          name: string
+          provider: string
+          smtp_host: string | null
+          smtp_port: number | null
+          updated_at: string
+          username: string | null
+        }
+        Insert: {
+          configuration?: Json | null
+          created_at?: string
+          domain?: string | null
+          id?: string
+          imap_host?: string | null
+          imap_port?: number | null
+          is_active?: boolean
+          is_verified?: boolean
+          name: string
+          provider: string
+          smtp_host?: string | null
+          smtp_port?: number | null
+          updated_at?: string
+          username?: string | null
+        }
+        Update: {
+          configuration?: Json | null
+          created_at?: string
+          domain?: string | null
+          id?: string
+          imap_host?: string | null
+          imap_port?: number | null
+          is_active?: boolean
+          is_verified?: boolean
+          name?: string
+          provider?: string
+          smtp_host?: string | null
+          smtp_port?: number | null
+          updated_at?: string
+          username?: string | null
+        }
+        Relationships: []
+      }
       phone_numbers: {
         Row: {
           country_code: string
@@ -1242,15 +1389,117 @@ export type Database = {
           },
         ]
       }
+      team_invitations: {
+        Row: {
+          accepted_at: string | null
+          created_at: string
+          email: string
+          expires_at: string
+          id: string
+          invited_by: string
+          role: Database["public"]["Enums"]["app_role"]
+          status: string
+          token: string
+        }
+        Insert: {
+          accepted_at?: string | null
+          created_at?: string
+          email: string
+          expires_at: string
+          id?: string
+          invited_by: string
+          role?: Database["public"]["Enums"]["app_role"]
+          status?: string
+          token: string
+        }
+        Update: {
+          accepted_at?: string | null
+          created_at?: string
+          email?: string
+          expires_at?: string
+          id?: string
+          invited_by?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          status?: string
+          token?: string
+        }
+        Relationships: []
+      }
+      user_profiles: {
+        Row: {
+          avatar_url: string | null
+          created_at: string
+          full_name: string | null
+          id: string
+          invited_at: string | null
+          invited_by: string | null
+          last_login: string | null
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string
+          full_name?: string | null
+          id?: string
+          invited_at?: string | null
+          invited_by?: string | null
+          last_login?: string | null
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string
+          full_name?: string | null
+          id?: string
+          invited_at?: string | null
+          invited_by?: string | null
+          last_login?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_roles: {
+        Row: {
+          created_at: string
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "admin" | "moderator" | "member" | "viewer"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1377,6 +1626,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["admin", "moderator", "member", "viewer"],
+    },
   },
 } as const
