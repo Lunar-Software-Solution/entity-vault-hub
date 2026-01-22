@@ -215,22 +215,22 @@ const AIChatAssistant = () => {
           </ScrollArea>
 
           {/* Input */}
-          <div className="p-4 border-t border-border bg-muted/30">
-            <div className="flex gap-2">
+          <div className="p-4 border-t border-border/50 bg-card/80 backdrop-blur-sm">
+            <div className="flex gap-2 items-end">
               <Textarea
                 ref={inputRef}
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 onKeyDown={handleKeyDown}
                 placeholder="Paste company info, address, or ask a question..."
-                className="min-h-[44px] max-h-[120px] resize-none bg-background"
+                className="min-h-[44px] max-h-[120px] resize-none bg-muted/50 border-border/50 text-foreground placeholder:text-muted-foreground focus:bg-muted/70 transition-colors"
                 rows={1}
               />
               <Button 
                 onClick={sendMessage} 
                 disabled={!input.trim() || isLoading}
                 size="icon"
-                className="shrink-0 h-11 w-11"
+                className="shrink-0 h-11 w-11 bg-primary hover:bg-primary/90"
               >
                 {isLoading ? (
                   <Loader2 className="h-4 w-4 animate-spin" />
