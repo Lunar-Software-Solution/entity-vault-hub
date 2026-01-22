@@ -244,10 +244,12 @@ const ContractsSection = ({ entityFilter }: ContractsSectionProps) => {
                             title={contract.file_path ? "View PDF" : "No file uploaded"}
                             onClick={async () => {
                               if (contract.file_path) {
-                                const { data } = supabase.storage
+                                const { data, error } = await supabase.storage
                                   .from('contract-files')
-                                  .getPublicUrl(contract.file_path);
-                                window.open(data.publicUrl, '_blank');
+                                  .createSignedUrl(contract.file_path, 3600); // 1 hour expiry
+                                if (data?.signedUrl) {
+                                  window.open(data.signedUrl, '_blank');
+                                }
                               }
                             }}
                           >
@@ -271,13 +273,12 @@ const ContractsSection = ({ entityFilter }: ContractsSectionProps) => {
                             title={contract.file_path ? "Download PDF" : "No file uploaded"}
                             onClick={async () => {
                               if (contract.file_path) {
-                                const { data } = supabase.storage
+                                const { data, error } = await supabase.storage
                                   .from('contract-files')
-                                  .getPublicUrl(contract.file_path);
-                                const link = document.createElement('a');
-                                link.href = data.publicUrl;
-                                link.download = contract.file_name || 'contract.pdf';
-                                link.click();
+                                  .createSignedUrl(contract.file_path, 3600, { download: true });
+                                if (data?.signedUrl) {
+                                  window.open(data.signedUrl, '_blank');
+                                }
                               }
                             }}
                           >
