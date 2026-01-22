@@ -153,6 +153,7 @@ const ContractsSection = ({ entityFilter }: ContractsSectionProps) => {
                 <tr className="border-b border-border">
                   <th className="text-left p-4 text-sm font-medium text-muted-foreground">Contract</th>
                   <th className="text-left p-4 text-sm font-medium text-muted-foreground">Type</th>
+                  <th className="text-left p-4 text-sm font-medium text-muted-foreground">File</th>
                   <th className="text-left p-4 text-sm font-medium text-muted-foreground">Duration</th>
                   <th className="text-left p-4 text-sm font-medium text-muted-foreground">Status</th>
                   <th className="text-right p-4 text-sm font-medium text-muted-foreground">Actions</th>
@@ -190,6 +191,15 @@ const ContractsSection = ({ entityFilter }: ContractsSectionProps) => {
                         <span className="px-2 py-1 rounded-full bg-muted text-muted-foreground text-xs">
                           {contract.type}
                         </span>
+                      </td>
+                      <td className="p-4">
+                        {contract.file_name ? (
+                          <span className="text-sm text-foreground truncate max-w-[150px] block" title={contract.file_name}>
+                            {contract.file_name}
+                          </span>
+                        ) : (
+                          <span className="text-sm text-muted-foreground">—</span>
+                        )}
                       </td>
                       <td className="p-4">
                         <div className="flex items-center gap-2">
