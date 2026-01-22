@@ -552,6 +552,101 @@ export type Database = {
           },
         ]
       }
+      directors_ubos: {
+        Row: {
+          address: string | null
+          appointment_date: string | null
+          control_type: string | null
+          country_of_residence: string | null
+          created_at: string
+          date_of_birth: string | null
+          email: string | null
+          entity_id: string
+          id: string
+          id_document_number: string | null
+          id_document_type: string | null
+          id_expiry_date: string | null
+          is_active: boolean | null
+          is_pep: boolean | null
+          name: string
+          nationality: string | null
+          notes: string | null
+          ownership_percentage: number | null
+          passport_number: string | null
+          pep_details: string | null
+          phone: string | null
+          resignation_date: string | null
+          role_type: string
+          tax_id: string | null
+          title: string | null
+          updated_at: string
+        }
+        Insert: {
+          address?: string | null
+          appointment_date?: string | null
+          control_type?: string | null
+          country_of_residence?: string | null
+          created_at?: string
+          date_of_birth?: string | null
+          email?: string | null
+          entity_id: string
+          id?: string
+          id_document_number?: string | null
+          id_document_type?: string | null
+          id_expiry_date?: string | null
+          is_active?: boolean | null
+          is_pep?: boolean | null
+          name: string
+          nationality?: string | null
+          notes?: string | null
+          ownership_percentage?: number | null
+          passport_number?: string | null
+          pep_details?: string | null
+          phone?: string | null
+          resignation_date?: string | null
+          role_type?: string
+          tax_id?: string | null
+          title?: string | null
+          updated_at?: string
+        }
+        Update: {
+          address?: string | null
+          appointment_date?: string | null
+          control_type?: string | null
+          country_of_residence?: string | null
+          created_at?: string
+          date_of_birth?: string | null
+          email?: string | null
+          entity_id?: string
+          id?: string
+          id_document_number?: string | null
+          id_document_type?: string | null
+          id_expiry_date?: string | null
+          is_active?: boolean | null
+          is_pep?: boolean | null
+          name?: string
+          nationality?: string | null
+          notes?: string | null
+          ownership_percentage?: number | null
+          passport_number?: string | null
+          pep_details?: string | null
+          phone?: string | null
+          resignation_date?: string | null
+          role_type?: string
+          tax_id?: string | null
+          title?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "directors_ubos_entity_id_fkey"
+            columns: ["entity_id"]
+            isOneToOne: false
+            referencedRelation: "entities"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       document_types: {
         Row: {
           category: string

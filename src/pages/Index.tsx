@@ -18,6 +18,7 @@ import ServiceProvidersSection from "@/components/sections/ServiceProvidersSecti
 import EmailSection from "@/components/sections/EmailSection";
 import UserManagementSection from "@/components/sections/UserManagementSection";
 import CapTableSection from "@/components/sections/CapTableSection";
+import DirectorsUboSection from "@/components/sections/DirectorsUboSection";
 import AIChatAssistant from "@/components/ai/AIChatAssistant";
 
 const Index = () => {
@@ -25,7 +26,7 @@ const Index = () => {
   const [selectedEntityId, setSelectedEntityId] = useState<string | null>(null);
 
   // Sections that support entity filtering
-  const filterableSections = ["bank-accounts", "credit-cards", "addresses", "contracts", "phone-numbers", "tax-ids", "documents", "filings", "social-media"];
+  const filterableSections = ["bank-accounts", "credit-cards", "addresses", "contracts", "phone-numbers", "tax-ids", "documents", "filings", "social-media", "directors-ubo"];
   const showFilter = filterableSections.includes(activeSection);
 
   const renderSection = () => {
@@ -34,6 +35,8 @@ const Index = () => {
         return <DashboardSection onNavigate={setActiveSection} />;
       case "entity":
         return <EntitySection />;
+      case "directors-ubo":
+        return <DirectorsUboSection entityFilter={selectedEntityId} />;
       case "cap-table":
         return <CapTableSection />;
       case "service-providers":
