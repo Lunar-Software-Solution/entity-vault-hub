@@ -1,7 +1,14 @@
+import { useState } from "react";
 import { Plus, MapPin, Home, Building2, Package, Edit2, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAddresses } from "@/hooks/usePortalData";
+import { useCreateAddress, useUpdateAddress, useDeleteAddress } from "@/hooks/usePortalMutations";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import AddressForm from "@/components/forms/AddressForm";
+import DeleteConfirmDialog from "@/components/shared/DeleteConfirmDialog";
+import type { Address } from "@/hooks/usePortalData";
+import type { AddressFormData } from "@/lib/formSchemas";
 
 const getAddressIcon = (type: string) => {
   switch (type.toLowerCase()) {
@@ -18,6 +25,46 @@ const getAddressIcon = (type: string) => {
 
 const AddressesSection = () => {
   const { data: addresses, isLoading } = useAddresses();
+  
+  const [isFormOpen, setIsFormOpen] = useState(false);
+  const [editingAddress, setEditingAddress] = useState<Address | null>(null);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+  
+  const createAddress = useCreateAddress();
+  const updateAddress = useUpdateAddress();
+  const deleteAddress = useDeleteAddress();
+
+  const handleSubmit = (data: AddressFormData) => {
+    const cleanData = {
+      ...data,
+      state: data.state || null,
+      zip: data.zip || null,
+    };
+    
+    if (editingAddress) {
+      updateAddress.mutate({ id: editingAddress.id, ...cleanData }, { 
+        onSuccess: () => { setIsFormOpen(false); setEditingAddress(null); }
+      });
+    } else {
+      createAddress.mutate(cleanData, { onSuccess: () => setIsFormOpen(false) });
+    }
+  };
+
+  const handleEdit = (address: Address) => {
+    setEditingAddress(address);
+    setIsFormOpen(true);
+  };
+
+  const handleDelete = () => {
+    if (deletingId) {
+      deleteAddress.mutate(deletingId, { onSuccess: () => setDeletingId(null) });
+    }
+  };
+
+  const handleCloseForm = () => {
+    setIsFormOpen(false);
+    setEditingAddress(null);
+  };
 
   if (isLoading) {
     return (
@@ -47,7 +94,7 @@ const AddressesSection = () => {
           <h2 className="text-2xl font-bold text-foreground mb-2">Addresses</h2>
           <p className="text-muted-foreground">Manage your registered addresses for different purposes.</p>
         </div>
-        <Button className="gap-2">
+        <Button className="gap-2" onClick={() => setIsFormOpen(true)}>
           <Plus className="w-4 h-4" />
           Add Address
         </Button>
@@ -56,7 +103,7 @@ const AddressesSection = () => {
       {isEmpty ? (
         <div className="glass-card rounded-xl p-12 text-center">
           <p className="text-muted-foreground mb-4">No addresses added yet.</p>
-          <Button className="gap-2">
+          <Button className="gap-2" onClick={() => setIsFormOpen(true)}>
             <Plus className="w-4 h-4" />
             Add Your First Address
           </Button>
@@ -86,10 +133,16 @@ const AddressesSection = () => {
                     </div>
                   </div>
                   <div className="flex gap-1">
-                    <button className="p-2 hover:bg-muted rounded-lg transition-colors">
+                    <button 
+                      className="p-2 hover:bg-muted rounded-lg transition-colors"
+                      onClick={() => handleEdit(address)}
+                    >
                       <Edit2 className="w-4 h-4 text-muted-foreground" />
                     </button>
-                    <button className="p-2 hover:bg-destructive/10 rounded-lg transition-colors">
+                    <button 
+                      className="p-2 hover:bg-destructive/10 rounded-lg transition-colors"
+                      onClick={() => setDeletingId(address.id)}
+                    >
                       <Trash2 className="w-4 h-4 text-destructive" />
                     </button>
                   </div>
@@ -115,6 +168,29 @@ const AddressesSection = () => {
           })}
         </div>
       )}
+
+      <Dialog open={isFormOpen} onOpenChange={handleCloseForm}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>{editingAddress ? "Edit Address" : "Add Address"}</DialogTitle>
+          </DialogHeader>
+          <AddressForm
+            address={editingAddress}
+            onSubmit={handleSubmit}
+            onCancel={handleCloseForm}
+            isLoading={createAddress.isPending || updateAddress.isPending}
+          />
+        </DialogContent>
+      </Dialog>
+
+      <DeleteConfirmDialog
+        open={!!deletingId}
+        onOpenChange={(open) => !open && setDeletingId(null)}
+        onConfirm={handleDelete}
+        title="Delete Address"
+        description="This will permanently delete this address."
+        isLoading={deleteAddress.isPending}
+      />
     </div>
   );
 };

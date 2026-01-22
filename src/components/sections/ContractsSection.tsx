@@ -1,12 +1,61 @@
-import { Plus, FileText, Download, Eye, Calendar, AlertCircle, CheckCircle2 } from "lucide-react";
+import { useState } from "react";
+import { Plus, FileText, Download, Eye, Calendar, AlertCircle, CheckCircle2, Edit2, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useContracts } from "@/hooks/usePortalData";
+import { useCreateContract, useUpdateContract, useDeleteContract } from "@/hooks/usePortalMutations";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import ContractForm from "@/components/forms/ContractForm";
+import DeleteConfirmDialog from "@/components/shared/DeleteConfirmDialog";
 import { format, differenceInDays } from "date-fns";
+import type { Contract } from "@/hooks/usePortalData";
+import type { ContractFormData } from "@/lib/formSchemas";
 
 const ContractsSection = () => {
   const { data: contracts, isLoading } = useContracts();
+  
+  const [isFormOpen, setIsFormOpen] = useState(false);
+  const [editingContract, setEditingContract] = useState<Contract | null>(null);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+  
+  const createContract = useCreateContract();
+  const updateContract = useUpdateContract();
+  const deleteContract = useDeleteContract();
+
+  const handleSubmit = (data: ContractFormData) => {
+    const cleanData = {
+      ...data,
+      start_date: data.start_date || null,
+      end_date: data.end_date || null,
+      value: data.value || null,
+      value_numeric: data.value_numeric || null,
+    };
+    
+    if (editingContract) {
+      updateContract.mutate({ id: editingContract.id, ...cleanData }, { 
+        onSuccess: () => { setIsFormOpen(false); setEditingContract(null); }
+      });
+    } else {
+      createContract.mutate(cleanData, { onSuccess: () => setIsFormOpen(false) });
+    }
+  };
+
+  const handleEdit = (contract: Contract) => {
+    setEditingContract(contract);
+    setIsFormOpen(true);
+  };
+
+  const handleDelete = () => {
+    if (deletingId) {
+      deleteContract.mutate(deletingId, { onSuccess: () => setDeletingId(null) });
+    }
+  };
+
+  const handleCloseForm = () => {
+    setIsFormOpen(false);
+    setEditingContract(null);
+  };
 
   if (isLoading) {
     return (
@@ -40,7 +89,7 @@ const ContractsSection = () => {
           <h2 className="text-2xl font-bold text-foreground mb-2">Contracts</h2>
           <p className="text-muted-foreground">Track and manage all your business and personal contracts.</p>
         </div>
-        <Button className="gap-2">
+        <Button className="gap-2" onClick={() => setIsFormOpen(true)}>
           <Plus className="w-4 h-4" />
           Add Contract
         </Button>
@@ -88,7 +137,7 @@ const ContractsSection = () => {
       {isEmpty ? (
         <div className="glass-card rounded-xl p-12 text-center">
           <p className="text-muted-foreground mb-4">No contracts added yet.</p>
-          <Button className="gap-2">
+          <Button className="gap-2" onClick={() => setIsFormOpen(true)}>
             <Plus className="w-4 h-4" />
             Add Your First Contract
           </Button>
@@ -164,12 +213,25 @@ const ContractsSection = () => {
                           {contract.status === "active" && "Active"}
                           {contract.status === "expiring-soon" && (daysUntilExpiry !== null ? `${daysUntilExpiry} days left` : "Expiring")}
                           {contract.status === "expired" && "Expired"}
+                          {!["active", "expiring-soon", "expired"].includes(contract.status) && contract.status}
                         </span>
                       </td>
                       <td className="p-4">
                         <div className="flex items-center justify-end gap-1">
                           <button className="p-2 hover:bg-muted rounded-lg transition-colors">
                             <Eye className="w-4 h-4 text-muted-foreground" />
+                          </button>
+                          <button 
+                            className="p-2 hover:bg-muted rounded-lg transition-colors"
+                            onClick={() => handleEdit(contract)}
+                          >
+                            <Edit2 className="w-4 h-4 text-muted-foreground" />
+                          </button>
+                          <button 
+                            className="p-2 hover:bg-destructive/10 rounded-lg transition-colors"
+                            onClick={() => setDeletingId(contract.id)}
+                          >
+                            <Trash2 className="w-4 h-4 text-destructive" />
                           </button>
                           <button className="p-2 hover:bg-muted rounded-lg transition-colors">
                             <Download className="w-4 h-4 text-muted-foreground" />
@@ -184,6 +246,29 @@ const ContractsSection = () => {
           </div>
         </div>
       )}
+
+      <Dialog open={isFormOpen} onOpenChange={handleCloseForm}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>{editingContract ? "Edit Contract" : "Add Contract"}</DialogTitle>
+          </DialogHeader>
+          <ContractForm
+            contract={editingContract}
+            onSubmit={handleSubmit}
+            onCancel={handleCloseForm}
+            isLoading={createContract.isPending || updateContract.isPending}
+          />
+        </DialogContent>
+      </Dialog>
+
+      <DeleteConfirmDialog
+        open={!!deletingId}
+        onOpenChange={(open) => !open && setDeletingId(null)}
+        onConfirm={handleDelete}
+        title="Delete Contract"
+        description="This will permanently delete this contract."
+        isLoading={deleteContract.isPending}
+      />
     </div>
   );
 };

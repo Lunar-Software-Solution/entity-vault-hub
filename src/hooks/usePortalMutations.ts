@@ -1,0 +1,292 @@
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import type { TablesInsert, TablesUpdate } from "@/integrations/supabase/types";
+import { toast } from "sonner";
+
+// Entity mutations
+export const useCreateEntity = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (entity: TablesInsert<"entities">) => {
+      const { data, error } = await supabase.from("entities").insert(entity).select().single();
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["entities"] });
+      toast.success("Entity created successfully");
+    },
+    onError: (error) => toast.error(`Failed to create entity: ${error.message}`),
+  });
+};
+
+export const useUpdateEntity = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, ...entity }: TablesUpdate<"entities"> & { id: string }) => {
+      const { data, error } = await supabase.from("entities").update(entity).eq("id", id).select().single();
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["entities"] });
+      toast.success("Entity updated successfully");
+    },
+    onError: (error) => toast.error(`Failed to update entity: ${error.message}`),
+  });
+};
+
+export const useDeleteEntity = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from("entities").delete().eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["entities"] });
+      toast.success("Entity deleted successfully");
+    },
+    onError: (error) => toast.error(`Failed to delete entity: ${error.message}`),
+  });
+};
+
+// Bank Account mutations
+export const useCreateBankAccount = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (account: TablesInsert<"bank_accounts">) => {
+      const { data, error } = await supabase.from("bank_accounts").insert(account).select().single();
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["bank_accounts"] });
+      toast.success("Bank account added successfully");
+    },
+    onError: (error) => toast.error(`Failed to add bank account: ${error.message}`),
+  });
+};
+
+export const useUpdateBankAccount = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, ...account }: TablesUpdate<"bank_accounts"> & { id: string }) => {
+      const { data, error } = await supabase.from("bank_accounts").update(account).eq("id", id).select().single();
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["bank_accounts"] });
+      toast.success("Bank account updated successfully");
+    },
+    onError: (error) => toast.error(`Failed to update bank account: ${error.message}`),
+  });
+};
+
+export const useDeleteBankAccount = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from("bank_accounts").delete().eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["bank_accounts"] });
+      toast.success("Bank account deleted successfully");
+    },
+    onError: (error) => toast.error(`Failed to delete bank account: ${error.message}`),
+  });
+};
+
+// Credit Card mutations
+export const useCreateCreditCard = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (card: TablesInsert<"credit_cards">) => {
+      const { data, error } = await supabase.from("credit_cards").insert(card).select().single();
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["credit_cards"] });
+      toast.success("Credit card added successfully");
+    },
+    onError: (error) => toast.error(`Failed to add credit card: ${error.message}`),
+  });
+};
+
+export const useUpdateCreditCard = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, ...card }: TablesUpdate<"credit_cards"> & { id: string }) => {
+      const { data, error } = await supabase.from("credit_cards").update(card).eq("id", id).select().single();
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["credit_cards"] });
+      toast.success("Credit card updated successfully");
+    },
+    onError: (error) => toast.error(`Failed to update credit card: ${error.message}`),
+  });
+};
+
+export const useDeleteCreditCard = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from("credit_cards").delete().eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["credit_cards"] });
+      toast.success("Credit card deleted successfully");
+    },
+    onError: (error) => toast.error(`Failed to delete credit card: ${error.message}`),
+  });
+};
+
+// Address mutations
+export const useCreateAddress = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (address: TablesInsert<"addresses">) => {
+      const { data, error } = await supabase.from("addresses").insert(address).select().single();
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["addresses"] });
+      toast.success("Address added successfully");
+    },
+    onError: (error) => toast.error(`Failed to add address: ${error.message}`),
+  });
+};
+
+export const useUpdateAddress = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, ...address }: TablesUpdate<"addresses"> & { id: string }) => {
+      const { data, error } = await supabase.from("addresses").update(address).eq("id", id).select().single();
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["addresses"] });
+      toast.success("Address updated successfully");
+    },
+    onError: (error) => toast.error(`Failed to update address: ${error.message}`),
+  });
+};
+
+export const useDeleteAddress = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from("addresses").delete().eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["addresses"] });
+      toast.success("Address deleted successfully");
+    },
+    onError: (error) => toast.error(`Failed to delete address: ${error.message}`),
+  });
+};
+
+// Contract mutations
+export const useCreateContract = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (contract: TablesInsert<"contracts">) => {
+      const { data, error } = await supabase.from("contracts").insert(contract).select().single();
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["contracts"] });
+      toast.success("Contract added successfully");
+    },
+    onError: (error) => toast.error(`Failed to add contract: ${error.message}`),
+  });
+};
+
+export const useUpdateContract = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, ...contract }: TablesUpdate<"contracts"> & { id: string }) => {
+      const { data, error } = await supabase.from("contracts").update(contract).eq("id", id).select().single();
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["contracts"] });
+      toast.success("Contract updated successfully");
+    },
+    onError: (error) => toast.error(`Failed to update contract: ${error.message}`),
+  });
+};
+
+export const useDeleteContract = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from("contracts").delete().eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["contracts"] });
+      toast.success("Contract deleted successfully");
+    },
+    onError: (error) => toast.error(`Failed to delete contract: ${error.message}`),
+  });
+};
+
+// Social Media Account mutations
+export const useCreateSocialMediaAccount = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (account: TablesInsert<"social_media_accounts">) => {
+      const { data, error } = await supabase.from("social_media_accounts").insert(account).select().single();
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["social_media_accounts"] });
+      toast.success("Social media account linked successfully");
+    },
+    onError: (error) => toast.error(`Failed to link account: ${error.message}`),
+  });
+};
+
+export const useUpdateSocialMediaAccount = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, ...account }: TablesUpdate<"social_media_accounts"> & { id: string }) => {
+      const { data, error } = await supabase.from("social_media_accounts").update(account).eq("id", id).select().single();
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["social_media_accounts"] });
+      toast.success("Social media account updated successfully");
+    },
+    onError: (error) => toast.error(`Failed to update account: ${error.message}`),
+  });
+};
+
+export const useDeleteSocialMediaAccount = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from("social_media_accounts").delete().eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["social_media_accounts"] });
+      toast.success("Social media account removed successfully");
+    },
+    onError: (error) => toast.error(`Failed to remove account: ${error.message}`),
+  });
+};

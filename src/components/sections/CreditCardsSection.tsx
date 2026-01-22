@@ -1,11 +1,61 @@
-import { Plus, CreditCard, MoreVertical } from "lucide-react";
+import { useState } from "react";
+import { Plus, CreditCard, MoreVertical, Edit2, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useCreditCards } from "@/hooks/usePortalData";
+import { useCreateCreditCard, useUpdateCreditCard, useDeleteCreditCard } from "@/hooks/usePortalMutations";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import CreditCardForm from "@/components/forms/CreditCardForm";
+import DeleteConfirmDialog from "@/components/shared/DeleteConfirmDialog";
 import { format } from "date-fns";
+import type { CreditCard as CreditCardType } from "@/hooks/usePortalData";
+import type { CreditCardFormData } from "@/lib/formSchemas";
 
 const CreditCardsSection = () => {
   const { data: creditCards, isLoading } = useCreditCards();
+  
+  const [isFormOpen, setIsFormOpen] = useState(false);
+  const [editingCard, setEditingCard] = useState<CreditCardType | null>(null);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+  
+  const createCard = useCreateCreditCard();
+  const updateCard = useUpdateCreditCard();
+  const deleteCard = useDeleteCreditCard();
+
+  const handleSubmit = (data: CreditCardFormData) => {
+    const cleanData = {
+      ...data,
+      cardholder_name: data.cardholder_name || null,
+      expiry_date: data.expiry_date || null,
+      minimum_payment: data.minimum_payment || null,
+      due_date: data.due_date || null,
+    };
+    
+    if (editingCard) {
+      updateCard.mutate({ id: editingCard.id, ...cleanData }, { 
+        onSuccess: () => { setIsFormOpen(false); setEditingCard(null); }
+      });
+    } else {
+      createCard.mutate(cleanData, { onSuccess: () => setIsFormOpen(false) });
+    }
+  };
+
+  const handleEdit = (card: CreditCardType) => {
+    setEditingCard(card);
+    setIsFormOpen(true);
+  };
+
+  const handleDelete = () => {
+    if (deletingId) {
+      deleteCard.mutate(deletingId, { onSuccess: () => setDeletingId(null) });
+    }
+  };
+
+  const handleCloseForm = () => {
+    setIsFormOpen(false);
+    setEditingCard(null);
+  };
 
   if (isLoading) {
     return (
@@ -35,7 +85,7 @@ const CreditCardsSection = () => {
           <h2 className="text-2xl font-bold text-foreground mb-2">Credit Cards</h2>
           <p className="text-muted-foreground">View and manage your credit cards and payments.</p>
         </div>
-        <Button className="gap-2">
+        <Button className="gap-2" onClick={() => setIsFormOpen(true)}>
           <Plus className="w-4 h-4" />
           Add Card
         </Button>
@@ -44,7 +94,7 @@ const CreditCardsSection = () => {
       {isEmpty ? (
         <div className="glass-card rounded-xl p-12 text-center">
           <p className="text-muted-foreground mb-4">No credit cards added yet.</p>
-          <Button className="gap-2">
+          <Button className="gap-2" onClick={() => setIsFormOpen(true)}>
             <Plus className="w-4 h-4" />
             Add Your First Card
           </Button>
@@ -63,9 +113,21 @@ const CreditCardsSection = () => {
                   <div className="relative">
                     <div className="flex items-center justify-between mb-8">
                       <CreditCard className="w-10 h-10" />
-                      <button className="p-1 hover:bg-white/20 rounded transition-colors">
-                        <MoreVertical className="w-5 h-5" />
-                      </button>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <button className="p-1 hover:bg-white/20 rounded transition-colors">
+                            <MoreVertical className="w-5 h-5" />
+                          </button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem onClick={() => handleEdit(card)}>
+                            <Edit2 className="w-4 h-4 mr-2" /> Edit
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => setDeletingId(card.id)} className="text-destructive">
+                            <Trash2 className="w-4 h-4 mr-2" /> Delete
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
                     </div>
                     <p className="font-mono text-lg tracking-wider mb-4">{card.card_number}</p>
                     <div className="flex items-center justify-between">
@@ -129,6 +191,29 @@ const CreditCardsSection = () => {
           })}
         </div>
       )}
+
+      <Dialog open={isFormOpen} onOpenChange={handleCloseForm}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>{editingCard ? "Edit Credit Card" : "Add Credit Card"}</DialogTitle>
+          </DialogHeader>
+          <CreditCardForm
+            card={editingCard}
+            onSubmit={handleSubmit}
+            onCancel={handleCloseForm}
+            isLoading={createCard.isPending || updateCard.isPending}
+          />
+        </DialogContent>
+      </Dialog>
+
+      <DeleteConfirmDialog
+        open={!!deletingId}
+        onOpenChange={(open) => !open && setDeletingId(null)}
+        onConfirm={handleDelete}
+        title="Delete Credit Card"
+        description="This will permanently delete this credit card."
+        isLoading={deleteCard.isPending}
+      />
     </div>
   );
 };

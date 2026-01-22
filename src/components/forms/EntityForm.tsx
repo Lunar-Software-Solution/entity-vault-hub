@@ -1,0 +1,166 @@
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { entitySchema, EntityFormData } from "@/lib/formSchemas";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
+import type { Entity } from "@/hooks/usePortalData";
+
+interface EntityFormProps {
+  entity?: Entity | null;
+  onSubmit: (data: EntityFormData) => void;
+  onCancel: () => void;
+  isLoading?: boolean;
+}
+
+const EntityForm = ({ entity, onSubmit, onCancel, isLoading }: EntityFormProps) => {
+  const form = useForm<EntityFormData>({
+    resolver: zodResolver(entitySchema),
+    defaultValues: {
+      name: entity?.name ?? "",
+      type: entity?.type ?? "LLC",
+      status: entity?.status ?? "Active",
+      email: entity?.email ?? "",
+      phone: entity?.phone ?? "",
+      website: entity?.website ?? "",
+      jurisdiction: entity?.jurisdiction ?? "",
+      founded_date: entity?.founded_date ?? "",
+      ein_tax_id: entity?.ein_tax_id ?? "",
+      registration_number: entity?.registration_number ?? "",
+      duns_number: entity?.duns_number ?? "",
+      is_verified: entity?.is_verified ?? false,
+    },
+  });
+
+  return (
+    <Form {...form}>
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <FormField control={form.control} name="name" render={({ field }) => (
+            <FormItem>
+              <FormLabel>Entity Name *</FormLabel>
+              <FormControl><Input placeholder="Acme Corporation" {...field} /></FormControl>
+              <FormMessage />
+            </FormItem>
+          )} />
+          
+          <FormField control={form.control} name="type" render={({ field }) => (
+            <FormItem>
+              <FormLabel>Entity Type *</FormLabel>
+              <Select onValueChange={field.onChange} defaultValue={field.value}>
+                <FormControl><SelectTrigger><SelectValue placeholder="Select type" /></SelectTrigger></FormControl>
+                <SelectContent>
+                  <SelectItem value="LLC">LLC</SelectItem>
+                  <SelectItem value="Corporation">Corporation</SelectItem>
+                  <SelectItem value="Partnership">Partnership</SelectItem>
+                  <SelectItem value="Sole Proprietorship">Sole Proprietorship</SelectItem>
+                  <SelectItem value="Non-Profit">Non-Profit</SelectItem>
+                  <SelectItem value="Trust">Trust</SelectItem>
+                </SelectContent>
+              </Select>
+              <FormMessage />
+            </FormItem>
+          )} />
+
+          <FormField control={form.control} name="status" render={({ field }) => (
+            <FormItem>
+              <FormLabel>Status *</FormLabel>
+              <Select onValueChange={field.onChange} defaultValue={field.value}>
+                <FormControl><SelectTrigger><SelectValue placeholder="Select status" /></SelectTrigger></FormControl>
+                <SelectContent>
+                  <SelectItem value="Active">Active</SelectItem>
+                  <SelectItem value="Inactive">Inactive</SelectItem>
+                  <SelectItem value="Pending">Pending</SelectItem>
+                  <SelectItem value="Dissolved">Dissolved</SelectItem>
+                </SelectContent>
+              </Select>
+              <FormMessage />
+            </FormItem>
+          )} />
+
+          <FormField control={form.control} name="jurisdiction" render={({ field }) => (
+            <FormItem>
+              <FormLabel>Jurisdiction</FormLabel>
+              <FormControl><Input placeholder="Delaware, USA" {...field} /></FormControl>
+              <FormMessage />
+            </FormItem>
+          )} />
+
+          <FormField control={form.control} name="email" render={({ field }) => (
+            <FormItem>
+              <FormLabel>Email</FormLabel>
+              <FormControl><Input type="email" placeholder="contact@company.com" {...field} /></FormControl>
+              <FormMessage />
+            </FormItem>
+          )} />
+
+          <FormField control={form.control} name="phone" render={({ field }) => (
+            <FormItem>
+              <FormLabel>Phone</FormLabel>
+              <FormControl><Input placeholder="+1 (555) 123-4567" {...field} /></FormControl>
+              <FormMessage />
+            </FormItem>
+          )} />
+
+          <FormField control={form.control} name="website" render={({ field }) => (
+            <FormItem>
+              <FormLabel>Website</FormLabel>
+              <FormControl><Input placeholder="https://www.company.com" {...field} /></FormControl>
+              <FormMessage />
+            </FormItem>
+          )} />
+
+          <FormField control={form.control} name="founded_date" render={({ field }) => (
+            <FormItem>
+              <FormLabel>Founded Date</FormLabel>
+              <FormControl><Input type="date" {...field} /></FormControl>
+              <FormMessage />
+            </FormItem>
+          )} />
+
+          <FormField control={form.control} name="ein_tax_id" render={({ field }) => (
+            <FormItem>
+              <FormLabel>EIN / Tax ID</FormLabel>
+              <FormControl><Input placeholder="XX-XXXXXXX" {...field} /></FormControl>
+              <FormMessage />
+            </FormItem>
+          )} />
+
+          <FormField control={form.control} name="registration_number" render={({ field }) => (
+            <FormItem>
+              <FormLabel>Registration Number</FormLabel>
+              <FormControl><Input placeholder="REG-123456" {...field} /></FormControl>
+              <FormMessage />
+            </FormItem>
+          )} />
+
+          <FormField control={form.control} name="duns_number" render={({ field }) => (
+            <FormItem>
+              <FormLabel>DUNS Number</FormLabel>
+              <FormControl><Input placeholder="XX-XXX-XXXX" {...field} /></FormControl>
+              <FormMessage />
+            </FormItem>
+          )} />
+
+          <FormField control={form.control} name="is_verified" render={({ field }) => (
+            <FormItem className="flex items-center justify-between rounded-lg border p-3">
+              <FormLabel className="cursor-pointer">Verified Entity</FormLabel>
+              <FormControl><Switch checked={field.value} onCheckedChange={field.onChange} /></FormControl>
+            </FormItem>
+          )} />
+        </div>
+
+        <div className="flex justify-end gap-3 pt-4">
+          <Button type="button" variant="outline" onClick={onCancel}>Cancel</Button>
+          <Button type="submit" disabled={isLoading}>
+            {isLoading ? "Saving..." : entity ? "Update Entity" : "Create Entity"}
+          </Button>
+        </div>
+      </form>
+    </Form>
+  );
+};
+
+export default EntityForm;
