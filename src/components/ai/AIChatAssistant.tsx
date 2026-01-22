@@ -69,18 +69,13 @@ const AIChatAssistant = () => {
 
       // Invalidate queries to refresh data if tools were used
       if (data.toolsUsed?.length) {
-        queryClient.invalidateQueries({ queryKey: ["entities"] });
-        queryClient.invalidateQueries({ queryKey: ["addresses"] });
-        queryClient.invalidateQueries({ queryKey: ["bank-accounts"] });
-        queryClient.invalidateQueries({ queryKey: ["phone-numbers"] });
-        queryClient.invalidateQueries({ queryKey: ["tax-ids"] });
-        queryClient.invalidateQueries({ queryKey: ["entity-filings"] });
-        queryClient.invalidateQueries({ queryKey: ["law-firms"] });
-        queryClient.invalidateQueries({ queryKey: ["accountant-firms"] });
-        queryClient.invalidateQueries({ queryKey: ["consultants"] });
-        queryClient.invalidateQueries({ queryKey: ["registration-agents"] });
-        queryClient.invalidateQueries({ queryKey: ["advisors"] });
-        queryClient.invalidateQueries({ queryKey: ["auditors"] });
+        // Invalidate all data queries
+        const queryKeys = [
+          "entities", "addresses", "bank-accounts", "phone-numbers", "tax-ids",
+          "entity-filings", "law-firms", "accountant-firms", "consultants",
+          "registration-agents", "advisors", "auditors", "credit-cards", "contracts"
+        ];
+        queryKeys.forEach(key => queryClient.invalidateQueries({ queryKey: [key] }));
         toast.success("Data updated!", { description: `Used: ${data.toolsUsed.join(", ")}` });
       }
     } catch (error: any) {
