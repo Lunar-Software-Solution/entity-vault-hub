@@ -244,11 +244,11 @@ const ContractsSection = ({ entityFilter }: ContractsSectionProps) => {
                             title={contract.file_path ? "View PDF" : "No file uploaded"}
                             onClick={async () => {
                               if (contract.file_path) {
-                                const { data, error } = await supabase.storage
+                                const { data } = await supabase.storage
                                   .from('contract-files')
-                                  .createSignedUrl(contract.file_path, 3600); // 1 hour expiry
+                                  .createSignedUrl(contract.file_path, 3600);
                                 if (data?.signedUrl) {
-                                  window.open(data.signedUrl, '_blank');
+                                  window.open(data.signedUrl, '_blank', 'noopener,noreferrer');
                                 }
                               }
                             }}
@@ -273,11 +273,16 @@ const ContractsSection = ({ entityFilter }: ContractsSectionProps) => {
                             title={contract.file_path ? "Download PDF" : "No file uploaded"}
                             onClick={async () => {
                               if (contract.file_path) {
-                                const { data, error } = await supabase.storage
+                                const { data } = await supabase.storage
                                   .from('contract-files')
-                                  .createSignedUrl(contract.file_path, 3600, { download: true });
-                                if (data?.signedUrl) {
-                                  window.open(data.signedUrl, '_blank');
+                                  .download(contract.file_path);
+                                if (data) {
+                                  const url = URL.createObjectURL(data);
+                                  const link = document.createElement('a');
+                                  link.href = url;
+                                  link.download = contract.file_name || 'contract.pdf';
+                                  link.click();
+                                  URL.revokeObjectURL(url);
                                 }
                               }
                             }}
