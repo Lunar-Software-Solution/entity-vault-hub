@@ -197,7 +197,7 @@ const LinkedFilings = ({ entityId }: LinkedFilingsProps) => {
       {/* Delete Confirm */}
       <DeleteConfirmDialog
         open={!!deleting}
-        onClose={() => setDeleting(null)}
+        onOpenChange={(open) => !open && setDeleting(null)}
         onConfirm={() => {
           if (deleting) {
             deleteFiling.mutate(deleting.id);

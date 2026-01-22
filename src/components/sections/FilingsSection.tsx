@@ -569,7 +569,7 @@ const FilingsSection = ({ entityFilter }: FilingsSectionProps) => {
       {/* Delete Filing Confirm */}
       <DeleteConfirmDialog
         open={!!deletingFiling}
-        onClose={() => setDeletingFiling(null)}
+        onOpenChange={(open) => !open && setDeletingFiling(null)}
         onConfirm={() => {
           if (deletingFiling) {
             deleteFiling.mutate(deletingFiling.id);
@@ -583,7 +583,7 @@ const FilingsSection = ({ entityFilter }: FilingsSectionProps) => {
       {/* Delete Task Confirm */}
       <DeleteConfirmDialog
         open={!!deletingTask}
-        onClose={() => setDeletingTask(null)}
+        onOpenChange={(open) => !open && setDeletingTask(null)}
         onConfirm={() => {
           if (deletingTask) {
             deleteTask.mutate(deletingTask.id);
