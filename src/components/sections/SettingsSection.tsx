@@ -284,24 +284,24 @@ const SettingsSection = () => {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Name</TableHead>
-                  <TableHead>Country</TableHead>
-                  <TableHead>Description</TableHead>
-                  <TableHead className="w-24">Actions</TableHead>
+                  <TableHead className="min-w-[150px]">Name</TableHead>
+                  <TableHead className="min-w-[150px]">Country</TableHead>
+                  <TableHead className="min-w-[200px]">Description</TableHead>
+                  <TableHead className="w-28">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {issuingAuthorities?.map((authority) => (
                   <TableRow key={authority.id}>
-                    <TableCell className="font-medium">{authority.name}</TableCell>
-                    <TableCell>{authority.country}</TableCell>
+                    <TableCell className="font-medium text-foreground">{authority.name}</TableCell>
+                    <TableCell className="text-foreground">{authority.country}</TableCell>
                     <TableCell className="text-muted-foreground text-sm">{authority.description || "—"}</TableCell>
                     <TableCell>
                       <div className="flex gap-1">
                         <Button 
                           variant="ghost" 
                           size="icon" 
-                          className="h-8 w-8"
+                          className="h-8 w-8 text-primary hover:text-primary"
                           onClick={() => { setEditingAuthority(authority); setShowAuthorityForm(true); }}
                         >
                           <Edit className="w-4 h-4" />
