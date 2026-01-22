@@ -17,6 +17,7 @@ import SettingsSection from "@/components/sections/SettingsSection";
 import ServiceProvidersSection from "@/components/sections/ServiceProvidersSection";
 import EmailSection from "@/components/sections/EmailSection";
 import UserManagementSection from "@/components/sections/UserManagementSection";
+import CapTableSection from "@/components/sections/CapTableSection";
 import AIChatAssistant from "@/components/ai/AIChatAssistant";
 
 const Index = () => {
@@ -33,6 +34,8 @@ const Index = () => {
         return <DashboardSection onNavigate={setActiveSection} />;
       case "entity":
         return <EntitySection />;
+      case "cap-table":
+        return <CapTableSection />;
       case "service-providers":
         return <ServiceProvidersSection />;
       case "filings":
