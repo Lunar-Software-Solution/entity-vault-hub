@@ -10,7 +10,8 @@ import {
   LogOut,
   User,
   ChevronUp,
-  Phone
+  Phone,
+  Receipt
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
@@ -36,6 +37,7 @@ const menuItems = [
   { id: "bank-accounts", label: "Bank Accounts", icon: Wallet },
   { id: "credit-cards", label: "Credit Cards", icon: CreditCard },
   { id: "phone-numbers", label: "Phone Numbers", icon: Phone },
+  { id: "tax-ids", label: "Tax IDs", icon: Receipt },
   { id: "social-media", label: "Social Media", icon: Share2 },
   { id: "addresses", label: "Addresses", icon: MapPin },
   { id: "contracts", label: "Contracts", icon: FileText },

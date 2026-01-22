@@ -9,6 +9,7 @@ export type SocialMediaAccount = Tables<"social_media_accounts">;
 export type Address = Tables<"addresses">;
 export type Contract = Tables<"contracts">;
 export type PhoneNumber = Tables<"phone_numbers">;
+export type TaxId = Tables<"tax_ids">;
 export const useEntities = () => {
   return useQuery({
     queryKey: ["entities"],
@@ -103,6 +104,20 @@ export const usePhoneNumbers = () => {
         .order("is_primary", { ascending: false });
       if (error) throw error;
       return data as PhoneNumber[];
+    },
+  });
+};
+
+export const useTaxIds = () => {
+  return useQuery({
+    queryKey: ["tax_ids"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("tax_ids")
+        .select("*")
+        .order("is_primary", { ascending: false });
+      if (error) throw error;
+      return data as TaxId[];
     },
   });
 };
