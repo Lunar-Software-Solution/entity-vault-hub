@@ -1,10 +1,59 @@
-import { Plus, ExternalLink, MoreVertical, CheckCircle2 } from "lucide-react";
+import { useState } from "react";
+import { Plus, ExternalLink, MoreVertical, CheckCircle2, Edit2, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useSocialMediaAccounts } from "@/hooks/usePortalData";
+import { useCreateSocialMediaAccount, useUpdateSocialMediaAccount, useDeleteSocialMediaAccount } from "@/hooks/usePortalMutations";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import SocialMediaForm from "@/components/forms/SocialMediaForm";
+import DeleteConfirmDialog from "@/components/shared/DeleteConfirmDialog";
+import type { SocialMediaAccount } from "@/hooks/usePortalData";
+import type { SocialMediaFormData } from "@/lib/formSchemas";
 
 const SocialMediaSection = () => {
   const { data: socialAccounts, isLoading } = useSocialMediaAccounts();
+  
+  const [isFormOpen, setIsFormOpen] = useState(false);
+  const [editingAccount, setEditingAccount] = useState<SocialMediaAccount | null>(null);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+  
+  const createAccount = useCreateSocialMediaAccount();
+  const updateAccount = useUpdateSocialMediaAccount();
+  const deleteAccount = useDeleteSocialMediaAccount();
+
+  const handleSubmit = (data: SocialMediaFormData) => {
+    const cleanData = {
+      ...data,
+      profile_url: data.profile_url || null,
+      followers: data.followers || null,
+      icon: data.icon || null,
+    };
+    
+    if (editingAccount) {
+      updateAccount.mutate({ id: editingAccount.id, ...cleanData }, { 
+        onSuccess: () => { setIsFormOpen(false); setEditingAccount(null); }
+      });
+    } else {
+      createAccount.mutate(cleanData, { onSuccess: () => setIsFormOpen(false) });
+    }
+  };
+
+  const handleEdit = (account: SocialMediaAccount) => {
+    setEditingAccount(account);
+    setIsFormOpen(true);
+  };
+
+  const handleDelete = () => {
+    if (deletingId) {
+      deleteAccount.mutate(deletingId, { onSuccess: () => setDeletingId(null) });
+    }
+  };
+
+  const handleCloseForm = () => {
+    setIsFormOpen(false);
+    setEditingAccount(null);
+  };
 
   if (isLoading) {
     return (
@@ -34,7 +83,7 @@ const SocialMediaSection = () => {
           <h2 className="text-2xl font-bold text-foreground mb-2">Social Media</h2>
           <p className="text-muted-foreground">Manage your connected social media accounts.</p>
         </div>
-        <Button className="gap-2">
+        <Button className="gap-2" onClick={() => setIsFormOpen(true)}>
           <Plus className="w-4 h-4" />
           Link Account
         </Button>
@@ -43,7 +92,7 @@ const SocialMediaSection = () => {
       {isEmpty ? (
         <div className="glass-card rounded-xl p-12 text-center">
           <p className="text-muted-foreground mb-4">No social media accounts linked yet.</p>
-          <Button className="gap-2">
+          <Button className="gap-2" onClick={() => setIsFormOpen(true)}>
             <Plus className="w-4 h-4" />
             Link Your First Account
           </Button>
@@ -67,9 +116,21 @@ const SocialMediaSection = () => {
                     <p className="text-sm text-muted-foreground">{account.username}</p>
                   </div>
                 </div>
-                <button className="p-1.5 hover:bg-muted rounded-lg transition-colors">
-                  <MoreVertical className="w-4 h-4 text-muted-foreground" />
-                </button>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <button className="p-1.5 hover:bg-muted rounded-lg transition-colors">
+                      <MoreVertical className="w-4 h-4 text-muted-foreground" />
+                    </button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuItem onClick={() => handleEdit(account)}>
+                      <Edit2 className="w-4 h-4 mr-2" /> Edit
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => setDeletingId(account.id)} className="text-destructive">
+                      <Trash2 className="w-4 h-4 mr-2" /> Remove
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
               </div>
 
               <div className="flex items-center justify-between pt-4 border-t border-border">
@@ -92,6 +153,29 @@ const SocialMediaSection = () => {
           ))}
         </div>
       )}
+
+      <Dialog open={isFormOpen} onOpenChange={handleCloseForm}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>{editingAccount ? "Edit Social Media Account" : "Link Social Media Account"}</DialogTitle>
+          </DialogHeader>
+          <SocialMediaForm
+            account={editingAccount}
+            onSubmit={handleSubmit}
+            onCancel={handleCloseForm}
+            isLoading={createAccount.isPending || updateAccount.isPending}
+          />
+        </DialogContent>
+      </Dialog>
+
+      <DeleteConfirmDialog
+        open={!!deletingId}
+        onOpenChange={(open) => !open && setDeletingId(null)}
+        onConfirm={handleDelete}
+        title="Remove Social Media Account"
+        description="This will remove this social media account from your portal."
+        isLoading={deleteAccount.isPending}
+      />
     </div>
   );
 };
