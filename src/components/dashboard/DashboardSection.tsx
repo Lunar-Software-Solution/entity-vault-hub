@@ -1,7 +1,46 @@
 import { Wallet, CreditCard, Share2, FileText, MapPin, Building2 } from "lucide-react";
 import StatCard from "./StatCard";
+import { useDashboardStats, useBankAccounts, useContracts } from "@/hooks/usePortalData";
+import { Skeleton } from "@/components/ui/skeleton";
+import { format } from "date-fns";
 
 const DashboardSection = () => {
+  const stats = useDashboardStats();
+  const { data: bankAccounts, isLoading: loadingBanks } = useBankAccounts();
+  const { data: contracts, isLoading: loadingContracts } = useContracts();
+
+  const isLoading = loadingBanks || loadingContracts;
+
+  // Build recent activity from actual data
+  const recentActivity = [
+    ...(bankAccounts?.slice(0, 2).map(acc => ({
+      action: "Bank account added",
+      item: acc.name,
+      time: format(new Date(acc.created_at), "MMM d, yyyy")
+    })) ?? []),
+    ...(contracts?.slice(0, 2).map(c => ({
+      action: "Contract created",
+      item: c.title,
+      time: format(new Date(c.created_at), "MMM d, yyyy")
+    })) ?? [])
+  ].slice(0, 4);
+
+  if (isLoading) {
+    return (
+      <div className="space-y-8">
+        <div>
+          <Skeleton className="h-8 w-64 mb-2" />
+          <Skeleton className="h-4 w-96" />
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {[1, 2, 3, 4, 5, 6].map((i) => (
+            <Skeleton key={i} className="h-32 w-full rounded-xl" />
+          ))}
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-8">
       <div>
@@ -12,68 +51,68 @@ const DashboardSection = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         <StatCard
           title="Total Bank Balance"
-          value="$124,580.00"
-          subtitle="Across 3 accounts"
+          value={`$${stats.totalBankBalance.toLocaleString('en-US', { minimumFractionDigits: 2 })}`}
+          subtitle={`Across ${stats.bankAccountCount} account${stats.bankAccountCount !== 1 ? "s" : ""}`}
           icon={Wallet}
           variant="primary"
-          trend={{ value: 12.5, isPositive: true }}
         />
         <StatCard
           title="Credit Card Limit"
-          value="$45,000.00"
-          subtitle="2 active cards"
+          value={`$${stats.totalCreditLimit.toLocaleString('en-US', { minimumFractionDigits: 2 })}`}
+          subtitle={`${stats.creditCardCount} active card${stats.creditCardCount !== 1 ? "s" : ""}`}
           icon={CreditCard}
           variant="warning"
         />
         <StatCard
           title="Social Accounts"
-          value="8"
+          value={stats.socialAccountCount.toString()}
           subtitle="Connected platforms"
           icon={Share2}
           variant="default"
         />
         <StatCard
           title="Active Contracts"
-          value="5"
-          subtitle="2 expiring soon"
+          value={stats.activeContracts.toString()}
+          subtitle={stats.expiringContracts > 0 ? `${stats.expiringContracts} expiring soon` : "All contracts current"}
           icon={FileText}
           variant="success"
         />
         <StatCard
           title="Registered Addresses"
-          value="3"
-          subtitle="Home, Office, Shipping"
+          value={stats.addressCount.toString()}
+          subtitle="Saved locations"
           icon={MapPin}
           variant="default"
         />
         <StatCard
           title="Entity Status"
-          value="Active"
-          subtitle="Since Jan 2020"
+          value={stats.entityStatus}
+          subtitle={stats.entityFoundedDate 
+            ? `Since ${format(new Date(stats.entityFoundedDate), "MMM yyyy")}` 
+            : "Register your entity"}
           icon={Building2}
-          variant="success"
+          variant={stats.entityStatus === "Active" ? "success" : "default"}
         />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div className="glass-card rounded-xl p-6">
           <h3 className="text-lg font-semibold text-foreground mb-4">Recent Activity</h3>
-          <div className="space-y-4">
-            {[
-              { action: "Contract renewed", item: "Office Lease Agreement", time: "2 hours ago" },
-              { action: "Bank statement received", item: "Chase Business", time: "1 day ago" },
-              { action: "Credit card payment", item: "Amex Platinum", time: "3 days ago" },
-              { action: "Address updated", item: "Shipping Address", time: "1 week ago" },
-            ].map((activity, index) => (
-              <div key={index} className="flex items-center justify-between py-3 border-b border-border last:border-0">
-                <div>
-                  <p className="text-sm font-medium text-foreground">{activity.action}</p>
-                  <p className="text-xs text-muted-foreground">{activity.item}</p>
+          {recentActivity.length > 0 ? (
+            <div className="space-y-4">
+              {recentActivity.map((activity, index) => (
+                <div key={index} className="flex items-center justify-between py-3 border-b border-border last:border-0">
+                  <div>
+                    <p className="text-sm font-medium text-foreground">{activity.action}</p>
+                    <p className="text-xs text-muted-foreground">{activity.item}</p>
+                  </div>
+                  <span className="text-xs text-muted-foreground">{activity.time}</span>
                 </div>
-                <span className="text-xs text-muted-foreground">{activity.time}</span>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          ) : (
+            <p className="text-muted-foreground text-sm">No recent activity. Start by adding some data!</p>
+          )}
         </div>
 
         <div className="glass-card rounded-xl p-6">

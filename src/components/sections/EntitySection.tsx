@@ -1,7 +1,49 @@
-import { Building2, Calendar, MapPin, Mail, Phone, Globe, Edit } from "lucide-react";
+import { Building2, Calendar, MapPin, Mail, Phone, Globe, Edit, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useEntities } from "@/hooks/usePortalData";
+import { Skeleton } from "@/components/ui/skeleton";
+import { format } from "date-fns";
 
 const EntitySection = () => {
+  const { data: entities, isLoading } = useEntities();
+  const entity = entities?.[0]; // Get the first entity
+
+  if (isLoading) {
+    return (
+      <div className="space-y-8">
+        <div className="flex items-center justify-between">
+          <div>
+            <Skeleton className="h-8 w-48 mb-2" />
+            <Skeleton className="h-4 w-80" />
+          </div>
+          <Skeleton className="h-10 w-32" />
+        </div>
+        <Skeleton className="h-96 w-full rounded-xl" />
+      </div>
+    );
+  }
+
+  if (!entity) {
+    return (
+      <div className="space-y-8">
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="text-2xl font-bold text-foreground mb-2">Entity Details</h2>
+            <p className="text-muted-foreground">Manage your business or personal entity information.</p>
+          </div>
+        </div>
+        <div className="glass-card rounded-xl p-12 text-center">
+          <Building2 className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
+          <p className="text-muted-foreground mb-4">No entity registered yet.</p>
+          <Button className="gap-2">
+            <Plus className="w-4 h-4" />
+            Register Your Entity
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-8">
       <div className="flex items-center justify-between">
@@ -21,11 +63,19 @@ const EntitySection = () => {
             <Building2 className="w-10 h-10 text-primary-foreground" />
           </div>
           <div className="flex-1">
-            <h3 className="text-2xl font-bold text-foreground">Acme Corporation</h3>
-            <p className="text-muted-foreground">Limited Liability Company (LLC)</p>
+            <h3 className="text-2xl font-bold text-foreground">{entity.name}</h3>
+            <p className="text-muted-foreground">{entity.type}</p>
             <div className="mt-2 flex items-center gap-2">
-              <span className="px-3 py-1 rounded-full bg-success/10 text-success text-xs font-medium">Active</span>
-              <span className="px-3 py-1 rounded-full bg-muted text-muted-foreground text-xs font-medium">Verified</span>
+              <span className={`px-3 py-1 rounded-full text-xs font-medium ${
+                entity.status === "Active" 
+                  ? "bg-success/10 text-success" 
+                  : "bg-muted text-muted-foreground"
+              }`}>
+                {entity.status}
+              </span>
+              {entity.is_verified && (
+                <span className="px-3 py-1 rounded-full bg-muted text-muted-foreground text-xs font-medium">Verified</span>
+              )}
             </div>
           </div>
         </div>
@@ -38,14 +88,18 @@ const EntitySection = () => {
                 <Calendar className="w-5 h-5 text-muted-foreground" />
                 <div>
                   <p className="text-sm text-muted-foreground">Founded</p>
-                  <p className="text-foreground font-medium">January 15, 2020</p>
+                  <p className="text-foreground font-medium">
+                    {entity.founded_date 
+                      ? format(new Date(entity.founded_date), "MMMM d, yyyy")
+                      : "Not specified"}
+                  </p>
                 </div>
               </div>
               <div className="flex items-center gap-3">
                 <MapPin className="w-5 h-5 text-muted-foreground" />
                 <div>
                   <p className="text-sm text-muted-foreground">Jurisdiction</p>
-                  <p className="text-foreground font-medium">Delaware, USA</p>
+                  <p className="text-foreground font-medium">{entity.jurisdiction || "Not specified"}</p>
                 </div>
               </div>
             </div>
@@ -58,21 +112,21 @@ const EntitySection = () => {
                 <Mail className="w-5 h-5 text-muted-foreground" />
                 <div>
                   <p className="text-sm text-muted-foreground">Email</p>
-                  <p className="text-foreground font-medium">contact@acme.com</p>
+                  <p className="text-foreground font-medium">{entity.email || "Not specified"}</p>
                 </div>
               </div>
               <div className="flex items-center gap-3">
                 <Phone className="w-5 h-5 text-muted-foreground" />
                 <div>
                   <p className="text-sm text-muted-foreground">Phone</p>
-                  <p className="text-foreground font-medium">+1 (555) 123-4567</p>
+                  <p className="text-foreground font-medium">{entity.phone || "Not specified"}</p>
                 </div>
               </div>
               <div className="flex items-center gap-3">
                 <Globe className="w-5 h-5 text-muted-foreground" />
                 <div>
                   <p className="text-sm text-muted-foreground">Website</p>
-                  <p className="text-foreground font-medium">www.acme.com</p>
+                  <p className="text-foreground font-medium">{entity.website || "Not specified"}</p>
                 </div>
               </div>
             </div>
@@ -84,15 +138,15 @@ const EntitySection = () => {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="p-4 bg-muted rounded-lg">
               <p className="text-xs text-muted-foreground mb-1">EIN / Tax ID</p>
-              <p className="font-mono text-foreground">XX-XXXXXXX</p>
+              <p className="font-mono text-foreground">{entity.ein_tax_id || "XX-XXXXXXX"}</p>
             </div>
             <div className="p-4 bg-muted rounded-lg">
               <p className="text-xs text-muted-foreground mb-1">Registration Number</p>
-              <p className="font-mono text-foreground">DE-2020-XXXXX</p>
+              <p className="font-mono text-foreground">{entity.registration_number || "Not specified"}</p>
             </div>
             <div className="p-4 bg-muted rounded-lg">
               <p className="text-xs text-muted-foreground mb-1">DUNS Number</p>
-              <p className="font-mono text-foreground">XX-XXX-XXXX</p>
+              <p className="font-mono text-foreground">{entity.duns_number || "XX-XXX-XXXX"}</p>
             </div>
           </div>
         </div>
