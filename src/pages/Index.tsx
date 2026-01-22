@@ -14,6 +14,7 @@ import TaxIdsSection from "@/components/sections/TaxIdsSection";
 import DocumentsSection from "@/components/sections/DocumentsSection";
 import FilingsSection from "@/components/sections/FilingsSection";
 import SettingsSection from "@/components/sections/SettingsSection";
+import AIChatAssistant from "@/components/ai/AIChatAssistant";
 
 const Index = () => {
   const [activeSection, setActiveSection] = useState("dashboard");
@@ -74,6 +75,7 @@ const Index = () => {
           {renderSection()}
         </div>
       </main>
+      <AIChatAssistant />
     </div>
   );
 };
