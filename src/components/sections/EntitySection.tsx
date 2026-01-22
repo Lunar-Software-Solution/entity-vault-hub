@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Building2, Calendar, MapPin, Mail, Phone, Globe, Edit, Plus, Trash2, ExternalLink } from "lucide-react";
+import { Building2, Plus, ChevronRight, MapPin, Mail } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useEntities } from "@/hooks/usePortalData";
 import { useCreateEntity, useUpdateEntity, useDeleteEntity } from "@/hooks/usePortalMutations";
@@ -8,16 +8,16 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import EntityForm from "@/components/forms/EntityForm";
 import DeleteConfirmDialog from "@/components/shared/DeleteConfirmDialog";
-import { format } from "date-fns";
 import type { EntityFormData } from "@/lib/formSchemas";
+import type { Entity } from "@/hooks/usePortalData";
 
 const EntitySection = () => {
   const navigate = useNavigate();
   const { data: entities, isLoading } = useEntities();
-  const entity = entities?.[0];
   
   const [isFormOpen, setIsFormOpen] = useState(false);
-  const [isDeleteOpen, setIsDeleteOpen] = useState(false);
+  const [editingEntity, setEditingEntity] = useState<Entity | null>(null);
+  const [deletingEntity, setDeletingEntity] = useState<Entity | null>(null);
   
   const createEntity = useCreateEntity();
   const updateEntity = useUpdateEntity();
@@ -36,17 +36,29 @@ const EntitySection = () => {
       duns_number: data.duns_number || null,
     };
     
-    if (entity) {
-      updateEntity.mutate({ id: entity.id, ...cleanData }, { onSuccess: () => setIsFormOpen(false) });
+    if (editingEntity) {
+      updateEntity.mutate({ id: editingEntity.id, ...cleanData }, { 
+        onSuccess: () => {
+          setIsFormOpen(false);
+          setEditingEntity(null);
+        }
+      });
     } else {
       createEntity.mutate(cleanData, { onSuccess: () => setIsFormOpen(false) });
     }
   };
 
   const handleDelete = () => {
-    if (entity) {
-      deleteEntity.mutate(entity.id, { onSuccess: () => setIsDeleteOpen(false) });
+    if (deletingEntity) {
+      deleteEntity.mutate(deletingEntity.id, { 
+        onSuccess: () => setDeletingEntity(null) 
+      });
     }
+  };
+
+  const handleAddNew = () => {
+    setEditingEntity(null);
+    setIsFormOpen(true);
   };
 
   if (isLoading) {
@@ -59,7 +71,11 @@ const EntitySection = () => {
           </div>
           <Skeleton className="h-10 w-32" />
         </div>
-        <Skeleton className="h-96 w-full rounded-xl" />
+        <div className="space-y-3">
+          {[1, 2, 3].map(i => (
+            <Skeleton key={i} className="h-20 w-full rounded-xl" />
+          ))}
+        </div>
       </div>
     );
   }
@@ -68,155 +84,95 @@ const EntitySection = () => {
     <div className="space-y-8">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold text-foreground mb-2">Entity Details</h2>
-          <p className="text-muted-foreground">Manage your business or personal entity information.</p>
+          <h2 className="text-2xl font-bold text-foreground mb-2">Entities</h2>
+          <p className="text-muted-foreground">Manage your business or personal entities.</p>
         </div>
-        {entity ? (
-          <div className="flex gap-2">
-            <Button variant="outline" className="gap-2" onClick={() => setIsDeleteOpen(true)}>
-              <Trash2 className="w-4 h-4" />
-              Delete
-            </Button>
-            <Button variant="outline" className="gap-2" onClick={() => navigate(`/entity/${entity.id}`)}>
-              <ExternalLink className="w-4 h-4" />
-              View Details
-            </Button>
-            <Button className="gap-2" onClick={() => setIsFormOpen(true)}>
-              <Edit className="w-4 h-4" />
-              Edit Entity
-            </Button>
-          </div>
-        ) : (
-          <Button className="gap-2" onClick={() => setIsFormOpen(true)}>
-            <Plus className="w-4 h-4" />
-            Register Your Entity
-          </Button>
-        )}
+        <Button className="gap-2" onClick={handleAddNew}>
+          <Plus className="w-4 h-4" />
+          Add Entity
+        </Button>
       </div>
 
-      {!entity ? (
+      {!entities || entities.length === 0 ? (
         <div className="glass-card rounded-xl p-12 text-center">
           <Building2 className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
-          <p className="text-muted-foreground mb-4">No entity registered yet.</p>
-          <Button className="gap-2" onClick={() => setIsFormOpen(true)}>
+          <p className="text-muted-foreground mb-4">No entities registered yet.</p>
+          <Button className="gap-2" onClick={handleAddNew}>
             <Plus className="w-4 h-4" />
-            Register Your Entity
+            Register Your First Entity
           </Button>
         </div>
       ) : (
-        <div className="glass-card rounded-xl p-8">
-          <div className="flex items-start gap-6">
-            <div className="w-20 h-20 rounded-2xl gradient-primary flex items-center justify-center glow-primary">
-              <Building2 className="w-10 h-10 text-primary-foreground" />
-            </div>
-            <div className="flex-1">
-              <h3 className="text-2xl font-bold text-foreground">{entity.name}</h3>
-              <p className="text-muted-foreground">{entity.type}</p>
-              <div className="mt-2 flex items-center gap-2">
-                <span className={`px-3 py-1 rounded-full text-xs font-medium ${
-                  entity.status === "Active" 
-                    ? "bg-success/10 text-success" 
-                    : "bg-muted text-muted-foreground"
-                }`}>
-                  {entity.status}
-                </span>
-                {entity.is_verified && (
-                  <span className="px-3 py-1 rounded-full bg-muted text-muted-foreground text-xs font-medium">Verified</span>
-                )}
+        <div className="space-y-3">
+          {entities.map((entity) => (
+            <div
+              key={entity.id}
+              onClick={() => navigate(`/entity/${entity.id}`)}
+              className="glass-card rounded-xl p-4 flex items-center gap-4 cursor-pointer hover:bg-muted/50 transition-colors group"
+            >
+              <div className="w-12 h-12 rounded-xl gradient-primary flex items-center justify-center flex-shrink-0">
+                <Building2 className="w-6 h-6 text-primary-foreground" />
               </div>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
-            <div className="space-y-4">
-              <h4 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Registration</h4>
-              <div className="space-y-3">
-                <div className="flex items-center gap-3">
-                  <Calendar className="w-5 h-5 text-muted-foreground" />
-                  <div>
-                    <p className="text-sm text-muted-foreground">Founded</p>
-                    <p className="text-foreground font-medium">
-                      {entity.founded_date 
-                        ? format(new Date(entity.founded_date), "MMMM d, yyyy")
-                        : "Not specified"}
-                    </p>
-                  </div>
+              
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2 mb-1">
+                  <h3 className="font-semibold text-foreground truncate">{entity.name}</h3>
+                  <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${
+                    entity.status === "Active" 
+                      ? "bg-success/10 text-success" 
+                      : "bg-muted text-muted-foreground"
+                  }`}>
+                    {entity.status}
+                  </span>
+                  {entity.is_verified && (
+                    <span className="px-2 py-0.5 rounded-full bg-primary/10 text-primary text-xs font-medium">
+                      Verified
+                    </span>
+                  )}
                 </div>
-                <div className="flex items-center gap-3">
-                  <MapPin className="w-5 h-5 text-muted-foreground" />
-                  <div>
-                    <p className="text-sm text-muted-foreground">Jurisdiction</p>
-                    <p className="text-foreground font-medium">{entity.jurisdiction || "Not specified"}</p>
-                  </div>
+                <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                  <span>{entity.type}</span>
+                  {entity.jurisdiction && (
+                    <span className="flex items-center gap-1">
+                      <MapPin className="w-3 h-3" />
+                      {entity.jurisdiction}
+                    </span>
+                  )}
+                  {entity.email && (
+                    <span className="flex items-center gap-1 truncate">
+                      <Mail className="w-3 h-3" />
+                      {entity.email}
+                    </span>
+                  )}
                 </div>
               </div>
+              
+              <ChevronRight className="w-5 h-5 text-muted-foreground group-hover:text-foreground transition-colors flex-shrink-0" />
             </div>
-
-            <div className="space-y-4">
-              <h4 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Contact</h4>
-              <div className="space-y-3">
-                <div className="flex items-center gap-3">
-                  <Mail className="w-5 h-5 text-muted-foreground" />
-                  <div>
-                    <p className="text-sm text-muted-foreground">Email</p>
-                    <p className="text-foreground font-medium">{entity.email || "Not specified"}</p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-3">
-                  <Phone className="w-5 h-5 text-muted-foreground" />
-                  <div>
-                    <p className="text-sm text-muted-foreground">Phone</p>
-                    <p className="text-foreground font-medium">{entity.phone || "Not specified"}</p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-3">
-                  <Globe className="w-5 h-5 text-muted-foreground" />
-                  <div>
-                    <p className="text-sm text-muted-foreground">Website</p>
-                    <p className="text-foreground font-medium">{entity.website || "Not specified"}</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div className="mt-8 pt-6 border-t border-border">
-            <h4 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-4">Identification Numbers</h4>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="p-4 bg-muted rounded-lg">
-                <p className="text-xs text-muted-foreground mb-1">EIN / Tax ID</p>
-                <p className="font-mono text-foreground">{entity.ein_tax_id || "XX-XXXXXXX"}</p>
-              </div>
-              <div className="p-4 bg-muted rounded-lg">
-                <p className="text-xs text-muted-foreground mb-1">Registration Number</p>
-                <p className="font-mono text-foreground">{entity.registration_number || "Not specified"}</p>
-              </div>
-              <div className="p-4 bg-muted rounded-lg">
-                <p className="text-xs text-muted-foreground mb-1">DUNS Number</p>
-                <p className="font-mono text-foreground">{entity.duns_number || "XX-XXX-XXXX"}</p>
-              </div>
-            </div>
-          </div>
+          ))}
         </div>
       )}
 
       <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>{entity ? "Edit Entity" : "Register Entity"}</DialogTitle>
+            <DialogTitle>{editingEntity ? "Edit Entity" : "Register Entity"}</DialogTitle>
           </DialogHeader>
           <EntityForm
-            entity={entity}
+            entity={editingEntity || undefined}
             onSubmit={handleSubmit}
-            onCancel={() => setIsFormOpen(false)}
+            onCancel={() => {
+              setIsFormOpen(false);
+              setEditingEntity(null);
+            }}
             isLoading={createEntity.isPending || updateEntity.isPending}
           />
         </DialogContent>
       </Dialog>
 
       <DeleteConfirmDialog
-        open={isDeleteOpen}
-        onOpenChange={setIsDeleteOpen}
+        open={!!deletingEntity}
+        onOpenChange={(open) => !open && setDeletingEntity(null)}
         onConfirm={handleDelete}
         title="Delete Entity"
         description="This will permanently delete this entity and all associated information."
