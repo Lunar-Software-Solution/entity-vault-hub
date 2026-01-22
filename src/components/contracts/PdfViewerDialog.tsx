@@ -95,7 +95,7 @@ const PdfViewerDialog = ({ open, onOpenChange, filePath, fileName }: PdfViewerDi
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-5xl h-[90vh] flex flex-col p-0">
-        <DialogHeader className="p-4 pb-2 border-b border-border">
+        <DialogHeader className="p-4 pb-2 border-b border-border pr-12">
           <div className="flex items-center justify-between">
             <div>
               <DialogTitle className="text-lg">{fileName || "View Contract"}</DialogTitle>
