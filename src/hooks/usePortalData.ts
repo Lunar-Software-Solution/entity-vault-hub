@@ -10,6 +10,8 @@ export type Address = Tables<"addresses">;
 export type Contract = Tables<"contracts">;
 export type PhoneNumber = Tables<"phone_numbers">;
 export type TaxId = Tables<"tax_ids">;
+export type TaxIdType = Tables<"tax_id_types">;
+export type IssuingAuthority = Tables<"issuing_authorities">;
 export const useEntities = () => {
   return useQuery({
     queryKey: ["entities"],
@@ -118,6 +120,34 @@ export const useTaxIds = () => {
         .order("is_primary", { ascending: false });
       if (error) throw error;
       return data as TaxId[];
+    },
+  });
+};
+
+export const useTaxIdTypes = () => {
+  return useQuery({
+    queryKey: ["tax_id_types"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("tax_id_types")
+        .select("*")
+        .order("code", { ascending: true });
+      if (error) throw error;
+      return data as TaxIdType[];
+    },
+  });
+};
+
+export const useIssuingAuthorities = () => {
+  return useQuery({
+    queryKey: ["issuing_authorities"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("issuing_authorities")
+        .select("*")
+        .order("name", { ascending: true });
+      if (error) throw error;
+      return data as IssuingAuthority[];
     },
   });
 };

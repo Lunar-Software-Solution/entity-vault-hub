@@ -386,3 +386,99 @@ export const useDeleteTaxId = () => {
     onError: (error) => toast.error(`Failed to delete tax ID: ${error.message}`),
   });
 };
+
+// Tax ID Type mutations
+export const useCreateTaxIdType = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (type: TablesInsert<"tax_id_types">) => {
+      const { data, error } = await supabase.from("tax_id_types").insert(type).select().single();
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["tax_id_types"] });
+      toast.success("Tax ID type added successfully");
+    },
+    onError: (error) => toast.error(`Failed to add tax ID type: ${error.message}`),
+  });
+};
+
+export const useUpdateTaxIdType = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, ...type }: TablesUpdate<"tax_id_types"> & { id: string }) => {
+      const { data, error } = await supabase.from("tax_id_types").update(type).eq("id", id).select().single();
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["tax_id_types"] });
+      toast.success("Tax ID type updated successfully");
+    },
+    onError: (error) => toast.error(`Failed to update tax ID type: ${error.message}`),
+  });
+};
+
+export const useDeleteTaxIdType = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from("tax_id_types").delete().eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["tax_id_types"] });
+      toast.success("Tax ID type deleted successfully");
+    },
+    onError: (error) => toast.error(`Failed to delete tax ID type: ${error.message}`),
+  });
+};
+
+// Issuing Authority mutations
+export const useCreateIssuingAuthority = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (authority: TablesInsert<"issuing_authorities">) => {
+      const { data, error } = await supabase.from("issuing_authorities").insert(authority).select().single();
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["issuing_authorities"] });
+      toast.success("Issuing authority added successfully");
+    },
+    onError: (error) => toast.error(`Failed to add issuing authority: ${error.message}`),
+  });
+};
+
+export const useUpdateIssuingAuthority = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, ...authority }: TablesUpdate<"issuing_authorities"> & { id: string }) => {
+      const { data, error } = await supabase.from("issuing_authorities").update(authority).eq("id", id).select().single();
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["issuing_authorities"] });
+      toast.success("Issuing authority updated successfully");
+    },
+    onError: (error) => toast.error(`Failed to update issuing authority: ${error.message}`),
+  });
+};
+
+export const useDeleteIssuingAuthority = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from("issuing_authorities").delete().eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["issuing_authorities"] });
+      toast.success("Issuing authority deleted successfully");
+    },
+    onError: (error) => toast.error(`Failed to delete issuing authority: ${error.message}`),
+  });
+};

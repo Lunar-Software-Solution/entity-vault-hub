@@ -41,6 +41,7 @@ const menuItems = [
   { id: "social-media", label: "Social Media", icon: Share2 },
   { id: "addresses", label: "Addresses", icon: MapPin },
   { id: "contracts", label: "Contracts", icon: FileText },
+  { id: "settings", label: "Settings", icon: Settings },
 ];
 
 const Sidebar = ({ activeSection, onSectionChange }: SidebarProps) => {
