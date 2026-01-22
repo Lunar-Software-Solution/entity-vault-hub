@@ -17,6 +17,7 @@ import { useForm } from "react-hook-form";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Textarea } from "@/components/ui/textarea";
 import { countries } from "@/lib/countries";
+import { usStates, canadaProvinces } from "@/lib/states";
 
 // Tax ID Type Form
 interface TaxIdTypeFormData {
@@ -107,6 +108,24 @@ const IssuingAuthorityForm = ({
     },
   });
 
+  const selectedCountry = form.watch("country");
+  
+  // Clear province_state when country changes to one without dropdown options
+  const handleCountryChange = (value: string) => {
+    form.setValue("country", value);
+    if (value !== "United States" && value !== "Canada") {
+      // Keep the value as-is for free text entry
+    }
+  };
+
+  const getProvinceStateOptions = () => {
+    if (selectedCountry === "United States") return usStates;
+    if (selectedCountry === "Canada") return canadaProvinces;
+    return null;
+  };
+
+  const provinceStateOptions = getProvinceStateOptions();
+
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
@@ -120,7 +139,7 @@ const IssuingAuthorityForm = ({
         <FormField control={form.control} name="country" render={({ field }) => (
           <FormItem>
             <FormLabel>Country *</FormLabel>
-            <Select onValueChange={field.onChange} value={field.value}>
+            <Select onValueChange={handleCountryChange} value={field.value}>
               <FormControl>
                 <SelectTrigger className="bg-background">
                   <SelectValue placeholder="Select a country" />
@@ -139,8 +158,30 @@ const IssuingAuthorityForm = ({
         )} />
         <FormField control={form.control} name="province_state" render={({ field }) => (
           <FormItem>
-            <FormLabel>Province / State</FormLabel>
-            <FormControl><Input placeholder="e.g., California, Ontario" {...field} /></FormControl>
+            <FormLabel>
+              {selectedCountry === "Canada" ? "Province" : selectedCountry === "United States" ? "State" : "Province / State"}
+            </FormLabel>
+            {provinceStateOptions ? (
+              <Select onValueChange={field.onChange} value={field.value || ""}>
+                <FormControl>
+                  <SelectTrigger className="bg-background">
+                    <SelectValue placeholder={`Select a ${selectedCountry === "Canada" ? "province" : "state"}`} />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent className="bg-background max-h-[300px]">
+                  <SelectItem value="__none__">None</SelectItem>
+                  {provinceStateOptions.map((option) => (
+                    <SelectItem key={option} value={option}>
+                      {option}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            ) : (
+              <FormControl>
+                <Input placeholder="e.g., Bavaria, New South Wales" {...field} />
+              </FormControl>
+            )}
             <FormMessage />
           </FormItem>
         )} />
@@ -258,10 +299,11 @@ const SettingsSection = () => {
   };
 
   const handleAuthoritySubmit = (data: IssuingAuthorityFormData) => {
+    const provinceState = data.province_state === "__none__" ? null : (data.province_state || null);
     const payload = { 
       ...data, 
       description: data.description || null,
-      province_state: data.province_state || null,
+      province_state: provinceState,
     };
     if (editingAuthority) {
       updateAuthorityMutation.mutate({ id: editingAuthority.id, ...payload }, {
