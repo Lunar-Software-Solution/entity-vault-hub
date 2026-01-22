@@ -277,6 +277,50 @@ export type Database = {
         }
         Relationships: []
       }
+      phone_numbers: {
+        Row: {
+          country_code: string
+          created_at: string
+          entity_id: string
+          id: string
+          is_primary: boolean
+          label: string
+          phone_number: string
+          purpose: string | null
+          updated_at: string
+        }
+        Insert: {
+          country_code?: string
+          created_at?: string
+          entity_id: string
+          id?: string
+          is_primary?: boolean
+          label?: string
+          phone_number: string
+          purpose?: string | null
+          updated_at?: string
+        }
+        Update: {
+          country_code?: string
+          created_at?: string
+          entity_id?: string
+          id?: string
+          is_primary?: boolean
+          label?: string
+          phone_number?: string
+          purpose?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "phone_numbers_entity_id_fkey"
+            columns: ["entity_id"]
+            isOneToOne: false
+            referencedRelation: "entities"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       social_media_accounts: {
         Row: {
           color: string
