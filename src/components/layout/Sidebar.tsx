@@ -15,7 +15,8 @@ import {
   Calendar,
   Briefcase,
   Mail,
-  Users
+  Users,
+  PieChart
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
@@ -38,6 +39,7 @@ interface SidebarProps {
 const menuItems = [
   { id: "dashboard", label: "Dashboard", icon: LayoutDashboard },
   { id: "entity", label: "Entities", icon: Building2 },
+  { id: "cap-table", label: "Cap Table", icon: PieChart },
   { id: "service-providers", label: "Service Providers", icon: Briefcase },
   { id: "filings", label: "Filings", icon: Calendar },
   { id: "bank-accounts", label: "Bank Accounts", icon: Wallet },

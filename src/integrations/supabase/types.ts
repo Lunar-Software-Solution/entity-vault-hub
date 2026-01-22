@@ -860,6 +860,101 @@ export type Database = {
           },
         ]
       }
+      equity_transactions: {
+        Row: {
+          board_approval_date: string | null
+          certificate_number: string | null
+          created_at: string
+          entity_id: string
+          from_shareholder_id: string | null
+          id: string
+          notes: string | null
+          price_per_share: number
+          share_class_id: string
+          shareholder_id: string
+          shares: number
+          total_amount: number | null
+          transaction_date: string
+          transaction_type: string
+          updated_at: string
+          vesting_cliff_months: number | null
+          vesting_end_date: string | null
+          vesting_period_months: number | null
+          vesting_start_date: string | null
+        }
+        Insert: {
+          board_approval_date?: string | null
+          certificate_number?: string | null
+          created_at?: string
+          entity_id: string
+          from_shareholder_id?: string | null
+          id?: string
+          notes?: string | null
+          price_per_share?: number
+          share_class_id: string
+          shareholder_id: string
+          shares: number
+          total_amount?: number | null
+          transaction_date?: string
+          transaction_type?: string
+          updated_at?: string
+          vesting_cliff_months?: number | null
+          vesting_end_date?: string | null
+          vesting_period_months?: number | null
+          vesting_start_date?: string | null
+        }
+        Update: {
+          board_approval_date?: string | null
+          certificate_number?: string | null
+          created_at?: string
+          entity_id?: string
+          from_shareholder_id?: string | null
+          id?: string
+          notes?: string | null
+          price_per_share?: number
+          share_class_id?: string
+          shareholder_id?: string
+          shares?: number
+          total_amount?: number | null
+          transaction_date?: string
+          transaction_type?: string
+          updated_at?: string
+          vesting_cliff_months?: number | null
+          vesting_end_date?: string | null
+          vesting_period_months?: number | null
+          vesting_start_date?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "equity_transactions_entity_id_fkey"
+            columns: ["entity_id"]
+            isOneToOne: false
+            referencedRelation: "entities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "equity_transactions_from_shareholder_id_fkey"
+            columns: ["from_shareholder_id"]
+            isOneToOne: false
+            referencedRelation: "shareholders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "equity_transactions_share_class_id_fkey"
+            columns: ["share_class_id"]
+            isOneToOne: false
+            referencedRelation: "share_classes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "equity_transactions_shareholder_id_fkey"
+            columns: ["shareholder_id"]
+            isOneToOne: false
+            referencedRelation: "shareholders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       filing_documents: {
         Row: {
           created_at: string
@@ -1144,6 +1239,100 @@ export type Database = {
         }
         Relationships: []
       }
+      option_grants: {
+        Row: {
+          acceleration_double_trigger: boolean | null
+          acceleration_single_trigger: boolean | null
+          created_at: string
+          early_exercise_allowed: boolean | null
+          entity_id: string
+          exercise_price: number
+          expiration_date: string | null
+          grant_date: string
+          grant_type: string
+          id: string
+          notes: string | null
+          share_class_id: string
+          shareholder_id: string
+          shares_exercised: number
+          shares_granted: number
+          shares_vested: number
+          status: string
+          updated_at: string
+          vesting_cliff_months: number | null
+          vesting_period_months: number | null
+          vesting_start_date: string | null
+        }
+        Insert: {
+          acceleration_double_trigger?: boolean | null
+          acceleration_single_trigger?: boolean | null
+          created_at?: string
+          early_exercise_allowed?: boolean | null
+          entity_id: string
+          exercise_price: number
+          expiration_date?: string | null
+          grant_date: string
+          grant_type?: string
+          id?: string
+          notes?: string | null
+          share_class_id: string
+          shareholder_id: string
+          shares_exercised?: number
+          shares_granted: number
+          shares_vested?: number
+          status?: string
+          updated_at?: string
+          vesting_cliff_months?: number | null
+          vesting_period_months?: number | null
+          vesting_start_date?: string | null
+        }
+        Update: {
+          acceleration_double_trigger?: boolean | null
+          acceleration_single_trigger?: boolean | null
+          created_at?: string
+          early_exercise_allowed?: boolean | null
+          entity_id?: string
+          exercise_price?: number
+          expiration_date?: string | null
+          grant_date?: string
+          grant_type?: string
+          id?: string
+          notes?: string | null
+          share_class_id?: string
+          shareholder_id?: string
+          shares_exercised?: number
+          shares_granted?: number
+          shares_vested?: number
+          status?: string
+          updated_at?: string
+          vesting_cliff_months?: number | null
+          vesting_period_months?: number | null
+          vesting_start_date?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "option_grants_entity_id_fkey"
+            columns: ["entity_id"]
+            isOneToOne: false
+            referencedRelation: "entities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "option_grants_share_class_id_fkey"
+            columns: ["share_class_id"]
+            isOneToOne: false
+            referencedRelation: "share_classes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "option_grants_shareholder_id_fkey"
+            columns: ["shareholder_id"]
+            isOneToOne: false
+            referencedRelation: "shareholders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       phone_numbers: {
         Row: {
           country_code: string
@@ -1252,6 +1441,130 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "registration_agents_entity_id_fkey"
+            columns: ["entity_id"]
+            isOneToOne: false
+            referencedRelation: "entities"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      share_classes: {
+        Row: {
+          anti_dilution: string | null
+          authorized_shares: number
+          class_type: string
+          conversion_ratio: number | null
+          created_at: string
+          dividend_rate: number | null
+          entity_id: string
+          id: string
+          liquidation_preference: number | null
+          name: string
+          notes: string | null
+          par_value: number | null
+          participation_cap: number | null
+          seniority: number | null
+          updated_at: string
+          votes_per_share: number | null
+          voting_rights: boolean | null
+        }
+        Insert: {
+          anti_dilution?: string | null
+          authorized_shares?: number
+          class_type?: string
+          conversion_ratio?: number | null
+          created_at?: string
+          dividend_rate?: number | null
+          entity_id: string
+          id?: string
+          liquidation_preference?: number | null
+          name: string
+          notes?: string | null
+          par_value?: number | null
+          participation_cap?: number | null
+          seniority?: number | null
+          updated_at?: string
+          votes_per_share?: number | null
+          voting_rights?: boolean | null
+        }
+        Update: {
+          anti_dilution?: string | null
+          authorized_shares?: number
+          class_type?: string
+          conversion_ratio?: number | null
+          created_at?: string
+          dividend_rate?: number | null
+          entity_id?: string
+          id?: string
+          liquidation_preference?: number | null
+          name?: string
+          notes?: string | null
+          par_value?: number | null
+          participation_cap?: number | null
+          seniority?: number | null
+          updated_at?: string
+          votes_per_share?: number | null
+          voting_rights?: boolean | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "share_classes_entity_id_fkey"
+            columns: ["entity_id"]
+            isOneToOne: false
+            referencedRelation: "entities"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      shareholders: {
+        Row: {
+          address: string | null
+          created_at: string
+          email: string | null
+          entity_id: string
+          id: string
+          is_board_member: boolean | null
+          is_founder: boolean | null
+          name: string
+          notes: string | null
+          phone: string | null
+          shareholder_type: string
+          tax_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          address?: string | null
+          created_at?: string
+          email?: string | null
+          entity_id: string
+          id?: string
+          is_board_member?: boolean | null
+          is_founder?: boolean | null
+          name: string
+          notes?: string | null
+          phone?: string | null
+          shareholder_type?: string
+          tax_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          address?: string | null
+          created_at?: string
+          email?: string | null
+          entity_id?: string
+          id?: string
+          is_board_member?: boolean | null
+          is_founder?: boolean | null
+          name?: string
+          notes?: string | null
+          phone?: string | null
+          shareholder_type?: string
+          tax_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "shareholders_entity_id_fkey"
             columns: ["entity_id"]
             isOneToOne: false
             referencedRelation: "entities"
