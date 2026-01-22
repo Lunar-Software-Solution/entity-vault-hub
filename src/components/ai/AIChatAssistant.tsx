@@ -134,12 +134,17 @@ const AIChatAssistant = () => {
             </div>
             <div className="flex items-center gap-1">
               {messages.length > 0 && (
-                <Button variant="ghost" size="sm" onClick={clearChat} className="text-xs">
+                <Button variant="ghost" size="sm" onClick={clearChat} className="text-xs text-muted-foreground hover:text-foreground">
                   Clear
                 </Button>
               )}
-              <Button variant="ghost" size="icon" onClick={() => setIsOpen(false)}>
-                <X className="h-4 w-4" />
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                onClick={() => setIsOpen(false)}
+                className="text-foreground hover:bg-muted/50"
+              >
+                <X className="h-5 w-5" />
               </Button>
             </div>
           </div>
