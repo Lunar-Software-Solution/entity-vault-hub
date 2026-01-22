@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Plus, MapPin, Home, Building2, Package, Edit2, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useAddresses } from "@/hooks/usePortalData";
+import { useAddresses, useEntities } from "@/hooks/usePortalData";
 import { useCreateAddress, useUpdateAddress, useDeleteAddress } from "@/hooks/usePortalMutations";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -23,8 +23,13 @@ const getAddressIcon = (type: string) => {
   }
 };
 
-const AddressesSection = () => {
+interface AddressesSectionProps {
+  entityFilter?: string | null;
+}
+
+const AddressesSection = ({ entityFilter }: AddressesSectionProps) => {
   const { data: addresses, isLoading } = useAddresses();
+  const { data: entities } = useEntities();
   
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingAddress, setEditingAddress] = useState<Address | null>(null);
@@ -86,14 +91,22 @@ const AddressesSection = () => {
     );
   }
 
-  const isEmpty = !addresses || addresses.length === 0;
+  const filteredAddresses = entityFilter 
+    ? (addresses ?? []).filter(addr => addr.entity_id === entityFilter)
+    : (addresses ?? []);
+
+  const isEmpty = filteredAddresses.length === 0;
 
   return (
     <div className="space-y-8">
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-2xl font-bold text-foreground mb-2">Addresses</h2>
-          <p className="text-muted-foreground">Manage your registered addresses for different purposes.</p>
+          <p className="text-muted-foreground">
+            {entityFilter 
+              ? `Showing addresses for selected entity (${filteredAddresses.length} of ${addresses?.length ?? 0})`
+              : "Manage your registered addresses for different purposes."}
+          </p>
         </div>
         <Button className="gap-2" onClick={() => setIsFormOpen(true)}>
           <Plus className="w-4 h-4" />
@@ -103,7 +116,9 @@ const AddressesSection = () => {
 
       {isEmpty ? (
         <div className="glass-card rounded-xl p-12 text-center">
-          <p className="text-muted-foreground mb-4">No addresses added yet.</p>
+          <p className="text-muted-foreground mb-4">
+            {entityFilter ? "No addresses linked to this entity." : "No addresses added yet."}
+          </p>
           <Button className="gap-2" onClick={() => setIsFormOpen(true)}>
             <Plus className="w-4 h-4" />
             Add Your First Address
@@ -111,8 +126,9 @@ const AddressesSection = () => {
         </div>
       ) : (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {addresses.map((address) => {
+          {filteredAddresses.map((address) => {
             const IconComponent = getAddressIcon(address.type);
+            const linkedEntity = entities?.find(e => e.id === address.entity_id);
             
             return (
               <div key={address.id} className="glass-card rounded-xl p-6 hover:border-primary/30 transition-all duration-300">
@@ -131,6 +147,12 @@ const AddressesSection = () => {
                         )}
                       </div>
                       <p className="text-sm text-muted-foreground capitalize">{address.type} Address</p>
+                      {linkedEntity && (
+                        <div className="flex items-center gap-1 mt-1">
+                          <Building2 className="w-3 h-3 text-primary" />
+                          <span className="text-xs text-primary">{linkedEntity.name}</span>
+                        </div>
+                      )}
                     </div>
                   </div>
                   <div className="flex gap-1">

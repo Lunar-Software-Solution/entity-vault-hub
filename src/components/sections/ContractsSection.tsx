@@ -1,8 +1,8 @@
 import { useState } from "react";
-import { Plus, FileText, Download, Eye, Calendar, AlertCircle, CheckCircle2, Edit2, Trash2 } from "lucide-react";
+import { Plus, FileText, Download, Eye, Calendar, AlertCircle, CheckCircle2, Edit2, Trash2, Building2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { useContracts } from "@/hooks/usePortalData";
+import { useContracts, useEntities } from "@/hooks/usePortalData";
 import { useCreateContract, useUpdateContract, useDeleteContract } from "@/hooks/usePortalMutations";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -12,8 +12,13 @@ import { format, differenceInDays } from "date-fns";
 import type { Contract } from "@/hooks/usePortalData";
 import type { ContractFormData } from "@/lib/formSchemas";
 
-const ContractsSection = () => {
+interface ContractsSectionProps {
+  entityFilter?: string | null;
+}
+
+const ContractsSection = ({ entityFilter }: ContractsSectionProps) => {
   const { data: contracts, isLoading } = useContracts();
+  const { data: entities } = useEntities();
   
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingContract, setEditingContract] = useState<Contract | null>(null);
@@ -76,16 +81,24 @@ const ContractsSection = () => {
     );
   }
 
-  const isEmpty = !contracts || contracts.length === 0;
-  const activeContracts = contracts?.filter(c => c.status === "active").length ?? 0;
-  const expiringContracts = contracts?.filter(c => c.status === "expiring-soon").length ?? 0;
+  const filteredContracts = entityFilter 
+    ? (contracts ?? []).filter(c => c.entity_id === entityFilter)
+    : (contracts ?? []);
+
+  const isEmpty = filteredContracts.length === 0;
+  const activeContracts = filteredContracts.filter(c => c.status === "active").length;
+  const expiringContracts = filteredContracts.filter(c => c.status === "expiring-soon").length;
 
   return (
     <div className="space-y-8">
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-2xl font-bold text-foreground mb-2">Contracts</h2>
-          <p className="text-muted-foreground">Track and manage all your business and personal contracts.</p>
+          <p className="text-muted-foreground">
+            {entityFilter 
+              ? `Showing contracts for selected entity (${filteredContracts.length} of ${contracts?.length ?? 0})`
+              : "Track and manage all your business and personal contracts."}
+          </p>
         </div>
         <Button className="gap-2" onClick={() => setIsFormOpen(true)}>
           <Plus className="w-4 h-4" />
@@ -121,7 +134,9 @@ const ContractsSection = () => {
 
       {isEmpty ? (
         <div className="glass-card rounded-xl p-12 text-center">
-          <p className="text-muted-foreground mb-4">No contracts added yet.</p>
+          <p className="text-muted-foreground mb-4">
+            {entityFilter ? "No contracts linked to this entity." : "No contracts added yet."}
+          </p>
           <Button className="gap-2" onClick={() => setIsFormOpen(true)}>
             <Plus className="w-4 h-4" />
             Add Your First Contract
@@ -142,10 +157,11 @@ const ContractsSection = () => {
                 </tr>
               </thead>
               <tbody>
-                {contracts.map((contract) => {
+                {filteredContracts.map((contract) => {
                   const daysUntilExpiry = contract.end_date 
                     ? differenceInDays(new Date(contract.end_date), new Date())
                     : null;
+                  const linkedEntity = entities?.find(e => e.id === contract.entity_id);
 
                   return (
                     <tr key={contract.id} className="border-b border-border last:border-0 hover:bg-muted/50 transition-colors">
@@ -159,6 +175,12 @@ const ContractsSection = () => {
                             <p className="text-xs text-muted-foreground">
                               {contract.parties?.join(" & ") || "—"}
                             </p>
+                            {linkedEntity && (
+                              <div className="flex items-center gap-1 mt-1">
+                                <Building2 className="w-3 h-3 text-primary" />
+                                <span className="text-xs text-primary">{linkedEntity.name}</span>
+                              </div>
+                            )}
                           </div>
                         </div>
                       </td>

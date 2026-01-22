@@ -1,7 +1,7 @@
 import { useState } from "react";
-import { Plus, MoreVertical, Edit2, Trash2 } from "lucide-react";
+import { Plus, MoreVertical, Edit2, Trash2, Building2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useBankAccounts } from "@/hooks/usePortalData";
+import { useBankAccounts, useEntities } from "@/hooks/usePortalData";
 import { useCreateBankAccount, useUpdateBankAccount, useDeleteBankAccount } from "@/hooks/usePortalMutations";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -11,8 +11,13 @@ import DeleteConfirmDialog from "@/components/shared/DeleteConfirmDialog";
 import type { BankAccount } from "@/hooks/usePortalData";
 import type { BankAccountFormData } from "@/lib/formSchemas";
 
-const BankAccountsSection = () => {
+interface BankAccountsSectionProps {
+  entityFilter?: string | null;
+}
+
+const BankAccountsSection = ({ entityFilter }: BankAccountsSectionProps) => {
   const { data: bankAccounts, isLoading } = useBankAccounts();
+  const { data: entities } = useEntities();
   
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingAccount, setEditingAccount] = useState<BankAccount | null>(null);
@@ -73,14 +78,22 @@ const BankAccountsSection = () => {
     );
   }
 
-  const isEmpty = !bankAccounts || bankAccounts.length === 0;
+  const filteredAccounts = entityFilter 
+    ? (bankAccounts ?? []).filter(acc => acc.entity_id === entityFilter)
+    : (bankAccounts ?? []);
+
+  const isEmpty = filteredAccounts.length === 0;
 
   return (
     <div className="space-y-8">
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-2xl font-bold text-foreground mb-2">Bank Accounts</h2>
-          <p className="text-muted-foreground">Manage your connected bank accounts.</p>
+          <p className="text-muted-foreground">
+            {entityFilter 
+              ? `Showing accounts for selected entity (${filteredAccounts.length} of ${bankAccounts?.length ?? 0})`
+              : "Manage your connected bank accounts."}
+          </p>
         </div>
         <Button className="gap-2" onClick={() => setIsFormOpen(true)}>
           <Plus className="w-4 h-4" />
@@ -90,7 +103,9 @@ const BankAccountsSection = () => {
 
       {isEmpty ? (
         <div className="glass-card rounded-xl p-12 text-center">
-          <p className="text-muted-foreground mb-4">No bank accounts added yet.</p>
+          <p className="text-muted-foreground mb-4">
+            {entityFilter ? "No bank accounts linked to this entity." : "No bank accounts added yet."}
+          </p>
           <Button className="gap-2" onClick={() => setIsFormOpen(true)}>
             <Plus className="w-4 h-4" />
             Add Your First Account
@@ -98,55 +113,64 @@ const BankAccountsSection = () => {
         </div>
       ) : (
         <div className="grid grid-cols-1 gap-4">
-          {bankAccounts.map((account) => (
-            <div key={account.id} className="glass-card rounded-xl p-6 hover:border-primary/30 transition-all duration-300">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center">
-                    <span className="text-xl font-bold text-primary">{account.bank.charAt(0)}</span>
+          {filteredAccounts.map((account) => {
+            const linkedEntity = entities?.find(e => e.id === account.entity_id);
+            return (
+              <div key={account.id} className="glass-card rounded-xl p-6 hover:border-primary/30 transition-all duration-300">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center">
+                      <span className="text-xl font-bold text-primary">{account.bank.charAt(0)}</span>
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-foreground">{account.name}</h3>
+                      <p className="text-sm text-muted-foreground">{account.bank}</p>
+                      {linkedEntity && (
+                        <div className="flex items-center gap-1 mt-1">
+                          <Building2 className="w-3 h-3 text-primary" />
+                          <span className="text-xs text-primary">{linkedEntity.name}</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <button className="p-2 hover:bg-muted rounded-lg transition-colors">
+                        <MoreVertical className="w-5 h-5 text-muted-foreground" />
+                      </button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuItem onClick={() => handleEdit(account)}>
+                        <Edit2 className="w-4 h-4 mr-2" /> Edit
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => setDeletingId(account.id)} className="text-destructive">
+                        <Trash2 className="w-4 h-4 mr-2" /> Delete
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
+
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-6">
+                  <div>
+                    <p className="text-xs text-muted-foreground mb-1">Account Number</p>
+                    <p className="font-mono text-foreground">{account.account_number}</p>
                   </div>
                   <div>
-                    <h3 className="font-semibold text-foreground">{account.name}</h3>
-                    <p className="text-sm text-muted-foreground">{account.bank}</p>
+                    <p className="text-xs text-muted-foreground mb-1">Routing Number</p>
+                    <p className="font-mono text-foreground">{account.routing_number || "—"}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-muted-foreground mb-1">Type</p>
+                    <span className="px-2 py-0.5 rounded-full bg-muted text-muted-foreground text-xs">{account.type}</span>
+                  </div>
+                  <div>
+                    <p className="text-xs text-muted-foreground mb-1">Currency</p>
+                    <span className="px-2 py-0.5 rounded-full bg-muted text-muted-foreground text-xs">{account.currency}</span>
                   </div>
                 </div>
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <button className="p-2 hover:bg-muted rounded-lg transition-colors">
-                      <MoreVertical className="w-5 h-5 text-muted-foreground" />
-                    </button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    <DropdownMenuItem onClick={() => handleEdit(account)}>
-                      <Edit2 className="w-4 h-4 mr-2" /> Edit
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => setDeletingId(account.id)} className="text-destructive">
-                      <Trash2 className="w-4 h-4 mr-2" /> Delete
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
               </div>
-
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-6">
-                <div>
-                  <p className="text-xs text-muted-foreground mb-1">Account Number</p>
-                  <p className="font-mono text-foreground">{account.account_number}</p>
-                </div>
-                <div>
-                  <p className="text-xs text-muted-foreground mb-1">Routing Number</p>
-                  <p className="font-mono text-foreground">{account.routing_number || "—"}</p>
-                </div>
-                <div>
-                  <p className="text-xs text-muted-foreground mb-1">Type</p>
-                  <span className="px-2 py-0.5 rounded-full bg-muted text-muted-foreground text-xs">{account.type}</span>
-                </div>
-                <div>
-                  <p className="text-xs text-muted-foreground mb-1">Currency</p>
-                  <span className="px-2 py-0.5 rounded-full bg-muted text-muted-foreground text-xs">{account.currency}</span>
-                </div>
-              </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
 

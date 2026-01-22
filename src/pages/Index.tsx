@@ -1,5 +1,6 @@
 import { useState } from "react";
 import Sidebar from "@/components/layout/Sidebar";
+import EntityFilter from "@/components/layout/EntityFilter";
 import DashboardSection from "@/components/dashboard/DashboardSection";
 import EntitySection from "@/components/sections/EntitySection";
 import BankAccountsSection from "@/components/sections/BankAccountsSection";
@@ -10,6 +11,11 @@ import ContractsSection from "@/components/sections/ContractsSection";
 
 const Index = () => {
   const [activeSection, setActiveSection] = useState("dashboard");
+  const [selectedEntityId, setSelectedEntityId] = useState<string | null>(null);
+
+  // Sections that support entity filtering
+  const filterableSections = ["bank-accounts", "credit-cards", "addresses", "contracts"];
+  const showFilter = filterableSections.includes(activeSection);
 
   const renderSection = () => {
     switch (activeSection) {
@@ -18,15 +24,15 @@ const Index = () => {
       case "entity":
         return <EntitySection />;
       case "bank-accounts":
-        return <BankAccountsSection />;
+        return <BankAccountsSection entityFilter={selectedEntityId} />;
       case "credit-cards":
-        return <CreditCardsSection />;
+        return <CreditCardsSection entityFilter={selectedEntityId} />;
       case "social-media":
         return <SocialMediaSection />;
       case "addresses":
-        return <AddressesSection />;
+        return <AddressesSection entityFilter={selectedEntityId} />;
       case "contracts":
-        return <ContractsSection />;
+        return <ContractsSection entityFilter={selectedEntityId} />;
       default:
         return <DashboardSection />;
     }
@@ -37,6 +43,14 @@ const Index = () => {
       <Sidebar activeSection={activeSection} onSectionChange={setActiveSection} />
       <main className="ml-64 min-h-screen">
         <div className="p-8">
+          {showFilter && (
+            <div className="mb-6 pb-4 border-b border-border">
+              <EntityFilter 
+                selectedEntityId={selectedEntityId} 
+                onEntityChange={setSelectedEntityId} 
+              />
+            </div>
+          )}
           {renderSection()}
         </div>
       </main>

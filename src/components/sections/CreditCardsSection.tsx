@@ -1,7 +1,7 @@
 import { useState } from "react";
-import { Plus, CreditCard, MoreVertical, Edit2, Trash2 } from "lucide-react";
+import { Plus, CreditCard, MoreVertical, Edit2, Trash2, Building2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useCreditCards } from "@/hooks/usePortalData";
+import { useCreditCards, useEntities } from "@/hooks/usePortalData";
 import { useCreateCreditCard, useUpdateCreditCard, useDeleteCreditCard } from "@/hooks/usePortalMutations";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -12,8 +12,13 @@ import { format } from "date-fns";
 import type { CreditCard as CreditCardType } from "@/hooks/usePortalData";
 import type { CreditCardFormData } from "@/lib/formSchemas";
 
-const CreditCardsSection = () => {
+interface CreditCardsSectionProps {
+  entityFilter?: string | null;
+}
+
+const CreditCardsSection = ({ entityFilter }: CreditCardsSectionProps) => {
   const { data: creditCards, isLoading } = useCreditCards();
+  const { data: entities } = useEntities();
   
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingCard, setEditingCard] = useState<CreditCardType | null>(null);
@@ -76,14 +81,22 @@ const CreditCardsSection = () => {
     );
   }
 
-  const isEmpty = !creditCards || creditCards.length === 0;
+  const filteredCards = entityFilter 
+    ? (creditCards ?? []).filter(card => card.entity_id === entityFilter)
+    : (creditCards ?? []);
+
+  const isEmpty = filteredCards.length === 0;
 
   return (
     <div className="space-y-8">
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-2xl font-bold text-foreground mb-2">Credit Cards</h2>
-          <p className="text-muted-foreground">View and manage your credit cards.</p>
+          <p className="text-muted-foreground">
+            {entityFilter 
+              ? `Showing cards for selected entity (${filteredCards.length} of ${creditCards?.length ?? 0})`
+              : "View and manage your credit cards."}
+          </p>
         </div>
         <Button className="gap-2" onClick={() => setIsFormOpen(true)}>
           <Plus className="w-4 h-4" />
@@ -93,7 +106,9 @@ const CreditCardsSection = () => {
 
       {isEmpty ? (
         <div className="glass-card rounded-xl p-12 text-center">
-          <p className="text-muted-foreground mb-4">No credit cards added yet.</p>
+          <p className="text-muted-foreground mb-4">
+            {entityFilter ? "No credit cards linked to this entity." : "No credit cards added yet."}
+          </p>
           <Button className="gap-2" onClick={() => setIsFormOpen(true)}>
             <Plus className="w-4 h-4" />
             Add Your First Card
@@ -101,63 +116,74 @@ const CreditCardsSection = () => {
         </div>
       ) : (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {creditCards.map((card) => (
-            <div key={card.id} className="glass-card rounded-xl overflow-hidden">
-              {/* Card Visual */}
-              <div className={`p-6 bg-gradient-to-br ${card.card_color} text-white relative overflow-hidden`}>
-                <div className="absolute top-0 right-0 w-40 h-40 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/2" />
-                <div className="relative">
-                  <div className="flex items-center justify-between mb-8">
-                    <CreditCard className="w-10 h-10" />
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <button className="p-1 hover:bg-white/20 rounded transition-colors">
-                          <MoreVertical className="w-5 h-5" />
-                        </button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem onClick={() => handleEdit(card)}>
-                          <Edit2 className="w-4 h-4 mr-2" /> Edit
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => setDeletingId(card.id)} className="text-destructive">
-                          <Trash2 className="w-4 h-4 mr-2" /> Delete
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </div>
-                  <p className="font-mono text-lg tracking-wider mb-4">{card.card_number}</p>
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-xs text-white/60">Card Holder</p>
-                      <p className="font-medium">{card.cardholder_name || "CARD HOLDER"}</p>
+          {filteredCards.map((card) => {
+            const linkedEntity = entities?.find(e => e.id === card.entity_id);
+            return (
+              <div key={card.id} className="glass-card rounded-xl overflow-hidden">
+                {/* Card Visual */}
+                <div className={`p-6 bg-gradient-to-br ${card.card_color} text-white relative overflow-hidden`}>
+                  <div className="absolute top-0 right-0 w-40 h-40 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/2" />
+                  <div className="relative">
+                    <div className="flex items-center justify-between mb-8">
+                      <CreditCard className="w-10 h-10" />
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <button className="p-1 hover:bg-white/20 rounded transition-colors">
+                            <MoreVertical className="w-5 h-5" />
+                          </button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem onClick={() => handleEdit(card)}>
+                            <Edit2 className="w-4 h-4 mr-2" /> Edit
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => setDeletingId(card.id)} className="text-destructive">
+                            <Trash2 className="w-4 h-4 mr-2" /> Delete
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
                     </div>
-                    <div>
-                      <p className="text-xs text-white/60">Expires</p>
-                      <p className="font-medium">{card.expiry_date || "—"}</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Card Details */}
-              <div className="p-6 space-y-4">
-                <h3 className="font-semibold text-foreground">{card.name}</h3>
-                
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-muted-foreground">Credit Limit</span>
-                    <span className="font-medium text-foreground">${Number(card.credit_limit).toLocaleString()}</span>
-                  </div>
-                  {card.due_date && (
+                    <p className="font-mono text-lg tracking-wider mb-4">{card.card_number}</p>
                     <div className="flex items-center justify-between">
-                      <span className="text-sm text-muted-foreground">Due Date</span>
-                      <span className="font-medium text-foreground">{format(new Date(card.due_date), "MMM d, yyyy")}</span>
+                      <div>
+                        <p className="text-xs text-white/60">Card Holder</p>
+                        <p className="font-medium">{card.cardholder_name || "CARD HOLDER"}</p>
+                      </div>
+                      <div>
+                        <p className="text-xs text-white/60">Expires</p>
+                        <p className="font-medium">{card.expiry_date || "—"}</p>
+                      </div>
                     </div>
-                  )}
+                  </div>
+                </div>
+
+                {/* Card Details */}
+                <div className="p-6 space-y-4">
+                  <div className="flex items-center justify-between">
+                    <h3 className="font-semibold text-foreground">{card.name}</h3>
+                    {linkedEntity && (
+                      <div className="flex items-center gap-1 px-2 py-1 rounded-full bg-primary/10">
+                        <Building2 className="w-3 h-3 text-primary" />
+                        <span className="text-xs text-primary">{linkedEntity.name}</span>
+                      </div>
+                    )}
+                  </div>
+                  
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-muted-foreground">Credit Limit</span>
+                      <span className="font-medium text-foreground">${Number(card.credit_limit).toLocaleString()}</span>
+                    </div>
+                    {card.due_date && (
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm text-muted-foreground">Due Date</span>
+                        <span className="font-medium text-foreground">{format(new Date(card.due_date), "MMM d, yyyy")}</span>
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
 
