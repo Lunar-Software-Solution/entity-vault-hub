@@ -31,7 +31,7 @@ interface SidebarProps {
 
 const menuItems = [
   { id: "dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { id: "entity", label: "Entity", icon: Building2 },
+  { id: "entity", label: "Entities", icon: Building2 },
   { id: "bank-accounts", label: "Bank Accounts", icon: Wallet },
   { id: "credit-cards", label: "Credit Cards", icon: CreditCard },
   { id: "social-media", label: "Social Media", icon: Share2 },
