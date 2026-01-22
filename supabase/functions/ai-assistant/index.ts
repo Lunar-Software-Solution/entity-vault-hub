@@ -12,7 +12,7 @@ const tools = [
     type: "function",
     function: {
       name: "add_entity",
-      description: "Add a new business entity (company, LLC, corporation, etc.)",
+      description: "Add a new business entity (company, LLC, corporation, etc.) - ONLY use after user confirms",
       parameters: {
         type: "object",
         properties: {
@@ -34,7 +34,7 @@ const tools = [
     type: "function",
     function: {
       name: "add_address",
-      description: "Add a new address for an entity",
+      description: "Add a new address for an entity - ONLY use after user confirms",
       parameters: {
         type: "object",
         properties: {
@@ -57,7 +57,7 @@ const tools = [
     type: "function",
     function: {
       name: "add_bank_account",
-      description: "Add a new bank account",
+      description: "Add a new bank account - ONLY use after user confirms",
       parameters: {
         type: "object",
         properties: {
@@ -78,7 +78,7 @@ const tools = [
     type: "function",
     function: {
       name: "add_phone_number",
-      description: "Add a phone number for an entity",
+      description: "Add a phone number for an entity - ONLY use after user confirms",
       parameters: {
         type: "object",
         properties: {
@@ -98,7 +98,7 @@ const tools = [
     type: "function",
     function: {
       name: "add_tax_id",
-      description: "Add a tax ID for an entity",
+      description: "Add a tax ID for an entity - ONLY use after user confirms",
       parameters: {
         type: "object",
         properties: {
@@ -118,7 +118,7 @@ const tools = [
     type: "function",
     function: {
       name: "add_filing",
-      description: "Add a regulatory filing or tax filing for an entity",
+      description: "Add a regulatory filing or tax filing for an entity - ONLY use after user confirms",
       parameters: {
         type: "object",
         properties: {
@@ -138,7 +138,7 @@ const tools = [
     type: "function",
     function: {
       name: "add_law_firm",
-      description: "Add a law firm for an entity",
+      description: "Add a law firm for an entity - ONLY use after user confirms",
       parameters: {
         type: "object",
         properties: {
@@ -150,8 +150,8 @@ const tools = [
           address: { type: "string", description: "Office address" },
           website: { type: "string", description: "Website URL" },
           bar_number: { type: "string", description: "Bar number" },
-          practice_areas: { type: "array", items: { type: "string" }, description: "Practice areas (e.g., Corporate Law, IP, Litigation)" },
-          fee_structure: { type: "string", description: "Fee structure (e.g., Hourly, Retainer, Contingency)" },
+          practice_areas: { type: "array", items: { type: "string" }, description: "Practice areas" },
+          fee_structure: { type: "string", description: "Fee structure" },
           linkedin_url: { type: "string", description: "LinkedIn URL" },
           notes: { type: "string", description: "Additional notes" },
         },
@@ -164,7 +164,7 @@ const tools = [
     type: "function",
     function: {
       name: "add_accountant_firm",
-      description: "Add an accounting firm for an entity",
+      description: "Add an accounting firm for an entity - ONLY use after user confirms",
       parameters: {
         type: "object",
         properties: {
@@ -176,7 +176,58 @@ const tools = [
           address: { type: "string", description: "Office address" },
           website: { type: "string", description: "Website URL" },
           license_number: { type: "string", description: "CPA license number" },
-          specializations: { type: "array", items: { type: "string" }, description: "Specializations (e.g., Tax, Audit, Bookkeeping)" },
+          specializations: { type: "array", items: { type: "string" }, description: "Specializations" },
+          fee_structure: { type: "string", description: "Fee structure" },
+          notes: { type: "string", description: "Additional notes" },
+        },
+        required: ["entity_name", "name"],
+        additionalProperties: false,
+      },
+    },
+  },
+  {
+    type: "function",
+    function: {
+      name: "add_auditor",
+      description: "Add an auditor for an entity - ONLY use after user confirms",
+      parameters: {
+        type: "object",
+        properties: {
+          entity_name: { type: "string", description: "Name of the entity" },
+          name: { type: "string", description: "Auditor or audit firm name" },
+          contact_name: { type: "string", description: "Primary contact name" },
+          email: { type: "string", description: "Contact email" },
+          phone: { type: "string", description: "Phone number" },
+          address: { type: "string", description: "Office address" },
+          website: { type: "string", description: "Website URL" },
+          license_number: { type: "string", description: "License number" },
+          audit_types: { type: "array", items: { type: "string" }, description: "Audit types (e.g., Financial, SOC2, Tax)" },
+          certifications: { type: "array", items: { type: "string" }, description: "Certifications (e.g., CPA, CIA)" },
+          fee_structure: { type: "string", description: "Fee structure" },
+          notes: { type: "string", description: "Additional notes" },
+        },
+        required: ["entity_name", "name"],
+        additionalProperties: false,
+      },
+    },
+  },
+  {
+    type: "function",
+    function: {
+      name: "add_advisor",
+      description: "Add a financial or business advisor for an entity - ONLY use after user confirms",
+      parameters: {
+        type: "object",
+        properties: {
+          entity_name: { type: "string", description: "Name of the entity" },
+          name: { type: "string", description: "Advisor or advisory firm name" },
+          advisor_type: { type: "string", description: "Type (e.g., Financial, Investment, M&A, Tax)" },
+          contact_name: { type: "string", description: "Primary contact name" },
+          email: { type: "string", description: "Contact email" },
+          phone: { type: "string", description: "Phone number" },
+          address: { type: "string", description: "Office address" },
+          website: { type: "string", description: "Website URL" },
+          certifications: { type: "array", items: { type: "string" }, description: "Certifications (e.g., CFP, CFA)" },
           fee_structure: { type: "string", description: "Fee structure" },
           notes: { type: "string", description: "Additional notes" },
         },
@@ -189,7 +240,7 @@ const tools = [
     type: "function",
     function: {
       name: "add_consultant",
-      description: "Add a consultant for an entity",
+      description: "Add a consultant for an entity - ONLY use after user confirms",
       parameters: {
         type: "object",
         properties: {
@@ -214,7 +265,7 @@ const tools = [
     type: "function",
     function: {
       name: "add_registration_agent",
-      description: "Add a registered agent for an entity",
+      description: "Add a registered agent for an entity - ONLY use after user confirms",
       parameters: {
         type: "object",
         properties: {
@@ -238,13 +289,56 @@ const tools = [
   {
     type: "function",
     function: {
+      name: "add_credit_card",
+      description: "Add a credit card for an entity - ONLY use after user confirms",
+      parameters: {
+        type: "object",
+        properties: {
+          entity_name: { type: "string", description: "Name of the entity" },
+          name: { type: "string", description: "Card name/nickname (e.g., Company Amex, Travel Card)" },
+          card_number: { type: "string", description: "Last 4 digits of card number" },
+          cardholder_name: { type: "string", description: "Cardholder name" },
+          expiry_date: { type: "string", description: "Expiry date (MM/YY)" },
+          credit_limit: { type: "number", description: "Credit limit" },
+          due_date: { type: "string", description: "Payment due date (day of month)" },
+          card_color: { type: "string", description: "Card color for display" },
+        },
+        required: ["entity_name", "name", "card_number"],
+        additionalProperties: false,
+      },
+    },
+  },
+  {
+    type: "function",
+    function: {
+      name: "add_contract",
+      description: "Add a contract for an entity - ONLY use after user confirms",
+      parameters: {
+        type: "object",
+        properties: {
+          entity_name: { type: "string", description: "Name of the entity" },
+          title: { type: "string", description: "Contract title" },
+          type: { type: "string", description: "Contract type (e.g., Service Agreement, NDA, Lease)" },
+          parties: { type: "array", items: { type: "string" }, description: "Parties involved" },
+          start_date: { type: "string", description: "Start date (YYYY-MM-DD)" },
+          end_date: { type: "string", description: "End date (YYYY-MM-DD)" },
+          status: { type: "string", enum: ["active", "expired", "pending", "terminated"], description: "Contract status" },
+        },
+        required: ["entity_name", "title"],
+        additionalProperties: false,
+      },
+    },
+  },
+  {
+    type: "function",
+    function: {
       name: "search_data",
-      description: "Search existing data in the database",
+      description: "Search existing data in the database - can use anytime",
       parameters: {
         type: "object",
         properties: {
           query: { type: "string", description: "Search query" },
-          table: { type: "string", enum: ["entities", "addresses", "bank_accounts", "phone_numbers", "tax_ids", "entity_filings", "contracts", "law_firms", "accountant_firms", "consultants", "registration_agents"], description: "Table to search (optional, searches all if not specified)" },
+          table: { type: "string", enum: ["entities", "addresses", "bank_accounts", "phone_numbers", "tax_ids", "entity_filings", "contracts", "law_firms", "accountant_firms", "consultants", "registration_agents", "auditors", "advisors", "credit_cards"], description: "Table to search" },
         },
         required: ["query"],
         additionalProperties: false,
@@ -270,7 +364,7 @@ serve(async (req) => {
 
     const supabase = createClient(SUPABASE_URL!, SUPABASE_SERVICE_ROLE_KEY!);
 
-    // First, get context from the database
+    // Get context from the database
     const { data: entities } = await supabase.from("entities").select("id, name").limit(50);
     const entityList = entities?.map(e => e.name).join(", ") || "None";
 
@@ -278,19 +372,29 @@ serve(async (req) => {
 
 EXISTING ENTITIES in the database: ${entityList}
 
+CRITICAL WORKFLOW - ALWAYS FOLLOW THIS:
+1. When a user pastes or provides information, FIRST parse and summarize what you understood
+2. Present a clear summary of what you plan to add and ask "Should I add this? (Yes/No)"
+3. ONLY call the add_* tools AFTER the user confirms with "yes", "confirm", "go ahead", "do it", etc.
+4. If any information is missing or unclear, ask for clarification BEFORE asking for confirmation
+
 IMPORTANT DISTINCTIONS:
 - ENTITIES are the main business companies (LLCs, Corporations, etc.) that the user manages
-- LAW FIRMS, ACCOUNTANT FIRMS, CONSULTANTS, REGISTRATION AGENTS are SERVICE PROVIDERS that work FOR the entities
-- When a user mentions a law firm, accounting firm, CPA, attorney, lawyer, registered agent, or consultant - these should be added as service providers linked to an entity, NOT as new entities
+- SERVICE PROVIDERS (law firms, accountants, auditors, advisors, consultants, registration agents) work FOR entities
+- When adding a service provider, you MUST link it to an existing entity
 
-When users paste information:
-1. Determine if it's an entity (business the user owns/manages) or a service provider (external firm helping the entity)
-2. For service providers, use add_law_firm, add_accountant_firm, add_consultant, or add_registration_agent
-3. Service providers must be linked to an existing entity - ask which entity if unclear
-4. If an entity doesn't exist yet, create it first before adding its service providers
+WHAT YOU CAN ADD:
+- Entities (companies, LLCs, corporations)
+- Addresses (linked to entities)
+- Bank accounts (linked to entities)
+- Phone numbers (linked to entities)
+- Tax IDs (linked to entities)
+- Filings (regulatory filings, tax filings)
+- Law firms, Accountant firms, Auditors, Advisors, Consultants, Registration agents
+- Credit cards (linked to entities)
+- Contracts (linked to entities)
 
-Be conversational and helpful. If information is ambiguous, ask for clarification.
-Format dates as YYYY-MM-DD. For phone numbers, extract country codes if present.`;
+Format dates as YYYY-MM-DD. Always confirm before adding anything.`;
 
     // Call Lovable AI with tools
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
@@ -364,7 +468,6 @@ Format dates as YYYY-MM-DD. For phone numbers, extract country codes if present.
             }
 
             case "add_address": {
-              // Find entity by name
               const { data: entity } = await supabase
                 .from("entities")
                 .select("id")
@@ -571,6 +674,73 @@ Format dates as YYYY-MM-DD. For phone numbers, extract country codes if present.
               break;
             }
 
+            case "add_auditor": {
+              const { data: entity } = await supabase
+                .from("entities")
+                .select("id")
+                .ilike("name", `%${args.entity_name}%`)
+                .limit(1)
+                .single();
+
+              if (!entity) {
+                result = { success: false, message: `Entity "${args.entity_name}" not found. Please create it first.` };
+                break;
+              }
+
+              const { data, error } = await supabase.from("auditors").insert({
+                entity_id: entity.id,
+                name: args.name,
+                contact_name: args.contact_name || null,
+                email: args.email || null,
+                phone: args.phone || null,
+                address: args.address || null,
+                website: args.website || null,
+                license_number: args.license_number || null,
+                audit_types: args.audit_types || null,
+                certifications: args.certifications || null,
+                fee_structure: args.fee_structure || null,
+                notes: args.notes || null,
+                is_active: true,
+              }).select().single();
+
+              if (error) throw error;
+              result = { success: true, message: `Added auditor "${args.name}" for "${args.entity_name}"`, data };
+              break;
+            }
+
+            case "add_advisor": {
+              const { data: entity } = await supabase
+                .from("entities")
+                .select("id")
+                .ilike("name", `%${args.entity_name}%`)
+                .limit(1)
+                .single();
+
+              if (!entity) {
+                result = { success: false, message: `Entity "${args.entity_name}" not found. Please create it first.` };
+                break;
+              }
+
+              const { data, error } = await supabase.from("advisors").insert({
+                entity_id: entity.id,
+                name: args.name,
+                advisor_type: args.advisor_type || null,
+                contact_name: args.contact_name || null,
+                email: args.email || null,
+                phone: args.phone || null,
+                address: args.address || null,
+                website: args.website || null,
+                certifications: args.certifications || null,
+                fee_structure: args.fee_structure || null,
+                notes: args.notes || null,
+                is_active: true,
+              }).select().single();
+
+              if (error) throw error;
+              result = { success: true, message: `Added advisor "${args.name}" for "${args.entity_name}"`, data };
+              break;
+            }
+
             case "add_consultant": {
               const { data: entity } = await supabase
                 .from("entities")
@@ -637,6 +807,63 @@ Format dates as YYYY-MM-DD. For phone numbers, extract country codes if present.
               break;
             }
 
+            case "add_credit_card": {
+              const { data: entity } = await supabase
+                .from("entities")
+                .select("id")
+                .ilike("name", `%${args.entity_name}%`)
+                .limit(1)
+                .single();
+
+              if (!entity) {
+                result = { success: false, message: `Entity "${args.entity_name}" not found. Please create it first.` };
+                break;
+              }
+
+              const { data, error } = await supabase.from("credit_cards").insert({
+                entity_id: entity.id,
+                name: args.name,
+                card_number: args.card_number,
+                cardholder_name: args.cardholder_name || null,
+                expiry_date: args.expiry_date || null,
+                credit_limit: args.credit_limit || 0,
+                due_date: args.due_date || null,
+                card_color: args.card_color || "#1E3A5F",
+              }).select().single();
+
+              if (error) throw error;
+              result = { success: true, message: `Added credit card "${args.name}" for "${args.entity_name}"`, data };
+              break;
+            }
+
+            case "add_contract": {
+              const { data: entity } = await supabase
+                .from("entities")
+                .select("id")
+                .ilike("name", `%${args.entity_name}%`)
+                .limit(1)
+                .single();
+
+              if (!entity) {
+                result = { success: false, message: `Entity "${args.entity_name}" not found. Please create it first.` };
+                break;
+              }
+
+              const { data, error } = await supabase.from("contracts").insert({
+                entity_id: entity.id,
+                title: args.title,
+                type: args.type || "Service Agreement",
+                parties: args.parties || [],
+                start_date: args.start_date || null,
+                end_date: args.end_date || null,
+                status: args.status || "active",
+              }).select().single();
+
+              if (error) throw error;
+              result = { success: true, message: `Added contract "${args.title}" for "${args.entity_name}"`, data };
+              break;
+            }
+
             case "search_data": {
               const searchResults: any = {};
               const query = args.query.toLowerCase();
@@ -659,6 +886,16 @@ Format dates as YYYY-MM-DD. For phone numbers, extract country codes if present.
               if (!args.table || args.table === "accountant_firms") {
                 const { data } = await supabase.from("accountant_firms").select("name, contact_name, email, phone").ilike("name", `%${query}%`).limit(5);
                 if (data?.length) searchResults.accountant_firms = data;
+              }
+
+              if (!args.table || args.table === "auditors") {
+                const { data } = await supabase.from("auditors").select("name, contact_name, email, phone").ilike("name", `%${query}%`).limit(5);
+                if (data?.length) searchResults.auditors = data;
+              }
+
+              if (!args.table || args.table === "advisors") {
+                const { data } = await supabase.from("advisors").select("name, advisor_type, contact_name, email").ilike("name", `%${query}%`).limit(5);
+                if (data?.length) searchResults.advisors = data;
               }
 
               result = { success: true, message: "Search complete", data: searchResults };
@@ -712,7 +949,7 @@ Format dates as YYYY-MM-DD. For phone numbers, extract country codes if present.
 
     // No tools called, return direct response
     return new Response(JSON.stringify({ 
-      content: choice.message?.content || "I'm here to help! Paste company information, addresses, or other data and I'll add it to your portal.",
+      content: choice.message?.content || "I'm here to help! Paste company information, addresses, or other data and I'll help you add it to your portal. I'll always ask for confirmation before making any changes.",
     }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
