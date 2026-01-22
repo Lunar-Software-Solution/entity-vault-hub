@@ -1,1 +1,4 @@
 project_id = "xxaynwfseusnxlpukwnq"
+
+[functions.summarize-contract]
+verify_jwt = false
