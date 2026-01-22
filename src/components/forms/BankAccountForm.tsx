@@ -39,10 +39,10 @@ const BankAccountForm = ({ account, onSubmit, onCancel, isLoading }: BankAccount
           <FormField control={form.control} name="entity_id" render={({ field }) => (
             <FormItem className="md:col-span-2">
               <FormLabel>Linked Entity</FormLabel>
-              <Select onValueChange={field.onChange} defaultValue={field.value}>
+              <Select onValueChange={(value) => field.onChange(value === "__none__" ? "" : value)} defaultValue={field.value || "__none__"}>
                 <FormControl><SelectTrigger><SelectValue placeholder="Select entity (optional)" /></SelectTrigger></FormControl>
                 <SelectContent>
-                  <SelectItem value="">No entity</SelectItem>
+                  <SelectItem value="__none__">No entity</SelectItem>
                   {entities?.map((entity) => (
                     <SelectItem key={entity.id} value={entity.id}>{entity.name}</SelectItem>
                   ))}
