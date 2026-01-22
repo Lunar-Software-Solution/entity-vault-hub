@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Building2, Plus, ChevronRight, MapPin, Mail } from "lucide-react";
+import { Plus, ChevronRight, MapPin, Mail } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import CompanyLogo from "@/components/shared/CompanyLogo";
 import { useEntities } from "@/hooks/usePortalData";
 import { useCreateEntity, useUpdateEntity, useDeleteEntity } from "@/hooks/usePortalMutations";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -95,7 +96,9 @@ const EntitySection = () => {
 
       {!entities || entities.length === 0 ? (
         <div className="glass-card rounded-xl p-12 text-center">
-          <Building2 className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
+          <div className="w-16 h-16 rounded-xl gradient-primary flex items-center justify-center mx-auto mb-4">
+            <Plus className="w-8 h-8 text-primary-foreground" />
+          </div>
           <p className="text-muted-foreground mb-4">No entities registered yet.</p>
           <Button className="gap-2" onClick={handleAddNew}>
             <Plus className="w-4 h-4" />
@@ -110,9 +113,11 @@ const EntitySection = () => {
               onClick={() => navigate(`/entity/${entity.id}`)}
               className="glass-card rounded-xl p-4 flex items-center gap-4 cursor-pointer hover:bg-muted/50 transition-colors group"
             >
-              <div className="w-12 h-12 rounded-xl gradient-primary flex items-center justify-center flex-shrink-0">
-                <Building2 className="w-6 h-6 text-primary-foreground" />
-              </div>
+              <CompanyLogo 
+                domain={entity.website} 
+                name={entity.name} 
+                size="md"
+              />
               
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 mb-1">

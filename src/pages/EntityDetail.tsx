@@ -43,6 +43,7 @@ import {
   CheckSquare
 } from "lucide-react";
 import { format } from "date-fns";
+import CompanyLogo from "@/components/shared/CompanyLogo";
 import LinkedBankAccounts from "@/components/entity-detail/LinkedBankAccounts";
 import LinkedCreditCards from "@/components/entity-detail/LinkedCreditCards";
 import LinkedAddresses from "@/components/entity-detail/LinkedAddresses";
@@ -139,9 +140,12 @@ const EntityDetail = () => {
       {/* Entity Header */}
       <div className="glass-card rounded-xl p-8 mb-8">
         <div className="flex items-start gap-6">
-          <div className="w-20 h-20 rounded-2xl gradient-primary flex items-center justify-center glow-primary">
-            <Building2 className="w-10 h-10 text-primary-foreground" />
-          </div>
+          <CompanyLogo 
+            domain={entity.website} 
+            name={entity.name} 
+            size="lg"
+            className="w-20 h-20 rounded-2xl"
+          />
           <div className="flex-1">
             <h1 className="text-3xl font-bold text-foreground">{entity.name}</h1>
             <p className="text-muted-foreground text-lg">{entity.type}</p>
