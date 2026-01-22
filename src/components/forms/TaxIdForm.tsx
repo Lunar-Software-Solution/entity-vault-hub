@@ -57,6 +57,23 @@ const commonCountries = [
   "British Virgin Islands",
 ];
 
+const commonAuthorities = [
+  "IRS (Internal Revenue Service)",
+  "HMRC (HM Revenue & Customs)",
+  "CRA (Canada Revenue Agency)",
+  "ATO (Australian Taxation Office)",
+  "State Tax Office",
+  "AFIP (Argentina)",
+  "SAT (Mexico)",
+  "Receita Federal (Brazil)",
+  "BZSt (Germany)",
+  "DGFIP (France)",
+  "Agenzia delle Entrate (Italy)",
+  "AEAT (Spain)",
+  "NTA (Japan)",
+  "IRAS (Singapore)",
+];
+
 const TaxIdForm = ({ taxId, defaultEntityId, onSubmit, onCancel, isLoading }: TaxIdFormProps) => {
   const { data: entities } = useEntities();
   
@@ -103,20 +120,22 @@ const TaxIdForm = ({ taxId, defaultEntityId, onSubmit, onCancel, isLoading }: Ta
           <FormField control={form.control} name="type" render={({ field }) => (
             <FormItem>
               <FormLabel>Tax ID Type *</FormLabel>
-              <Select onValueChange={field.onChange} defaultValue={field.value}>
-                <FormControl>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select type" />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  {commonTaxIdTypes.map((type) => (
-                    <SelectItem key={type.value} value={type.value}>
-                      {type.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <FormControl>
+                <>
+                  <Input 
+                    list="tax-id-types" 
+                    placeholder="Select or type custom..."
+                    {...field} 
+                  />
+                  <datalist id="tax-id-types">
+                    {commonTaxIdTypes.map((type) => (
+                      <option key={type.value} value={type.value}>
+                        {type.label}
+                      </option>
+                    ))}
+                  </datalist>
+                </>
+              </FormControl>
               <FormMessage />
             </FormItem>
           )} />
@@ -136,20 +155,20 @@ const TaxIdForm = ({ taxId, defaultEntityId, onSubmit, onCancel, isLoading }: Ta
           <FormField control={form.control} name="country" render={({ field }) => (
             <FormItem>
               <FormLabel>Country *</FormLabel>
-              <Select onValueChange={field.onChange} defaultValue={field.value}>
-                <FormControl>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select country" />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  {commonCountries.map((country) => (
-                    <SelectItem key={country} value={country}>
-                      {country}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <FormControl>
+                <>
+                  <Input 
+                    list="countries" 
+                    placeholder="Select or type custom..."
+                    {...field} 
+                  />
+                  <datalist id="countries">
+                    {commonCountries.map((country) => (
+                      <option key={country} value={country} />
+                    ))}
+                  </datalist>
+                </>
+              </FormControl>
               <FormMessage />
             </FormItem>
           )} />
@@ -158,7 +177,18 @@ const TaxIdForm = ({ taxId, defaultEntityId, onSubmit, onCancel, isLoading }: Ta
             <FormItem>
               <FormLabel>Issuing Authority *</FormLabel>
               <FormControl>
-                <Input placeholder="e.g., IRS, HMRC, State Tax Office" {...field} />
+                <>
+                  <Input 
+                    list="authorities" 
+                    placeholder="e.g., IRS, HMRC, State Tax Office"
+                    {...field} 
+                  />
+                  <datalist id="authorities">
+                    {commonAuthorities.map((auth) => (
+                      <option key={auth} value={auth} />
+                    ))}
+                  </datalist>
+                </>
               </FormControl>
               <FormMessage />
             </FormItem>
