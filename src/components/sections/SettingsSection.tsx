@@ -424,82 +424,84 @@ const SettingsSection = () => {
               </div>
             </div>
             
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="min-w-[150px]">
-                    <button 
-                      onClick={() => handleSort("name")} 
-                      className="flex items-center hover:text-foreground transition-colors"
-                    >
-                      Name {getSortIcon("name")}
-                    </button>
-                  </TableHead>
-                  <TableHead className="min-w-[150px]">
-                    <button 
-                      onClick={() => handleSort("country")} 
-                      className="flex items-center hover:text-foreground transition-colors"
-                    >
-                      Country {getSortIcon("country")}
-                    </button>
-                  </TableHead>
-                  <TableHead className="min-w-[120px]">
-                    <button 
-                      onClick={() => handleSort("province_state")} 
-                      className="flex items-center hover:text-foreground transition-colors"
-                    >
-                      Province/State {getSortIcon("province_state")}
-                    </button>
-                  </TableHead>
-                  <TableHead className="min-w-[200px]">
-                    <button 
-                      onClick={() => handleSort("description")} 
-                      className="flex items-center hover:text-foreground transition-colors"
-                    >
-                      Description {getSortIcon("description")}
-                    </button>
-                  </TableHead>
-                  <TableHead className="w-28">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredAndSortedAuthorities.map((authority) => (
-                  <TableRow key={authority.id}>
-                    <TableCell className="font-medium text-foreground">{authority.name}</TableCell>
-                    <TableCell className="text-foreground">{authority.country}</TableCell>
-                    <TableCell className="text-foreground">{(authority as any).province_state || "—"}</TableCell>
-                    <TableCell className="text-muted-foreground text-sm">{authority.description || "—"}</TableCell>
-                    <TableCell>
-                      <div className="flex gap-1">
-                        <Button 
-                          variant="ghost" 
-                          size="icon" 
-                          className="h-8 w-8 text-primary hover:text-primary"
-                          onClick={() => { setEditingAuthority(authority); setShowAuthorityForm(true); }}
-                        >
-                          <Edit className="w-4 h-4" />
-                        </Button>
-                        <Button 
-                          variant="ghost" 
-                          size="icon" 
-                          className="h-8 w-8 text-destructive hover:text-destructive"
-                          onClick={() => setDeletingAuthority(authority)}
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
-                {!filteredAndSortedAuthorities.length && (
+            <div className="overflow-x-auto">
+              <Table className="table-fixed w-full">
+                <TableHeader>
                   <TableRow>
-                    <TableCell colSpan={5} className="text-center text-muted-foreground py-8">
-                      {authoritySearch ? "No authorities match your search" : "No issuing authorities defined yet"}
-                    </TableCell>
+                    <TableHead className="w-[180px]">
+                      <button 
+                        onClick={() => handleSort("name")} 
+                        className="flex items-center hover:text-foreground transition-colors text-foreground"
+                      >
+                        Name {getSortIcon("name")}
+                      </button>
+                    </TableHead>
+                    <TableHead className="w-[150px]">
+                      <button 
+                        onClick={() => handleSort("country")} 
+                        className="flex items-center hover:text-foreground transition-colors text-foreground"
+                      >
+                        Country {getSortIcon("country")}
+                      </button>
+                    </TableHead>
+                    <TableHead className="w-[130px]">
+                      <button 
+                        onClick={() => handleSort("province_state")} 
+                        className="flex items-center hover:text-foreground transition-colors text-foreground"
+                      >
+                        Province/State {getSortIcon("province_state")}
+                      </button>
+                    </TableHead>
+                    <TableHead className="w-auto">
+                      <button 
+                        onClick={() => handleSort("description")} 
+                        className="flex items-center hover:text-foreground transition-colors text-foreground"
+                      >
+                        Description {getSortIcon("description")}
+                      </button>
+                    </TableHead>
+                    <TableHead className="w-[100px] text-foreground">Actions</TableHead>
                   </TableRow>
-                )}
-              </TableBody>
-            </Table>
+                </TableHeader>
+                <TableBody>
+                  {filteredAndSortedAuthorities.map((authority) => (
+                    <TableRow key={authority.id}>
+                      <TableCell className="font-medium text-foreground">{authority.name}</TableCell>
+                      <TableCell className="text-foreground">{authority.country}</TableCell>
+                      <TableCell className="text-foreground">{(authority as any).province_state || "—"}</TableCell>
+                      <TableCell className="text-muted-foreground text-sm">{authority.description || "—"}</TableCell>
+                      <TableCell>
+                        <div className="flex gap-1">
+                          <Button 
+                            variant="ghost" 
+                            size="icon" 
+                            className="h-8 w-8 text-primary hover:text-primary"
+                            onClick={() => { setEditingAuthority(authority); setShowAuthorityForm(true); }}
+                          >
+                            <Edit className="w-4 h-4" />
+                          </Button>
+                          <Button 
+                            variant="ghost" 
+                            size="icon" 
+                            className="h-8 w-8 text-destructive hover:text-destructive"
+                            onClick={() => setDeletingAuthority(authority)}
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                  {!filteredAndSortedAuthorities.length && (
+                    <TableRow>
+                      <TableCell colSpan={5} className="text-center text-muted-foreground py-8">
+                        {authoritySearch ? "No authorities match your search" : "No issuing authorities defined yet"}
+                      </TableCell>
+                    </TableRow>
+                  )}
+                </TableBody>
+              </Table>
+            </div>
           </div>
         </TabsContent>
       </Tabs>
