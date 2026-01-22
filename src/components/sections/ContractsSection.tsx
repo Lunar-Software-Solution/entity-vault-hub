@@ -194,7 +194,7 @@ const ContractsSection = ({ entityFilter }: ContractsSectionProps) => {
                       </td>
                       <td className="p-4">
                         {contract.file_name ? (
-                          <span className="text-sm text-foreground truncate max-w-[150px] block" title={contract.file_name}>
+                          <span className="text-sm text-foreground">
                             {contract.file_name}
                           </span>
                         ) : (
