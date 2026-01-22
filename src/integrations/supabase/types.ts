@@ -14,6 +14,77 @@ export type Database = {
   }
   public: {
     Tables: {
+      accountant_firms: {
+        Row: {
+          address: string | null
+          contact_name: string | null
+          created_at: string
+          email: string | null
+          engagement_end_date: string | null
+          engagement_start_date: string | null
+          entity_id: string
+          fee_structure: string | null
+          id: string
+          is_active: boolean
+          license_number: string | null
+          linkedin_url: string | null
+          name: string
+          notes: string | null
+          phone: string | null
+          specializations: string[] | null
+          updated_at: string
+          website: string | null
+        }
+        Insert: {
+          address?: string | null
+          contact_name?: string | null
+          created_at?: string
+          email?: string | null
+          engagement_end_date?: string | null
+          engagement_start_date?: string | null
+          entity_id: string
+          fee_structure?: string | null
+          id?: string
+          is_active?: boolean
+          license_number?: string | null
+          linkedin_url?: string | null
+          name: string
+          notes?: string | null
+          phone?: string | null
+          specializations?: string[] | null
+          updated_at?: string
+          website?: string | null
+        }
+        Update: {
+          address?: string | null
+          contact_name?: string | null
+          created_at?: string
+          email?: string | null
+          engagement_end_date?: string | null
+          engagement_start_date?: string | null
+          entity_id?: string
+          fee_structure?: string | null
+          id?: string
+          is_active?: boolean
+          license_number?: string | null
+          linkedin_url?: string | null
+          name?: string
+          notes?: string | null
+          phone?: string | null
+          specializations?: string[] | null
+          updated_at?: string
+          website?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "accountant_firms_entity_id_fkey"
+            columns: ["entity_id"]
+            isOneToOne: false
+            referencedRelation: "entities"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       addresses: {
         Row: {
           city: string
@@ -67,6 +138,151 @@ export type Database = {
           },
         ]
       }
+      advisors: {
+        Row: {
+          address: string | null
+          advisor_type: string | null
+          certifications: string[] | null
+          contact_name: string | null
+          created_at: string
+          email: string | null
+          engagement_end_date: string | null
+          engagement_start_date: string | null
+          entity_id: string
+          fee_structure: string | null
+          id: string
+          is_active: boolean
+          linkedin_url: string | null
+          name: string
+          notes: string | null
+          phone: string | null
+          updated_at: string
+          website: string | null
+        }
+        Insert: {
+          address?: string | null
+          advisor_type?: string | null
+          certifications?: string[] | null
+          contact_name?: string | null
+          created_at?: string
+          email?: string | null
+          engagement_end_date?: string | null
+          engagement_start_date?: string | null
+          entity_id: string
+          fee_structure?: string | null
+          id?: string
+          is_active?: boolean
+          linkedin_url?: string | null
+          name: string
+          notes?: string | null
+          phone?: string | null
+          updated_at?: string
+          website?: string | null
+        }
+        Update: {
+          address?: string | null
+          advisor_type?: string | null
+          certifications?: string[] | null
+          contact_name?: string | null
+          created_at?: string
+          email?: string | null
+          engagement_end_date?: string | null
+          engagement_start_date?: string | null
+          entity_id?: string
+          fee_structure?: string | null
+          id?: string
+          is_active?: boolean
+          linkedin_url?: string | null
+          name?: string
+          notes?: string | null
+          phone?: string | null
+          updated_at?: string
+          website?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "advisors_entity_id_fkey"
+            columns: ["entity_id"]
+            isOneToOne: false
+            referencedRelation: "entities"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      auditors: {
+        Row: {
+          address: string | null
+          audit_types: string[] | null
+          certifications: string[] | null
+          contact_name: string | null
+          created_at: string
+          email: string | null
+          engagement_end_date: string | null
+          engagement_start_date: string | null
+          entity_id: string
+          fee_structure: string | null
+          id: string
+          is_active: boolean
+          license_number: string | null
+          linkedin_url: string | null
+          name: string
+          notes: string | null
+          phone: string | null
+          updated_at: string
+          website: string | null
+        }
+        Insert: {
+          address?: string | null
+          audit_types?: string[] | null
+          certifications?: string[] | null
+          contact_name?: string | null
+          created_at?: string
+          email?: string | null
+          engagement_end_date?: string | null
+          engagement_start_date?: string | null
+          entity_id: string
+          fee_structure?: string | null
+          id?: string
+          is_active?: boolean
+          license_number?: string | null
+          linkedin_url?: string | null
+          name: string
+          notes?: string | null
+          phone?: string | null
+          updated_at?: string
+          website?: string | null
+        }
+        Update: {
+          address?: string | null
+          audit_types?: string[] | null
+          certifications?: string[] | null
+          contact_name?: string | null
+          created_at?: string
+          email?: string | null
+          engagement_end_date?: string | null
+          engagement_start_date?: string | null
+          entity_id?: string
+          fee_structure?: string | null
+          id?: string
+          is_active?: boolean
+          license_number?: string | null
+          linkedin_url?: string | null
+          name?: string
+          notes?: string | null
+          phone?: string | null
+          updated_at?: string
+          website?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "auditors_entity_id_fkey"
+            columns: ["entity_id"]
+            isOneToOne: false
+            referencedRelation: "entities"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       bank_accounts: {
         Row: {
           account_number: string
@@ -107,6 +323,77 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "bank_accounts_entity_id_fkey"
+            columns: ["entity_id"]
+            isOneToOne: false
+            referencedRelation: "entities"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      consultants: {
+        Row: {
+          address: string | null
+          consultant_type: string | null
+          contact_name: string | null
+          created_at: string
+          email: string | null
+          engagement_end_date: string | null
+          engagement_start_date: string | null
+          entity_id: string
+          fee_structure: string | null
+          id: string
+          is_active: boolean
+          linkedin_url: string | null
+          name: string
+          notes: string | null
+          phone: string | null
+          project_scope: string | null
+          updated_at: string
+          website: string | null
+        }
+        Insert: {
+          address?: string | null
+          consultant_type?: string | null
+          contact_name?: string | null
+          created_at?: string
+          email?: string | null
+          engagement_end_date?: string | null
+          engagement_start_date?: string | null
+          entity_id: string
+          fee_structure?: string | null
+          id?: string
+          is_active?: boolean
+          linkedin_url?: string | null
+          name: string
+          notes?: string | null
+          phone?: string | null
+          project_scope?: string | null
+          updated_at?: string
+          website?: string | null
+        }
+        Update: {
+          address?: string | null
+          consultant_type?: string | null
+          contact_name?: string | null
+          created_at?: string
+          email?: string | null
+          engagement_end_date?: string | null
+          engagement_start_date?: string | null
+          entity_id?: string
+          fee_structure?: string | null
+          id?: string
+          is_active?: boolean
+          linkedin_url?: string | null
+          name?: string
+          notes?: string | null
+          phone?: string | null
+          project_scope?: string | null
+          updated_at?: string
+          website?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "consultants_entity_id_fkey"
             columns: ["entity_id"]
             isOneToOne: false
             referencedRelation: "entities"
@@ -277,6 +564,38 @@ export type Database = {
         }
         Relationships: []
       }
+      entity_provider_contracts: {
+        Row: {
+          contract_id: string
+          created_at: string
+          id: string
+          provider_id: string
+          provider_type: string
+        }
+        Insert: {
+          contract_id: string
+          created_at?: string
+          id?: string
+          provider_id: string
+          provider_type: string
+        }
+        Update: {
+          contract_id?: string
+          created_at?: string
+          id?: string
+          provider_id?: string
+          provider_type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "entity_provider_contracts_contract_id_fkey"
+            columns: ["contract_id"]
+            isOneToOne: false
+            referencedRelation: "contracts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       issuing_authorities: {
         Row: {
           country: string
@@ -306,6 +625,77 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      law_firms: {
+        Row: {
+          address: string | null
+          bar_number: string | null
+          contact_name: string | null
+          created_at: string
+          email: string | null
+          engagement_end_date: string | null
+          engagement_start_date: string | null
+          entity_id: string
+          fee_structure: string | null
+          id: string
+          is_active: boolean
+          linkedin_url: string | null
+          name: string
+          notes: string | null
+          phone: string | null
+          practice_areas: string[] | null
+          updated_at: string
+          website: string | null
+        }
+        Insert: {
+          address?: string | null
+          bar_number?: string | null
+          contact_name?: string | null
+          created_at?: string
+          email?: string | null
+          engagement_end_date?: string | null
+          engagement_start_date?: string | null
+          entity_id: string
+          fee_structure?: string | null
+          id?: string
+          is_active?: boolean
+          linkedin_url?: string | null
+          name: string
+          notes?: string | null
+          phone?: string | null
+          practice_areas?: string[] | null
+          updated_at?: string
+          website?: string | null
+        }
+        Update: {
+          address?: string | null
+          bar_number?: string | null
+          contact_name?: string | null
+          created_at?: string
+          email?: string | null
+          engagement_end_date?: string | null
+          engagement_start_date?: string | null
+          entity_id?: string
+          fee_structure?: string | null
+          id?: string
+          is_active?: boolean
+          linkedin_url?: string | null
+          name?: string
+          notes?: string | null
+          phone?: string | null
+          practice_areas?: string[] | null
+          updated_at?: string
+          website?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "law_firms_entity_id_fkey"
+            columns: ["entity_id"]
+            isOneToOne: false
+            referencedRelation: "entities"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       phone_numbers: {
         Row: {
@@ -344,6 +734,77 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "phone_numbers_entity_id_fkey"
+            columns: ["entity_id"]
+            isOneToOne: false
+            referencedRelation: "entities"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      registration_agents: {
+        Row: {
+          address: string | null
+          agent_type: string | null
+          contact_name: string | null
+          created_at: string
+          email: string | null
+          engagement_end_date: string | null
+          engagement_start_date: string | null
+          entity_id: string
+          fee_structure: string | null
+          id: string
+          is_active: boolean
+          jurisdictions_covered: string[] | null
+          linkedin_url: string | null
+          name: string
+          notes: string | null
+          phone: string | null
+          updated_at: string
+          website: string | null
+        }
+        Insert: {
+          address?: string | null
+          agent_type?: string | null
+          contact_name?: string | null
+          created_at?: string
+          email?: string | null
+          engagement_end_date?: string | null
+          engagement_start_date?: string | null
+          entity_id: string
+          fee_structure?: string | null
+          id?: string
+          is_active?: boolean
+          jurisdictions_covered?: string[] | null
+          linkedin_url?: string | null
+          name: string
+          notes?: string | null
+          phone?: string | null
+          updated_at?: string
+          website?: string | null
+        }
+        Update: {
+          address?: string | null
+          agent_type?: string | null
+          contact_name?: string | null
+          created_at?: string
+          email?: string | null
+          engagement_end_date?: string | null
+          engagement_start_date?: string | null
+          entity_id?: string
+          fee_structure?: string | null
+          id?: string
+          is_active?: boolean
+          jurisdictions_covered?: string[] | null
+          linkedin_url?: string | null
+          name?: string
+          notes?: string | null
+          phone?: string | null
+          updated_at?: string
+          website?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "registration_agents_entity_id_fkey"
             columns: ["entity_id"]
             isOneToOne: false
             referencedRelation: "entities"

@@ -12,6 +12,13 @@ export type PhoneNumber = Tables<"phone_numbers">;
 export type TaxId = Tables<"tax_ids">;
 export type TaxIdType = Tables<"tax_id_types">;
 export type IssuingAuthority = Tables<"issuing_authorities">;
+export type AccountantFirm = Tables<"accountant_firms">;
+export type LawFirm = Tables<"law_firms">;
+export type RegistrationAgent = Tables<"registration_agents">;
+export type Advisor = Tables<"advisors">;
+export type Consultant = Tables<"consultants">;
+export type Auditor = Tables<"auditors">;
+export type EntityProviderContract = Tables<"entity_provider_contracts">;
 export const useEntities = () => {
   return useQuery({
     queryKey: ["entities"],
@@ -165,6 +172,91 @@ export const useTaxIdTypesForAuthority = (authorityId?: string) => {
       return data as TaxIdType[];
     },
     enabled: !!authorityId,
+  });
+};
+
+// Service Provider hooks
+export const useAccountantFirms = () => {
+  return useQuery({
+    queryKey: ["accountant_firms"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("accountant_firms")
+        .select("*")
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+      return data as AccountantFirm[];
+    },
+  });
+};
+
+export const useLawFirms = () => {
+  return useQuery({
+    queryKey: ["law_firms"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("law_firms")
+        .select("*")
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+      return data as LawFirm[];
+    },
+  });
+};
+
+export const useRegistrationAgents = () => {
+  return useQuery({
+    queryKey: ["registration_agents"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("registration_agents")
+        .select("*")
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+      return data as RegistrationAgent[];
+    },
+  });
+};
+
+export const useAdvisors = () => {
+  return useQuery({
+    queryKey: ["advisors"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("advisors")
+        .select("*")
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+      return data as Advisor[];
+    },
+  });
+};
+
+export const useConsultants = () => {
+  return useQuery({
+    queryKey: ["consultants"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("consultants")
+        .select("*")
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+      return data as Consultant[];
+    },
+  });
+};
+
+export const useAuditors = () => {
+  return useQuery({
+    queryKey: ["auditors"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("auditors")
+        .select("*")
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+      return data as Auditor[];
+    },
   });
 };
 
