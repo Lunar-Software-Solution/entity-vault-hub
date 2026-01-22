@@ -1,5 +1,6 @@
 import { Sparkles, Clock } from "lucide-react";
 import { format } from "date-fns";
+import DOMPurify from "dompurify";
 
 interface ContractSummaryProps {
   summary: string | null;
@@ -8,6 +9,17 @@ interface ContractSummaryProps {
 
 const ContractSummary = ({ summary, generatedAt }: ContractSummaryProps) => {
   if (!summary) return null;
+
+  // Sanitize AI-generated content to prevent XSS attacks
+  const sanitizedSummary = DOMPurify.sanitize(
+    summary
+      .replace(/\*\*(.*?)\*\*/g, '<strong class="text-foreground">$1</strong>')
+      .replace(/\n/g, '<br/>'),
+    { 
+      ALLOWED_TAGS: ['strong', 'br', 'p', 'ul', 'ol', 'li', 'em', 'b', 'i'],
+      ALLOWED_ATTR: ['class']
+    }
+  );
 
   return (
     <div className="glass-card rounded-xl p-4 space-y-3">
@@ -26,11 +38,7 @@ const ContractSummary = ({ summary, generatedAt }: ContractSummaryProps) => {
       <div className="prose prose-sm prose-invert max-w-none text-muted-foreground">
         <div 
           className="whitespace-pre-wrap text-sm leading-relaxed"
-          dangerouslySetInnerHTML={{ 
-            __html: summary
-              .replace(/\*\*(.*?)\*\*/g, '<strong class="text-foreground">$1</strong>')
-              .replace(/\n/g, '<br/>')
-          }} 
+          dangerouslySetInnerHTML={{ __html: sanitizedSummary }} 
         />
       </div>
     </div>
