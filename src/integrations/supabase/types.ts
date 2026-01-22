@@ -660,6 +660,78 @@ export type Database = {
           },
         ]
       }
+      entity_filings: {
+        Row: {
+          amount: number | null
+          confirmation_number: string | null
+          created_at: string
+          due_date: string
+          entity_id: string
+          filed_by: string | null
+          filing_date: string | null
+          filing_type_id: string | null
+          frequency: string
+          id: string
+          jurisdiction: string | null
+          notes: string | null
+          reminder_days: number
+          status: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          amount?: number | null
+          confirmation_number?: string | null
+          created_at?: string
+          due_date: string
+          entity_id: string
+          filed_by?: string | null
+          filing_date?: string | null
+          filing_type_id?: string | null
+          frequency?: string
+          id?: string
+          jurisdiction?: string | null
+          notes?: string | null
+          reminder_days?: number
+          status?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          amount?: number | null
+          confirmation_number?: string | null
+          created_at?: string
+          due_date?: string
+          entity_id?: string
+          filed_by?: string | null
+          filing_date?: string | null
+          filing_type_id?: string | null
+          frequency?: string
+          id?: string
+          jurisdiction?: string | null
+          notes?: string | null
+          reminder_days?: number
+          status?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "entity_filings_entity_id_fkey"
+            columns: ["entity_id"]
+            isOneToOne: false
+            referencedRelation: "entities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "entity_filings_filing_type_id_fkey"
+            columns: ["filing_type_id"]
+            isOneToOne: false
+            referencedRelation: "filing_types"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       entity_provider_contracts: {
         Row: {
           contract_id: string
@@ -691,6 +763,138 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      filing_documents: {
+        Row: {
+          created_at: string
+          document_id: string
+          filing_id: string
+          id: string
+        }
+        Insert: {
+          created_at?: string
+          document_id: string
+          filing_id: string
+          id?: string
+        }
+        Update: {
+          created_at?: string
+          document_id?: string
+          filing_id?: string
+          id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "filing_documents_document_id_fkey"
+            columns: ["document_id"]
+            isOneToOne: false
+            referencedRelation: "entity_documents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "filing_documents_filing_id_fkey"
+            columns: ["filing_id"]
+            isOneToOne: false
+            referencedRelation: "entity_filings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      filing_tasks: {
+        Row: {
+          assigned_to: string | null
+          completed_at: string | null
+          created_at: string
+          description: string | null
+          due_date: string
+          entity_id: string
+          filing_id: string | null
+          id: string
+          is_auto_generated: boolean
+          priority: string
+          status: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          assigned_to?: string | null
+          completed_at?: string | null
+          created_at?: string
+          description?: string | null
+          due_date: string
+          entity_id: string
+          filing_id?: string | null
+          id?: string
+          is_auto_generated?: boolean
+          priority?: string
+          status?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          assigned_to?: string | null
+          completed_at?: string | null
+          created_at?: string
+          description?: string | null
+          due_date?: string
+          entity_id?: string
+          filing_id?: string | null
+          id?: string
+          is_auto_generated?: boolean
+          priority?: string
+          status?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "filing_tasks_entity_id_fkey"
+            columns: ["entity_id"]
+            isOneToOne: false
+            referencedRelation: "entities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "filing_tasks_filing_id_fkey"
+            columns: ["filing_id"]
+            isOneToOne: false
+            referencedRelation: "entity_filings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      filing_types: {
+        Row: {
+          category: string
+          code: string
+          created_at: string
+          default_frequency: string
+          description: string | null
+          id: string
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          category?: string
+          code: string
+          created_at?: string
+          default_frequency?: string
+          description?: string | null
+          id?: string
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          category?: string
+          code?: string
+          created_at?: string
+          default_frequency?: string
+          description?: string | null
+          id?: string
+          name?: string
+          updated_at?: string
+        }
+        Relationships: []
       }
       issuing_authorities: {
         Row: {

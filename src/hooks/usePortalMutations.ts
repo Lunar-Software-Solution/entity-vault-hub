@@ -867,3 +867,219 @@ export const useDeleteEntityDocument = () => {
   });
 };
 
+// Filing Type mutations
+export const useCreateFilingType = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (type: TablesInsert<"filing_types">) => {
+      const { data, error } = await supabase.from("filing_types").insert(type).select().single();
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["filing_types"] });
+      toast.success("Filing type added successfully");
+    },
+    onError: (error) => toast.error(`Failed to add filing type: ${error.message}`),
+  });
+};
+
+export const useUpdateFilingType = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, ...type }: TablesUpdate<"filing_types"> & { id: string }) => {
+      const { data, error } = await supabase.from("filing_types").update(type).eq("id", id).select().single();
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["filing_types"] });
+      toast.success("Filing type updated successfully");
+    },
+    onError: (error) => toast.error(`Failed to update filing type: ${error.message}`),
+  });
+};
+
+export const useDeleteFilingType = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from("filing_types").delete().eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["filing_types"] });
+      toast.success("Filing type deleted successfully");
+    },
+    onError: (error) => toast.error(`Failed to delete filing type: ${error.message}`),
+  });
+};
+
+// Entity Filing mutations
+export const useCreateEntityFiling = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (filing: TablesInsert<"entity_filings">) => {
+      const { data, error } = await supabase.from("entity_filings").insert(filing).select().single();
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["entity_filings"] });
+      queryClient.invalidateQueries({ queryKey: ["filing_tasks"] });
+      toast.success("Filing added successfully");
+    },
+    onError: (error) => toast.error(`Failed to add filing: ${error.message}`),
+  });
+};
+
+export const useUpdateEntityFiling = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, ...filing }: TablesUpdate<"entity_filings"> & { id: string }) => {
+      const { data, error } = await supabase.from("entity_filings").update(filing).eq("id", id).select().single();
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["entity_filings"] });
+      queryClient.invalidateQueries({ queryKey: ["filing_tasks"] });
+      toast.success("Filing updated successfully");
+    },
+    onError: (error) => toast.error(`Failed to update filing: ${error.message}`),
+  });
+};
+
+export const useDeleteEntityFiling = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from("entity_filings").delete().eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["entity_filings"] });
+      queryClient.invalidateQueries({ queryKey: ["filing_tasks"] });
+      toast.success("Filing deleted successfully");
+    },
+    onError: (error) => toast.error(`Failed to delete filing: ${error.message}`),
+  });
+};
+
+// Filing Task mutations
+export const useCreateFilingTask = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (task: TablesInsert<"filing_tasks">) => {
+      const { data, error } = await supabase.from("filing_tasks").insert(task).select().single();
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["filing_tasks"] });
+      toast.success("Task added successfully");
+    },
+    onError: (error) => toast.error(`Failed to add task: ${error.message}`),
+  });
+};
+
+export const useUpdateFilingTask = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, ...task }: TablesUpdate<"filing_tasks"> & { id: string }) => {
+      const { data, error } = await supabase.from("filing_tasks").update(task).eq("id", id).select().single();
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["filing_tasks"] });
+      toast.success("Task updated successfully");
+    },
+    onError: (error) => toast.error(`Failed to update task: ${error.message}`),
+  });
+};
+
+export const useDeleteFilingTask = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from("filing_tasks").delete().eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["filing_tasks"] });
+      toast.success("Task deleted successfully");
+    },
+    onError: (error) => toast.error(`Failed to delete task: ${error.message}`),
+  });
+};
+
+// Helper mutations for task status
+export const useCompleteTask = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const { data, error } = await supabase
+        .from("filing_tasks")
+        .update({ status: "completed", completed_at: new Date().toISOString() })
+        .eq("id", id)
+        .select()
+        .single();
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["filing_tasks"] });
+      toast.success("Task completed!");
+    },
+    onError: (error) => toast.error(`Failed to complete task: ${error.message}`),
+  });
+};
+
+export const useReopenTask = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const { data, error } = await supabase
+        .from("filing_tasks")
+        .update({ status: "pending", completed_at: null })
+        .eq("id", id)
+        .select()
+        .single();
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["filing_tasks"] });
+      toast.success("Task reopened");
+    },
+    onError: (error) => toast.error(`Failed to reopen task: ${error.message}`),
+  });
+};
+
+// Mark filing as filed
+export const useMarkFilingFiled = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, filingDate, confirmationNumber }: { id: string; filingDate?: string; confirmationNumber?: string }) => {
+      const { data, error } = await supabase
+        .from("entity_filings")
+        .update({ 
+          status: "filed", 
+          filing_date: filingDate || new Date().toISOString().split("T")[0],
+          confirmation_number: confirmationNumber || undefined
+        })
+        .eq("id", id)
+        .select()
+        .single();
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["entity_filings"] });
+      toast.success("Filing marked as filed!");
+    },
+    onError: (error) => toast.error(`Failed to update filing: ${error.message}`),
+  });
+};
+
