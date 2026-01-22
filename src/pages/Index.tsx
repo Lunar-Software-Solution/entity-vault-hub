@@ -11,6 +11,7 @@ import AddressesSection from "@/components/sections/AddressesSection";
 import ContractsSection from "@/components/sections/ContractsSection";
 import PhoneNumbersSection from "@/components/sections/PhoneNumbersSection";
 import TaxIdsSection from "@/components/sections/TaxIdsSection";
+import SettingsSection from "@/components/sections/SettingsSection";
 
 const Index = () => {
   const [activeSection, setActiveSection] = useState("dashboard");
@@ -40,6 +41,8 @@ const Index = () => {
         return <AddressesSection entityFilter={selectedEntityId} />;
       case "contracts":
         return <ContractsSection entityFilter={selectedEntityId} />;
+      case "settings":
+        return <SettingsSection />;
       default:
         return <DashboardSection />;
     }

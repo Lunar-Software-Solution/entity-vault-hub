@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
-import { useEntities } from "@/hooks/usePortalData";
+import { useEntities, useTaxIdTypes, useIssuingAuthorities } from "@/hooks/usePortalData";
 import type { TaxId } from "@/hooks/usePortalData";
 
 interface TaxIdFormProps {
@@ -17,22 +17,6 @@ interface TaxIdFormProps {
   onCancel: () => void;
   isLoading?: boolean;
 }
-
-const commonTaxIdTypes = [
-  { value: "EIN", label: "EIN (Employer Identification Number)" },
-  { value: "SSN", label: "SSN (Social Security Number)" },
-  { value: "ITIN", label: "ITIN (Individual Taxpayer ID)" },
-  { value: "VAT", label: "VAT (Value Added Tax)" },
-  { value: "GST", label: "GST (Goods & Services Tax)" },
-  { value: "TIN", label: "TIN (Tax Identification Number)" },
-  { value: "ABN", label: "ABN (Australian Business Number)" },
-  { value: "UTR", label: "UTR (Unique Taxpayer Reference)" },
-  { value: "PAN", label: "PAN (Permanent Account Number)" },
-  { value: "NIF", label: "NIF (Número de Identificación Fiscal)" },
-  { value: "RFC", label: "RFC (Registro Federal de Contribuyentes)" },
-  { value: "CNPJ", label: "CNPJ (Brazil Corporate ID)" },
-  { value: "Other", label: "Other" },
-];
 
 const commonCountries = [
   "United States",
@@ -57,32 +41,17 @@ const commonCountries = [
   "British Virgin Islands",
 ];
 
-const commonAuthorities = [
-  "IRS (Internal Revenue Service)",
-  "HMRC (HM Revenue & Customs)",
-  "CRA (Canada Revenue Agency)",
-  "ATO (Australian Taxation Office)",
-  "State Tax Office",
-  "AFIP (Argentina)",
-  "SAT (Mexico)",
-  "Receita Federal (Brazil)",
-  "BZSt (Germany)",
-  "DGFIP (France)",
-  "Agenzia delle Entrate (Italy)",
-  "AEAT (Spain)",
-  "NTA (Japan)",
-  "IRAS (Singapore)",
-];
-
 const TaxIdForm = ({ taxId, defaultEntityId, onSubmit, onCancel, isLoading }: TaxIdFormProps) => {
   const { data: entities } = useEntities();
+  const { data: taxIdTypes } = useTaxIdTypes();
+  const { data: issuingAuthorities } = useIssuingAuthorities();
   
   const form = useForm<TaxIdFormData>({
     resolver: zodResolver(taxIdSchema),
     defaultValues: {
       entity_id: taxId?.entity_id ?? defaultEntityId ?? "",
       tax_id_number: taxId?.tax_id_number ?? "",
-      type: taxId?.type ?? "EIN",
+      type: taxId?.type ?? "",
       authority: taxId?.authority ?? "",
       country: taxId?.country ?? "United States",
       issued_date: taxId?.issued_date ?? "",
@@ -120,22 +89,20 @@ const TaxIdForm = ({ taxId, defaultEntityId, onSubmit, onCancel, isLoading }: Ta
           <FormField control={form.control} name="type" render={({ field }) => (
             <FormItem>
               <FormLabel>Tax ID Type *</FormLabel>
-              <FormControl>
-                <>
-                  <Input 
-                    list="tax-id-types" 
-                    placeholder="Select or type custom..."
-                    {...field} 
-                  />
-                  <datalist id="tax-id-types">
-                    {commonTaxIdTypes.map((type) => (
-                      <option key={type.value} value={type.value}>
-                        {type.label}
-                      </option>
-                    ))}
-                  </datalist>
-                </>
-              </FormControl>
+              <Select onValueChange={field.onChange} defaultValue={field.value}>
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select type" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  {taxIdTypes?.map((type) => (
+                    <SelectItem key={type.id} value={type.code}>
+                      {type.code} — {type.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
               <FormMessage />
             </FormItem>
           )} />
@@ -159,7 +126,7 @@ const TaxIdForm = ({ taxId, defaultEntityId, onSubmit, onCancel, isLoading }: Ta
                 <>
                   <Input 
                     list="countries" 
-                    placeholder="Select or type custom..."
+                    placeholder="Select or type..."
                     {...field} 
                   />
                   <datalist id="countries">
@@ -176,20 +143,20 @@ const TaxIdForm = ({ taxId, defaultEntityId, onSubmit, onCancel, isLoading }: Ta
           <FormField control={form.control} name="authority" render={({ field }) => (
             <FormItem>
               <FormLabel>Issuing Authority *</FormLabel>
-              <FormControl>
-                <>
-                  <Input 
-                    list="authorities" 
-                    placeholder="e.g., IRS, HMRC, State Tax Office"
-                    {...field} 
-                  />
-                  <datalist id="authorities">
-                    {commonAuthorities.map((auth) => (
-                      <option key={auth} value={auth} />
-                    ))}
-                  </datalist>
-                </>
-              </FormControl>
+              <Select onValueChange={field.onChange} defaultValue={field.value}>
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select authority" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  {issuingAuthorities?.map((auth) => (
+                    <SelectItem key={auth.id} value={auth.name}>
+                      {auth.name} ({auth.country})
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
               <FormMessage />
             </FormItem>
           )} />
