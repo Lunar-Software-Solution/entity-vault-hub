@@ -1,6 +1,6 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Loader2 } from "lucide-react";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
 interface PdfViewerDialogProps {
@@ -14,81 +14,91 @@ const PdfViewerDialog = ({ open, onOpenChange, filePath, fileName }: PdfViewerDi
   const [pdfUrl, setPdfUrl] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const blobUrlRef = useRef<string | null>(null);
 
   useEffect(() => {
     const loadPdf = async () => {
       if (open && filePath) {
         setIsLoading(true);
         setError(null);
+        setPdfUrl(null);
         
-        // Download the file as a blob to bypass Content-Disposition headers
-        const { data, error: downloadError } = await supabase.storage
-          .from('contract-files')
-          .download(filePath);
-        
-        if (downloadError) {
-          setError(downloadError.message);
-          setIsLoading(false);
-          return;
+        // Clean up previous blob URL
+        if (blobUrlRef.current) {
+          URL.revokeObjectURL(blobUrlRef.current);
+          blobUrlRef.current = null;
         }
         
-        if (data) {
-          // Create a blob URL for the PDF
-          const blobUrl = URL.createObjectURL(data);
-          setPdfUrl(blobUrl);
+        try {
+          const { data, error: downloadError } = await supabase.storage
+            .from('contract-files')
+            .download(filePath);
+          
+          if (downloadError) {
+            setError(downloadError.message);
+            setIsLoading(false);
+            return;
+          }
+          
+          if (data) {
+            // Create blob with explicit PDF type
+            const pdfBlob = new Blob([data], { type: 'application/pdf' });
+            const url = URL.createObjectURL(pdfBlob);
+            blobUrlRef.current = url;
+            setPdfUrl(url);
+          }
+        } catch (err) {
+          setError('Failed to load PDF');
         }
         setIsLoading(false);
       }
     };
 
-    loadPdf();
+    if (open && filePath) {
+      loadPdf();
+    }
 
-    // Cleanup blob URL when dialog closes
     return () => {
-      if (pdfUrl) {
-        URL.revokeObjectURL(pdfUrl);
-        setPdfUrl(null);
+      if (blobUrlRef.current) {
+        URL.revokeObjectURL(blobUrlRef.current);
+        blobUrlRef.current = null;
       }
     };
   }, [open, filePath]);
 
-  const handleClose = (isOpen: boolean) => {
-    if (!isOpen && pdfUrl) {
-      URL.revokeObjectURL(pdfUrl);
+  // Cleanup when dialog closes
+  useEffect(() => {
+    if (!open && blobUrlRef.current) {
+      URL.revokeObjectURL(blobUrlRef.current);
+      blobUrlRef.current = null;
       setPdfUrl(null);
     }
-    onOpenChange(isOpen);
-  };
+  }, [open]);
 
   return (
-    <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="max-w-5xl h-[90vh] flex flex-col">
-        <DialogHeader>
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-5xl h-[90vh] flex flex-col p-0">
+        <DialogHeader className="p-6 pb-0">
           <DialogTitle>{fileName || "View Contract"}</DialogTitle>
         </DialogHeader>
-        <div className="flex-1 min-h-0">
+        <div className="flex-1 min-h-0 p-6 pt-4">
           {isLoading ? (
-            <div className="w-full h-full flex items-center justify-center">
+            <div className="w-full h-full flex items-center justify-center bg-muted rounded-lg">
               <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
             </div>
           ) : error ? (
-            <div className="w-full h-full flex items-center justify-center text-destructive">
+            <div className="w-full h-full flex items-center justify-center text-destructive bg-muted rounded-lg">
               Error loading PDF: {error}
             </div>
           ) : pdfUrl ? (
-            <object
-              data={pdfUrl}
+            <embed
+              src={pdfUrl}
               type="application/pdf"
-              className="w-full h-full rounded-lg border border-border"
-            >
-              <iframe
-                src={pdfUrl}
-                className="w-full h-full rounded-lg border border-border"
-                title={fileName || "PDF Viewer"}
-              />
-            </object>
+              className="w-full h-full rounded-lg"
+              style={{ minHeight: '100%' }}
+            />
           ) : (
-            <div className="w-full h-full flex items-center justify-center text-muted-foreground">
+            <div className="w-full h-full flex items-center justify-center text-muted-foreground bg-muted rounded-lg">
               No PDF to display
             </div>
           )}
