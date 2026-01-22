@@ -21,7 +21,7 @@ const Index = () => {
   const renderSection = () => {
     switch (activeSection) {
       case "dashboard":
-        return <DashboardSection />;
+        return <DashboardSection onNavigate={setActiveSection} />;
       case "entity":
         return <EntitySection />;
       case "bank-accounts":

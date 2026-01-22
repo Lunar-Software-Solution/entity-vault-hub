@@ -4,7 +4,11 @@ import { useDashboardStats, useBankAccounts, useContracts } from "@/hooks/usePor
 import { Skeleton } from "@/components/ui/skeleton";
 import { format } from "date-fns";
 
-const DashboardSection = () => {
+interface DashboardSectionProps {
+  onNavigate?: (section: string) => void;
+}
+
+const DashboardSection = ({ onNavigate }: DashboardSectionProps) => {
   const stats = useDashboardStats();
   const { data: bankAccounts, isLoading: loadingBanks } = useBankAccounts();
   const { data: contracts, isLoading: loadingContracts } = useContracts();
@@ -55,6 +59,7 @@ const DashboardSection = () => {
           subtitle="Connected accounts"
           icon={Wallet}
           variant="primary"
+          onClick={() => onNavigate?.("bank-accounts")}
         />
         <StatCard
           title="Credit Cards"
@@ -62,6 +67,7 @@ const DashboardSection = () => {
           subtitle={`$${stats.totalCreditLimit.toLocaleString()} total limit`}
           icon={CreditCard}
           variant="warning"
+          onClick={() => onNavigate?.("credit-cards")}
         />
         <StatCard
           title="Social Accounts"
@@ -69,6 +75,7 @@ const DashboardSection = () => {
           subtitle="Connected platforms"
           icon={Share2}
           variant="default"
+          onClick={() => onNavigate?.("social-media")}
         />
         <StatCard
           title="Active Contracts"
@@ -76,6 +83,7 @@ const DashboardSection = () => {
           subtitle={stats.expiringContracts > 0 ? `${stats.expiringContracts} expiring soon` : "All contracts current"}
           icon={FileText}
           variant="success"
+          onClick={() => onNavigate?.("contracts")}
         />
         <StatCard
           title="Registered Addresses"
@@ -83,6 +91,7 @@ const DashboardSection = () => {
           subtitle="Saved locations"
           icon={MapPin}
           variant="default"
+          onClick={() => onNavigate?.("addresses")}
         />
         <StatCard
           title="Entity Status"
@@ -92,6 +101,7 @@ const DashboardSection = () => {
             : "Register your entity"}
           icon={Building2}
           variant={stats.entityStatus === "Active" ? "success" : "default"}
+          onClick={() => onNavigate?.("entity")}
         />
       </div>
 
@@ -119,14 +129,15 @@ const DashboardSection = () => {
           <h3 className="text-lg font-semibold text-foreground mb-4">Quick Actions</h3>
           <div className="grid grid-cols-2 gap-3">
             {[
-              { label: "Add Bank Account", icon: Wallet },
-              { label: "New Contract", icon: FileText },
-              { label: "Link Social", icon: Share2 },
-              { label: "Add Address", icon: MapPin },
+              { label: "Add Bank Account", icon: Wallet, section: "bank-accounts" },
+              { label: "New Contract", icon: FileText, section: "contracts" },
+              { label: "Link Social", icon: Share2, section: "social-media" },
+              { label: "Add Address", icon: MapPin, section: "addresses" },
             ].map((action, index) => (
               <button
                 key={index}
-                className="flex items-center gap-3 p-4 rounded-lg bg-muted text-foreground hover:bg-primary/10 hover:text-primary transition-all duration-200 text-sm font-medium"
+                onClick={() => onNavigate?.(action.section)}
+                className="flex items-center gap-3 p-4 rounded-lg bg-muted text-foreground hover:bg-primary/10 hover:text-primary transition-all duration-200 text-sm font-medium cursor-pointer"
               >
                 <action.icon className="w-5 h-5" />
                 {action.label}
