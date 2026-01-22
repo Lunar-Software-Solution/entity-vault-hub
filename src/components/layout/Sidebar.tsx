@@ -39,6 +39,7 @@ interface SidebarProps {
 const menuItems = [
   { id: "dashboard", label: "Dashboard", icon: LayoutDashboard },
   { id: "entity", label: "Entities", icon: Building2 },
+  { id: "directors-ubo", label: "Directors & UBOs", icon: Users },
   { id: "cap-table", label: "Cap Table", icon: PieChart },
   { id: "service-providers", label: "Service Providers", icon: Briefcase },
   { id: "filings", label: "Filings", icon: Calendar },

@@ -1,4 +1,6 @@
 import { useParams, useNavigate } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 import { 
   useEntities, 
   useBankAccounts, 
@@ -42,7 +44,8 @@ import {
   ClipboardCheck,
   FolderOpen,
   CheckSquare,
-  Share2
+  Share2,
+  Users
 } from "lucide-react";
 import { format } from "date-fns";
 import CompanyLogo from "@/components/shared/CompanyLogo";
@@ -62,6 +65,23 @@ import LinkedDocuments from "@/components/entity-detail/LinkedDocuments";
 import LinkedFilings from "@/components/entity-detail/LinkedFilings";
 import LinkedFilingTasks from "@/components/entity-detail/LinkedFilingTasks";
 import LinkedSocialMedia from "@/components/entity-detail/LinkedSocialMedia";
+import LinkedDirectorsUbos from "@/components/entity-detail/LinkedDirectorsUbos";
+
+const useDirectorsUbosForEntity = (entityId: string) => {
+  return useQuery({
+    queryKey: ["directors_ubos", entityId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("directors_ubos")
+        .select("*")
+        .eq("entity_id", entityId)
+        .order("name");
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!entityId,
+  });
+};
 
 const EntityDetail = () => {
   const { id } = useParams<{ id: string }>();
@@ -84,6 +104,7 @@ const EntityDetail = () => {
   const { data: filings, isLoading: filingsLoading } = useFilingsForEntity(id || "");
   const { data: tasks, isLoading: tasksLoading } = useTasksForEntity(id || "");
   const { data: socialMediaAccounts, isLoading: socialLoading } = useSocialMediaAccounts();
+  const { data: directorsUbos, isLoading: directorsLoading } = useDirectorsUbosForEntity(id || "");
 
   const entity = entities?.find(e => e.id === id);
   const linkedBankAccounts = bankAccounts?.filter(b => b.entity_id === id) ?? [];
@@ -100,10 +121,11 @@ const EntityDetail = () => {
   const linkedAuditors = auditors?.filter(a => a.entity_id === id) ?? [];
   const linkedDocuments = entityDocuments?.filter(d => d.entity_id === id) ?? [];
   const linkedSocialMedia = socialMediaAccounts?.filter(s => s.entity_id === id) ?? [];
+  const linkedDirectorsUbos = directorsUbos ?? [];
 
   const isLoading = entitiesLoading || bankLoading || cardsLoading || addressesLoading || 
     contractsLoading || phonesLoading || taxIdsLoading || accountantsLoading || 
-    lawFirmsLoading || agentsLoading || advisorsLoading || consultantsLoading || auditorsLoading || docsLoading || filingsLoading || tasksLoading || socialLoading;
+    lawFirmsLoading || agentsLoading || advisorsLoading || consultantsLoading || auditorsLoading || docsLoading || filingsLoading || tasksLoading || socialLoading || directorsLoading;
 
   if (isLoading) {
     return (
@@ -301,6 +323,11 @@ const EntityDetail = () => {
           <p className="text-2xl font-bold text-foreground">{linkedSocialMedia.length}</p>
           <p className="text-sm text-muted-foreground">Social Media</p>
         </div>
+        <div className="glass-card rounded-xl p-4 text-center">
+          <Users className="w-6 h-6 text-primary mx-auto mb-2" />
+          <p className="text-2xl font-bold text-foreground">{linkedDirectorsUbos.length}</p>
+          <p className="text-sm text-muted-foreground">Directors/UBOs</p>
+        </div>
       </div>
 
       {/* Stats Summary - Row 2: Service Providers */}
@@ -341,6 +368,7 @@ const EntityDetail = () => {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <LinkedBankAccounts accounts={linkedBankAccounts} />
         <LinkedCreditCards cards={linkedCreditCards} />
+        <LinkedDirectorsUbos directorsUbos={linkedDirectorsUbos} entityId={id!} />
         <LinkedPhoneNumbers phones={linkedPhoneNumbers} entityId={id!} />
         <LinkedTaxIds taxIds={linkedTaxIds} entityId={id!} />
         <LinkedAddresses addresses={linkedAddresses} />
