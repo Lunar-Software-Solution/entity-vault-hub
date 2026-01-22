@@ -10,6 +10,7 @@ import {
   LogOut
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/hooks/useAuth";
 import braxLogo from "@/assets/braxtech-logo.png";
 
 interface SidebarProps {
@@ -28,6 +29,12 @@ const menuItems = [
 ];
 
 const Sidebar = ({ activeSection, onSectionChange }: SidebarProps) => {
+  const { signOut } = useAuth();
+
+  const handleLogout = async () => {
+    await signOut();
+  };
+
   return (
     <aside className="fixed left-0 top-0 h-screen w-64 bg-sidebar border-r border-sidebar-border flex flex-col">
       <div className="p-6">
@@ -68,7 +75,10 @@ const Sidebar = ({ activeSection, onSectionChange }: SidebarProps) => {
           <Settings className="w-5 h-5" />
           Settings
         </button>
-        <button className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-destructive hover:bg-destructive/10 transition-all duration-200">
+        <button 
+          onClick={handleLogout}
+          className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-destructive hover:bg-destructive/10 transition-all duration-200"
+        >
           <LogOut className="w-5 h-5" />
           Logout
         </button>
