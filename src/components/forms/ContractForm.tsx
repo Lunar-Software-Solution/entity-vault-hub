@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { contractSchema, ContractFormData } from "@/lib/formSchemas";
@@ -7,16 +8,24 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import type { Contract } from "@/hooks/usePortalData";
 import { useEntities } from "@/hooks/usePortalData";
+import ContractFileUpload from "@/components/contracts/ContractFileUpload";
+import ContractSummary from "@/components/contracts/ContractSummary";
 
 interface ContractFormProps {
   contract?: Contract | null;
-  onSubmit: (data: ContractFormData) => void;
+  onSubmit: (data: ContractFormData & { file_path?: string; file_name?: string }) => void;
   onCancel: () => void;
   isLoading?: boolean;
 }
 
 const ContractForm = ({ contract, onSubmit, onCancel, isLoading }: ContractFormProps) => {
   const { data: entities } = useEntities();
+  const [filePath, setFilePath] = useState<string | null>((contract as any)?.file_path ?? null);
+  const [fileName, setFileName] = useState<string | null>((contract as any)?.file_name ?? null);
+  const [aiSummary, setAiSummary] = useState<string | null>((contract as any)?.ai_summary ?? null);
+  const [summaryGeneratedAt, setSummaryGeneratedAt] = useState<string | null>(
+    (contract as any)?.summary_generated_at ?? null
+  );
   
   const form = useForm<ContractFormData>({
     resolver: zodResolver(contractSchema),
@@ -31,12 +40,27 @@ const ContractForm = ({ contract, onSubmit, onCancel, isLoading }: ContractFormP
     },
   });
 
+  const handleFileUpload = (path: string, name: string) => {
+    setFilePath(path);
+    setFileName(name);
+  };
+
+  const handleSummaryGenerated = (summary: string) => {
+    setAiSummary(summary);
+    setSummaryGeneratedAt(new Date().toISOString());
+  };
+
   const handleSubmit = (data: ContractFormData) => {
     // Parse parties from comma-separated string if needed
     const parties = typeof data.parties === 'string' 
       ? (data.parties as string).split(',').map(p => p.trim()).filter(Boolean)
       : data.parties;
-    onSubmit({ ...data, parties });
+    onSubmit({ 
+      ...data, 
+      parties,
+      file_path: filePath || undefined,
+      file_name: fileName || undefined,
+    });
   };
 
   return (
@@ -133,6 +157,27 @@ const ContractForm = ({ contract, onSubmit, onCancel, isLoading }: ContractFormP
             </FormItem>
           )} />
         </div>
+
+        {/* File Upload Section */}
+        {contract?.id && (
+          <div className="space-y-4 pt-2 border-t border-border">
+            <h4 className="text-sm font-medium text-foreground">Contract Document</h4>
+            <ContractFileUpload
+              contractId={contract.id}
+              existingFilePath={filePath}
+              existingFileName={fileName}
+              onUploadComplete={handleFileUpload}
+              onSummaryGenerated={handleSummaryGenerated}
+            />
+            <ContractSummary summary={aiSummary} generatedAt={summaryGeneratedAt} />
+          </div>
+        )}
+
+        {!contract?.id && (
+          <p className="text-xs text-muted-foreground italic">
+            Save the contract first to upload a PDF and generate an AI summary.
+          </p>
+        )}
 
         <div className="flex justify-end gap-3 pt-4">
           <Button type="button" variant="outline" onClick={onCancel}>Cancel</Button>

@@ -116,37 +116,49 @@ export type Database = {
       }
       contracts: {
         Row: {
+          ai_summary: string | null
           created_at: string
           end_date: string | null
           entity_id: string | null
+          file_name: string | null
+          file_path: string | null
           id: string
           parties: string[]
           start_date: string | null
           status: string
+          summary_generated_at: string | null
           title: string
           type: string
           updated_at: string
         }
         Insert: {
+          ai_summary?: string | null
           created_at?: string
           end_date?: string | null
           entity_id?: string | null
+          file_name?: string | null
+          file_path?: string | null
           id?: string
           parties?: string[]
           start_date?: string | null
           status?: string
+          summary_generated_at?: string | null
           title: string
           type?: string
           updated_at?: string
         }
         Update: {
+          ai_summary?: string | null
           created_at?: string
           end_date?: string | null
           entity_id?: string | null
+          file_name?: string | null
+          file_path?: string | null
           id?: string
           parties?: string[]
           start_date?: string | null
           status?: string
+          summary_generated_at?: string | null
           title?: string
           type?: string
           updated_at?: string

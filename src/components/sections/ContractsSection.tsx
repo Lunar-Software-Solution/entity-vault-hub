@@ -28,12 +28,14 @@ const ContractsSection = ({ entityFilter }: ContractsSectionProps) => {
   const updateContract = useUpdateContract();
   const deleteContract = useDeleteContract();
 
-  const handleSubmit = (data: ContractFormData) => {
+  const handleSubmit = (data: ContractFormData & { file_path?: string; file_name?: string }) => {
     const cleanData = {
       ...data,
       start_date: data.start_date || null,
       end_date: data.end_date || null,
       entity_id: data.entity_id || null,
+      file_path: data.file_path || null,
+      file_name: data.file_name || null,
     };
     
     if (editingContract) {
