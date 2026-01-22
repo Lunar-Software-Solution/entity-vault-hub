@@ -1,7 +1,7 @@
-import { useState } from "react";
-import { Plus, ExternalLink, MoreVertical, CheckCircle2, Edit2, Trash2 } from "lucide-react";
+import { useState, useMemo } from "react";
+import { Plus, ExternalLink, MoreVertical, CheckCircle2, Edit2, Trash2, Building2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useSocialMediaAccounts } from "@/hooks/usePortalData";
+import { useSocialMediaAccounts, useEntities } from "@/hooks/usePortalData";
 import { useCreateSocialMediaAccount, useUpdateSocialMediaAccount, useDeleteSocialMediaAccount } from "@/hooks/usePortalMutations";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -11,8 +11,13 @@ import DeleteConfirmDialog from "@/components/shared/DeleteConfirmDialog";
 import type { SocialMediaAccount } from "@/hooks/usePortalData";
 import type { SocialMediaFormData } from "@/lib/formSchemas";
 
-const SocialMediaSection = () => {
+interface SocialMediaSectionProps {
+  entityFilter?: string | null;
+}
+
+const SocialMediaSection = ({ entityFilter }: SocialMediaSectionProps) => {
   const { data: socialAccounts, isLoading } = useSocialMediaAccounts();
+  const { data: entities } = useEntities();
   
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingAccount, setEditingAccount] = useState<SocialMediaAccount | null>(null);
@@ -22,12 +27,26 @@ const SocialMediaSection = () => {
   const updateAccount = useUpdateSocialMediaAccount();
   const deleteAccount = useDeleteSocialMediaAccount();
 
+  // Filter accounts by entity if filter is set
+  const filteredAccounts = useMemo(() => {
+    if (!socialAccounts) return [];
+    if (!entityFilter) return socialAccounts;
+    return socialAccounts.filter(account => account.entity_id === entityFilter);
+  }, [socialAccounts, entityFilter]);
+
+  // Get entity name by ID
+  const getEntityName = (entityId: string | null) => {
+    if (!entityId || !entities) return null;
+    return entities.find(e => e.id === entityId)?.name || null;
+  };
+
   const handleSubmit = (data: SocialMediaFormData) => {
     const cleanData = {
       ...data,
       profile_url: data.profile_url || null,
       followers: data.followers || null,
       icon: data.icon || null,
+      entity_id: data.entity_id || null,
     };
     
     if (editingAccount) {
@@ -89,9 +108,11 @@ const SocialMediaSection = () => {
         </Button>
       </div>
 
-      {isEmpty ? (
+      {filteredAccounts.length === 0 ? (
         <div className="glass-card rounded-xl p-12 text-center">
-          <p className="text-muted-foreground mb-4">No social media accounts linked yet.</p>
+          <p className="text-muted-foreground mb-4">
+            {entityFilter ? "No social media accounts linked to this entity." : "No social media accounts linked yet."}
+          </p>
           <Button className="gap-2" onClick={() => setIsFormOpen(true)}>
             <Plus className="w-4 h-4" />
             Link Your First Account
@@ -99,58 +120,68 @@ const SocialMediaSection = () => {
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {socialAccounts.map((account) => (
-            <div key={account.id} className="glass-card rounded-xl p-5 hover:border-primary/30 transition-all duration-300">
-              <div className="flex items-start justify-between mb-4">
-                <div className="flex items-center gap-3">
-                  <div className={`w-12 h-12 rounded-xl ${account.color} flex items-center justify-center text-white font-bold text-sm`}>
-                    {account.icon || account.platform.charAt(0)}
-                  </div>
-                  <div>
-                    <div className="flex items-center gap-1.5">
-                      <h3 className="font-semibold text-foreground">{account.platform}</h3>
-                      {account.is_verified && (
-                        <CheckCircle2 className="w-4 h-4 text-primary" />
-                      )}
+          {filteredAccounts.map((account) => {
+            const entityName = getEntityName(account.entity_id);
+            return (
+              <div key={account.id} className="glass-card rounded-xl p-5 hover:border-primary/30 transition-all duration-300">
+                <div className="flex items-start justify-between mb-4">
+                  <div className="flex items-center gap-3">
+                    <div className={`w-12 h-12 rounded-xl ${account.color} flex items-center justify-center text-white font-bold text-sm`}>
+                      {account.icon || account.platform.charAt(0)}
                     </div>
-                    <p className="text-sm text-muted-foreground">{account.username}</p>
+                    <div>
+                      <div className="flex items-center gap-1.5">
+                        <h3 className="font-semibold text-foreground">{account.platform}</h3>
+                        {account.is_verified && (
+                          <CheckCircle2 className="w-4 h-4 text-primary" />
+                        )}
+                      </div>
+                      <p className="text-sm text-muted-foreground">{account.username}</p>
+                    </div>
                   </div>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <button className="p-1.5 hover:bg-muted rounded-lg transition-colors">
+                        <MoreVertical className="w-4 h-4 text-muted-foreground" />
+                      </button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuItem onClick={() => handleEdit(account)}>
+                        <Edit2 className="w-4 h-4 mr-2" /> Edit
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => setDeletingId(account.id)} className="text-destructive">
+                        <Trash2 className="w-4 h-4 mr-2" /> Remove
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                 </div>
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <button className="p-1.5 hover:bg-muted rounded-lg transition-colors">
-                      <MoreVertical className="w-4 h-4 text-muted-foreground" />
-                    </button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    <DropdownMenuItem onClick={() => handleEdit(account)}>
-                      <Edit2 className="w-4 h-4 mr-2" /> Edit
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => setDeletingId(account.id)} className="text-destructive">
-                      <Trash2 className="w-4 h-4 mr-2" /> Remove
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </div>
 
-              <div className="flex items-center justify-between pt-4 border-t border-border">
-                <div>
-                  <p className="text-xs text-muted-foreground">Followers</p>
-                  <p className="font-semibold text-foreground">{account.followers || "—"}</p>
-                </div>
-                {account.profile_url && (
-                  <a 
-                    href={account.profile_url.startsWith("http") ? account.profile_url : `https://${account.profile_url}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center gap-1 text-sm text-primary hover:underline"
-                  >
-                    Visit <ExternalLink className="w-3 h-3" />
-                  </a>
+                {entityName && (
+                  <div className="flex items-center gap-1.5 mb-3 text-xs text-muted-foreground">
+                    <Building2 className="w-3 h-3" />
+                    <span>{entityName}</span>
+                  </div>
                 )}
+
+                <div className="flex items-center justify-between pt-4 border-t border-border">
+                  <div>
+                    <p className="text-xs text-muted-foreground">Followers</p>
+                    <p className="font-semibold text-foreground">{account.followers || "—"}</p>
+                  </div>
+                  {account.profile_url && (
+                    <a 
+                      href={account.profile_url.startsWith("http") ? account.profile_url : `https://${account.profile_url}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-1 text-sm text-primary hover:underline"
+                    >
+                      Visit <ExternalLink className="w-3 h-3" />
+                    </a>
+                  )}
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
 
