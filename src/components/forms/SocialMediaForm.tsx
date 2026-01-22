@@ -49,7 +49,7 @@ const SocialMediaForm = ({ account, onSubmit, onCancel, isLoading }: SocialMedia
       is_verified: account?.is_verified ?? false,
       color: account?.color ?? "bg-zinc-800",
       icon: account?.icon ?? "",
-      entity_id: account?.entity_id ?? "",
+      entity_id: account?.entity_id ?? "__none__",
       avatar_url: account?.avatar_url ?? "",
     },
   });
@@ -100,14 +100,14 @@ const SocialMediaForm = ({ account, onSubmit, onCancel, isLoading }: SocialMedia
           <FormField control={form.control} name="entity_id" render={({ field }) => (
             <FormItem className="md:col-span-2">
               <FormLabel>Entity</FormLabel>
-              <Select onValueChange={field.onChange} defaultValue={field.value}>
+              <Select onValueChange={field.onChange} defaultValue={field.value || "__none__"}>
                 <FormControl>
                   <SelectTrigger className="bg-background">
                     <SelectValue placeholder="Select entity (optional)" />
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent className="bg-background">
-                  <SelectItem value="">No entity</SelectItem>
+                  <SelectItem value="__none__">No entity</SelectItem>
                   {entities?.map((entity) => (
                     <SelectItem key={entity.id} value={entity.id}>{entity.name}</SelectItem>
                   ))}
