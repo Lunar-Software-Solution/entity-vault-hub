@@ -203,7 +203,8 @@ const IssuingAuthorityForm = ({
   );
 };
 
-type SortKey = "name" | "country" | "province_state" | "description";
+type AuthoritySortKey = "name" | "country" | "province_state" | "description";
+type TypeSortKey = "code" | "label" | "description";
 type SortDirection = "asc" | "desc";
 
 const SettingsSection = () => {
@@ -215,10 +216,15 @@ const SettingsSection = () => {
   const [editingAuthority, setEditingAuthority] = useState<IssuingAuthority | null>(null);
   const [deletingAuthority, setDeletingAuthority] = useState<IssuingAuthority | null>(null);
   
-  // Search and sort state
+  // Search and sort state for Tax ID Types
+  const [typeSearch, setTypeSearch] = useState("");
+  const [typeSortKey, setTypeSortKey] = useState<TypeSortKey>("code");
+  const [typeSortDirection, setTypeSortDirection] = useState<SortDirection>("asc");
+  
+  // Search and sort state for Issuing Authorities
   const [authoritySearch, setAuthoritySearch] = useState("");
-  const [sortKey, setSortKey] = useState<SortKey>("name");
-  const [sortDirection, setSortDirection] = useState<SortDirection>("asc");
+  const [authoritySortKey, setAuthoritySortKey] = useState<AuthoritySortKey>("name");
+  const [authoritySortDirection, setAuthoritySortDirection] = useState<SortDirection>("asc");
 
   const { data: taxIdTypes, isLoading: typesLoading } = useTaxIdTypes();
   const { data: issuingAuthorities, isLoading: authoritiesLoading } = useIssuingAuthorities();
@@ -230,6 +236,35 @@ const SettingsSection = () => {
   const createAuthorityMutation = useCreateIssuingAuthority();
   const updateAuthorityMutation = useUpdateIssuingAuthority();
   const deleteAuthorityMutation = useDeleteIssuingAuthority();
+
+  // Filter and sort Tax ID Types
+  const filteredAndSortedTypes = useMemo(() => {
+    if (!taxIdTypes) return [];
+    
+    let filtered = taxIdTypes;
+    
+    // Apply search filter
+    if (typeSearch.trim()) {
+      const searchLower = typeSearch.toLowerCase();
+      filtered = taxIdTypes.filter((type) => 
+        type.code.toLowerCase().includes(searchLower) ||
+        type.label.toLowerCase().includes(searchLower) ||
+        (type.description || "").toLowerCase().includes(searchLower)
+      );
+    }
+    
+    // Apply sort
+    return [...filtered].sort((a, b) => {
+      const aVal = (a[typeSortKey] || "").toLowerCase();
+      const bVal = (b[typeSortKey] || "").toLowerCase();
+      
+      if (typeSortDirection === "asc") {
+        return aVal.localeCompare(bVal);
+      } else {
+        return bVal.localeCompare(aVal);
+      }
+    });
+  }, [taxIdTypes, typeSearch, typeSortKey, typeSortDirection]);
 
   // Filter and sort authorities
   const filteredAndSortedAuthorities = useMemo(() => {
@@ -253,34 +288,50 @@ const SettingsSection = () => {
       let aVal = "";
       let bVal = "";
       
-      if (sortKey === "province_state") {
+      if (authoritySortKey === "province_state") {
         aVal = ((a as any).province_state || "").toLowerCase();
         bVal = ((b as any).province_state || "").toLowerCase();
       } else {
-        aVal = (a[sortKey] || "").toLowerCase();
-        bVal = (b[sortKey] || "").toLowerCase();
+        aVal = (a[authoritySortKey] || "").toLowerCase();
+        bVal = (b[authoritySortKey] || "").toLowerCase();
       }
       
-      if (sortDirection === "asc") {
+      if (authoritySortDirection === "asc") {
         return aVal.localeCompare(bVal);
       } else {
         return bVal.localeCompare(aVal);
       }
     });
-  }, [issuingAuthorities, authoritySearch, sortKey, sortDirection]);
+  }, [issuingAuthorities, authoritySearch, authoritySortKey, authoritySortDirection]);
 
-  const handleSort = (key: SortKey) => {
-    if (sortKey === key) {
-      setSortDirection(prev => prev === "asc" ? "desc" : "asc");
+  const handleTypeSort = (key: TypeSortKey) => {
+    if (typeSortKey === key) {
+      setTypeSortDirection(prev => prev === "asc" ? "desc" : "asc");
     } else {
-      setSortKey(key);
-      setSortDirection("asc");
+      setTypeSortKey(key);
+      setTypeSortDirection("asc");
     }
   };
 
-  const getSortIcon = (key: SortKey) => {
-    if (sortKey !== key) return <ArrowUpDown className="w-4 h-4 ml-1 opacity-50" />;
-    return sortDirection === "asc" 
+  const handleAuthoritySort = (key: AuthoritySortKey) => {
+    if (authoritySortKey === key) {
+      setAuthoritySortDirection(prev => prev === "asc" ? "desc" : "asc");
+    } else {
+      setAuthoritySortKey(key);
+      setAuthoritySortDirection("asc");
+    }
+  };
+
+  const getTypeSortIcon = (key: TypeSortKey) => {
+    if (typeSortKey !== key) return <ArrowUpDown className="w-4 h-4 ml-1 opacity-50" />;
+    return typeSortDirection === "asc" 
+      ? <ArrowUp className="w-4 h-4 ml-1" /> 
+      : <ArrowDown className="w-4 h-4 ml-1" />;
+  };
+
+  const getAuthoritySortIcon = (key: AuthoritySortKey) => {
+    if (authoritySortKey !== key) return <ArrowUpDown className="w-4 h-4 ml-1 opacity-50" />;
+    return authoritySortDirection === "asc" 
       ? <ArrowUp className="w-4 h-4 ml-1" /> 
       : <ArrowDown className="w-4 h-4 ml-1" />;
   };
@@ -346,60 +397,94 @@ const SettingsSection = () => {
 
         <TabsContent value="tax-id-types" className="mt-6">
           <div className="glass-card rounded-xl p-6">
-            <div className="flex items-center justify-between mb-4">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-4">
               <h3 className="text-lg font-semibold text-foreground">Tax ID Types</h3>
-              <Button onClick={() => setShowTypeForm(true)} size="sm" className="gap-2">
-                <Plus className="w-4 h-4" />
-                Add Type
-              </Button>
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full sm:w-auto">
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                  <Input
+                    placeholder="Search types..."
+                    value={typeSearch}
+                    onChange={(e) => setTypeSearch(e.target.value)}
+                    className="pl-9 w-full sm:w-64"
+                  />
+                </div>
+                <Button onClick={() => setShowTypeForm(true)} size="sm" className="gap-2">
+                  <Plus className="w-4 h-4" />
+                  Add Type
+                </Button>
+              </div>
             </div>
             
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Code</TableHead>
-                  <TableHead>Label</TableHead>
-                  <TableHead>Description</TableHead>
-                  <TableHead className="w-24">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {taxIdTypes?.map((type) => (
-                  <TableRow key={type.id}>
-                    <TableCell className="font-mono font-medium">{type.code}</TableCell>
-                    <TableCell>{type.label}</TableCell>
-                    <TableCell className="text-muted-foreground text-sm">{type.description || "—"}</TableCell>
-                    <TableCell>
-                      <div className="flex gap-1">
-                        <Button 
-                          variant="ghost" 
-                          size="icon" 
-                          className="h-8 w-8"
-                          onClick={() => { setEditingType(type); setShowTypeForm(true); }}
-                        >
-                          <Edit className="w-4 h-4" />
-                        </Button>
-                        <Button 
-                          variant="ghost" 
-                          size="icon" 
-                          className="h-8 w-8 text-destructive hover:text-destructive"
-                          onClick={() => setDeletingType(type)}
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
-                {!taxIdTypes?.length && (
+            <div className="overflow-x-auto">
+              <Table className="table-fixed w-full">
+                <TableHeader>
                   <TableRow>
-                    <TableCell colSpan={4} className="text-center text-muted-foreground py-8">
-                      No tax ID types defined yet
-                    </TableCell>
+                    <TableHead className="w-[120px]">
+                      <button 
+                        onClick={() => handleTypeSort("code")} 
+                        className="flex items-center hover:text-foreground transition-colors text-foreground"
+                      >
+                        Code {getTypeSortIcon("code")}
+                      </button>
+                    </TableHead>
+                    <TableHead className="w-[200px]">
+                      <button 
+                        onClick={() => handleTypeSort("label")} 
+                        className="flex items-center hover:text-foreground transition-colors text-foreground"
+                      >
+                        Label {getTypeSortIcon("label")}
+                      </button>
+                    </TableHead>
+                    <TableHead className="w-auto">
+                      <button 
+                        onClick={() => handleTypeSort("description")} 
+                        className="flex items-center hover:text-foreground transition-colors text-foreground"
+                      >
+                        Description {getTypeSortIcon("description")}
+                      </button>
+                    </TableHead>
+                    <TableHead className="w-[100px] text-foreground">Actions</TableHead>
                   </TableRow>
-                )}
-              </TableBody>
-            </Table>
+                </TableHeader>
+                <TableBody>
+                  {filteredAndSortedTypes.map((type) => (
+                    <TableRow key={type.id}>
+                      <TableCell className="font-mono font-medium text-foreground">{type.code}</TableCell>
+                      <TableCell className="text-foreground">{type.label}</TableCell>
+                      <TableCell className="text-muted-foreground text-sm">{type.description || "—"}</TableCell>
+                      <TableCell>
+                        <div className="flex gap-1">
+                          <Button 
+                            variant="ghost" 
+                            size="icon" 
+                            className="h-8 w-8 text-primary hover:text-primary"
+                            onClick={() => { setEditingType(type); setShowTypeForm(true); }}
+                          >
+                            <Edit className="w-4 h-4" />
+                          </Button>
+                          <Button 
+                            variant="ghost" 
+                            size="icon" 
+                            className="h-8 w-8 text-destructive hover:text-destructive"
+                            onClick={() => setDeletingType(type)}
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                  {!filteredAndSortedTypes.length && (
+                    <TableRow>
+                      <TableCell colSpan={4} className="text-center text-muted-foreground py-8">
+                        {typeSearch ? "No types match your search" : "No tax ID types defined yet"}
+                      </TableCell>
+                    </TableRow>
+                  )}
+                </TableBody>
+              </Table>
+            </div>
           </div>
         </TabsContent>
 
@@ -430,34 +515,34 @@ const SettingsSection = () => {
                   <TableRow>
                     <TableHead className="w-[180px]">
                       <button 
-                        onClick={() => handleSort("name")} 
+                        onClick={() => handleAuthoritySort("name")} 
                         className="flex items-center hover:text-foreground transition-colors text-foreground"
                       >
-                        Name {getSortIcon("name")}
+                        Name {getAuthoritySortIcon("name")}
                       </button>
                     </TableHead>
                     <TableHead className="w-[150px]">
                       <button 
-                        onClick={() => handleSort("country")} 
+                        onClick={() => handleAuthoritySort("country")} 
                         className="flex items-center hover:text-foreground transition-colors text-foreground"
                       >
-                        Country {getSortIcon("country")}
+                        Country {getAuthoritySortIcon("country")}
                       </button>
                     </TableHead>
                     <TableHead className="w-[130px]">
                       <button 
-                        onClick={() => handleSort("province_state")} 
+                        onClick={() => handleAuthoritySort("province_state")} 
                         className="flex items-center hover:text-foreground transition-colors text-foreground"
                       >
-                        Province/State {getSortIcon("province_state")}
+                        Province/State {getAuthoritySortIcon("province_state")}
                       </button>
                     </TableHead>
                     <TableHead className="w-auto">
                       <button 
-                        onClick={() => handleSort("description")} 
+                        onClick={() => handleAuthoritySort("description")} 
                         className="flex items-center hover:text-foreground transition-colors text-foreground"
                       >
-                        Description {getSortIcon("description")}
+                        Description {getAuthoritySortIcon("description")}
                       </button>
                     </TableHead>
                     <TableHead className="w-[100px] text-foreground">Actions</TableHead>
