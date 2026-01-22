@@ -8,6 +8,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import ContractForm from "@/components/forms/ContractForm";
 import DeleteConfirmDialog from "@/components/shared/DeleteConfirmDialog";
+import PdfViewerDialog from "@/components/contracts/PdfViewerDialog";
 import { format, differenceInDays } from "date-fns";
 import { supabase } from "@/integrations/supabase/client";
 import type { Contract } from "@/hooks/usePortalData";
@@ -24,6 +25,7 @@ const ContractsSection = ({ entityFilter }: ContractsSectionProps) => {
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingContract, setEditingContract] = useState<Contract | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [viewingContract, setViewingContract] = useState<Contract | null>(null);
   
   const createContract = useCreateContract();
   const updateContract = useUpdateContract();
@@ -242,16 +244,7 @@ const ContractsSection = ({ entityFilter }: ContractsSectionProps) => {
                             className="p-2 hover:bg-muted rounded-lg transition-colors disabled:opacity-50"
                             disabled={!contract.file_path}
                             title={contract.file_path ? "View PDF" : "No file uploaded"}
-                            onClick={async () => {
-                              if (contract.file_path) {
-                                const { data } = await supabase.storage
-                                  .from('contract-files')
-                                  .createSignedUrl(contract.file_path, 3600);
-                                if (data?.signedUrl) {
-                                  window.open(data.signedUrl, '_blank', 'noopener,noreferrer');
-                                }
-                              }
-                            }}
+                            onClick={() => setViewingContract(contract)}
                           >
                             <Eye className="w-4 h-4 text-muted-foreground" />
                           </button>
@@ -321,6 +314,13 @@ const ContractsSection = ({ entityFilter }: ContractsSectionProps) => {
         title="Delete Contract"
         description="This will permanently delete this contract."
         isLoading={deleteContract.isPending}
+      />
+
+      <PdfViewerDialog
+        open={!!viewingContract}
+        onOpenChange={(open) => !open && setViewingContract(null)}
+        filePath={viewingContract?.file_path || null}
+        fileName={viewingContract?.file_name || null}
       />
     </div>
   );
