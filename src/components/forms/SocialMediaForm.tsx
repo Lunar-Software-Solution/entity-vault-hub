@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { socialMediaSchema, SocialMediaFormData } from "@/lib/formSchemas";
@@ -6,6 +7,9 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
+import { supabase } from "@/integrations/supabase/client";
+import { Loader2, Wand2 } from "lucide-react";
+import { toast } from "sonner";
 import type { SocialMediaAccount } from "@/hooks/usePortalData";
 
 interface SocialMediaFormProps {
@@ -22,9 +26,16 @@ const platformColors = [
   { value: "bg-red-600", label: "Red (YouTube)" },
   { value: "bg-black", label: "Black (TikTok)" },
   { value: "bg-green-600", label: "Green (WhatsApp)" },
+  { value: "bg-purple-600", label: "Purple (Twitch)" },
+  { value: "bg-indigo-600", label: "Indigo (Discord)" },
+  { value: "bg-orange-600", label: "Orange (Reddit)" },
+  { value: "bg-yellow-400", label: "Yellow (Snapchat)" },
+  { value: "bg-blue-500", label: "Light Blue (Telegram)" },
 ];
 
 const SocialMediaForm = ({ account, onSubmit, onCancel, isLoading }: SocialMediaFormProps) => {
+  const [isFetching, setIsFetching] = useState(false);
+  
   const form = useForm<SocialMediaFormData>({
     resolver: zodResolver(socialMediaSchema),
     defaultValues: {
@@ -38,6 +49,41 @@ const SocialMediaForm = ({ account, onSubmit, onCancel, isLoading }: SocialMedia
     },
   });
 
+  const fetchProfileFromUrl = async () => {
+    const url = form.getValues("profile_url");
+    if (!url) {
+      toast.error("Please enter a profile URL first");
+      return;
+    }
+
+    setIsFetching(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      const response = await supabase.functions.invoke("fetch-social-profile", {
+        body: { profileUrl: url },
+        headers: session?.access_token ? {
+          Authorization: `Bearer ${session.access_token}`,
+        } : undefined,
+      });
+
+      if (response.error) throw response.error;
+
+      const profile = response.data;
+      
+      if (profile.platform) form.setValue("platform", profile.platform);
+      if (profile.username) form.setValue("username", profile.username);
+      if (profile.icon) form.setValue("icon", profile.icon);
+      if (profile.color) form.setValue("color", profile.color);
+      
+      toast.success(`Detected ${profile.platform} profile`);
+    } catch (error) {
+      console.error("Error fetching profile:", error);
+      toast.error("Could not fetch profile info. Please fill in manually.");
+    } finally {
+      setIsFetching(false);
+    }
+  };
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
@@ -61,7 +107,19 @@ const SocialMediaForm = ({ account, onSubmit, onCancel, isLoading }: SocialMedia
           <FormField control={form.control} name="profile_url" render={({ field }) => (
             <FormItem className="md:col-span-2">
               <FormLabel>Profile URL</FormLabel>
-              <FormControl><Input placeholder="https://instagram.com/username" {...field} /></FormControl>
+              <div className="flex gap-2">
+                <FormControl><Input placeholder="https://instagram.com/username" {...field} /></FormControl>
+                <Button 
+                  type="button" 
+                  variant="outline" 
+                  size="icon"
+                  onClick={fetchProfileFromUrl}
+                  disabled={isFetching}
+                  title="Auto-detect platform and username"
+                >
+                  {isFetching ? <Loader2 className="w-4 h-4 animate-spin" /> : <Wand2 className="w-4 h-4" />}
+                </Button>
+              </div>
               <FormMessage />
             </FormItem>
           )} />
