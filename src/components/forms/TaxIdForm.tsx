@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
-import { useEntities, useTaxIdTypes, useIssuingAuthorities } from "@/hooks/usePortalData";
+import { useEntities, useTaxIdTypes } from "@/hooks/usePortalData";
 import type { TaxId } from "@/hooks/usePortalData";
 
 interface TaxIdFormProps {
@@ -44,7 +44,6 @@ const commonCountries = [
 const TaxIdForm = ({ taxId, defaultEntityId, onSubmit, onCancel, isLoading }: TaxIdFormProps) => {
   const { data: entities } = useEntities();
   const { data: taxIdTypes } = useTaxIdTypes();
-  const { data: issuingAuthorities } = useIssuingAuthorities();
   
   const form = useForm<TaxIdFormData>({
     resolver: zodResolver(taxIdSchema),
@@ -85,82 +84,57 @@ const TaxIdForm = ({ taxId, defaultEntityId, onSubmit, onCancel, isLoading }: Ta
           </FormItem>
         )} />
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <FormField control={form.control} name="type" render={({ field }) => (
-            <FormItem>
-              <FormLabel>Tax ID Type *</FormLabel>
-              <Select onValueChange={field.onChange} defaultValue={field.value}>
-                <FormControl>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select type" />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  {taxIdTypes?.map((type) => (
-                    <SelectItem key={type.id} value={type.code}>
-                      {type.code} — {type.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <FormMessage />
-            </FormItem>
-          )} />
-
-          <FormField control={form.control} name="tax_id_number" render={({ field }) => (
-            <FormItem>
-              <FormLabel>Tax ID Number *</FormLabel>
+        <FormField control={form.control} name="type" render={({ field }) => (
+          <FormItem>
+            <FormLabel>Tax ID Type *</FormLabel>
+            <Select onValueChange={field.onChange} defaultValue={field.value}>
               <FormControl>
-                <Input placeholder="XX-XXXXXXX" {...field} />
+                <SelectTrigger>
+                  <SelectValue placeholder="Select type" />
+                </SelectTrigger>
               </FormControl>
-              <FormMessage />
-            </FormItem>
-          )} />
-        </div>
+              <SelectContent>
+                {taxIdTypes?.map((type) => (
+                  <SelectItem key={type.id} value={type.code}>
+                    {type.code} — {type.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <FormMessage />
+          </FormItem>
+        )} />
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <FormField control={form.control} name="country" render={({ field }) => (
-            <FormItem>
-              <FormLabel>Country *</FormLabel>
-              <FormControl>
-                <>
-                  <Input 
-                    list="countries" 
-                    placeholder="Select or type..."
-                    {...field} 
-                  />
-                  <datalist id="countries">
-                    {commonCountries.map((country) => (
-                      <option key={country} value={country} />
-                    ))}
-                  </datalist>
-                </>
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )} />
+        <FormField control={form.control} name="tax_id_number" render={({ field }) => (
+          <FormItem>
+            <FormLabel>Tax ID Number *</FormLabel>
+            <FormControl>
+              <Input placeholder="XX-XXXXXXX" {...field} />
+            </FormControl>
+            <FormMessage />
+          </FormItem>
+        )} />
 
-          <FormField control={form.control} name="authority" render={({ field }) => (
-            <FormItem>
-              <FormLabel>Issuing Authority *</FormLabel>
-              <Select onValueChange={field.onChange} defaultValue={field.value}>
-                <FormControl>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select authority" />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  {issuingAuthorities?.map((auth) => (
-                    <SelectItem key={auth.id} value={auth.name}>
-                      {auth.name} ({auth.country})
-                    </SelectItem>
+        <FormField control={form.control} name="country" render={({ field }) => (
+          <FormItem>
+            <FormLabel>Country *</FormLabel>
+            <FormControl>
+              <>
+                <Input 
+                  list="countries" 
+                  placeholder="Select or type..."
+                  {...field} 
+                />
+                <datalist id="countries">
+                  {commonCountries.map((country) => (
+                    <option key={country} value={country} />
                   ))}
-                </SelectContent>
-              </Select>
-              <FormMessage />
-            </FormItem>
-          )} />
-        </div>
+                </datalist>
+              </>
+            </FormControl>
+            <FormMessage />
+          </FormItem>
+        )} />
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <FormField control={form.control} name="issued_date" render={({ field }) => (
