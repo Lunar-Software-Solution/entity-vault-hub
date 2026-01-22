@@ -95,14 +95,18 @@ const FilingTaskForm = ({
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Related Filing</FormLabel>
-                <Select onValueChange={field.onChange} value={field.value || ""} disabled={!!preselectedFilingId}>
+                <Select 
+                  onValueChange={(val) => field.onChange(val === "__none__" ? "" : val)} 
+                  value={field.value || "__none__"} 
+                  disabled={!!preselectedFilingId}
+                >
                   <FormControl>
                     <SelectTrigger>
                       <SelectValue placeholder="Optional - link to filing" />
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                    <SelectItem value="">None</SelectItem>
+                    <SelectItem value="__none__">None</SelectItem>
                     {entityFilings.map((filing) => (
                       <SelectItem key={filing.id} value={filing.id}>
                         {filing.title}
