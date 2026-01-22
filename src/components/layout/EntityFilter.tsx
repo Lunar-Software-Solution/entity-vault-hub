@@ -15,9 +15,9 @@ const EntityFilter = ({ selectedEntityId, onEntityChange }: EntityFilterProps) =
 
   return (
     <div className="flex items-center gap-3">
-      <div className="flex items-center gap-2 text-sm text-muted-foreground">
+      <div className="flex items-center gap-2 text-sm text-foreground">
         <Building2 className="w-4 h-4" />
-        <span>Filter by entity:</span>
+        <span className="font-medium">Filter by entity:</span>
       </div>
       <Select 
         value={selectedEntityId || "__all__"} 
