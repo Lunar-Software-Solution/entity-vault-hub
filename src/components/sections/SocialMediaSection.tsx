@@ -47,7 +47,7 @@ const SocialMediaSection = ({ entityFilter }: SocialMediaSectionProps) => {
       profile_url: data.profile_url || null,
       followers: data.followers || null,
       icon: data.icon || null,
-      entity_id: data.entity_id || null,
+      entity_id: data.entity_id === "__none__" ? null : (data.entity_id || null),
       avatar_url: data.avatar_url || null,
     };
     
