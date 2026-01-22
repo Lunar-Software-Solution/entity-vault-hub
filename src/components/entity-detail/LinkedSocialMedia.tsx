@@ -143,9 +143,6 @@ const LinkedSocialMedia = ({ accounts, entityId }: LinkedSocialMediaProps) => {
                       )}
                     </div>
                     <p className="text-sm text-muted-foreground">{account.username}</p>
-                    {account.followers && (
-                      <p className="text-xs text-muted-foreground">{account.followers} followers</p>
-                    )}
                   </div>
                 </div>
                 <div className="flex items-center gap-1">
