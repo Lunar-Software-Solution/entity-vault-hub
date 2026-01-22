@@ -483,3 +483,291 @@ export const useDeleteIssuingAuthority = () => {
   });
 };
 
+// Accountant Firm mutations
+export const useCreateAccountantFirm = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (firm: TablesInsert<"accountant_firms">) => {
+      const { data, error } = await supabase.from("accountant_firms").insert(firm).select().single();
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["accountant_firms"] });
+      toast.success("Accountant firm added successfully");
+    },
+    onError: (error) => toast.error(`Failed to add accountant firm: ${error.message}`),
+  });
+};
+
+export const useUpdateAccountantFirm = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, ...firm }: TablesUpdate<"accountant_firms"> & { id: string }) => {
+      const { data, error } = await supabase.from("accountant_firms").update(firm).eq("id", id).select().single();
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["accountant_firms"] });
+      toast.success("Accountant firm updated successfully");
+    },
+    onError: (error) => toast.error(`Failed to update accountant firm: ${error.message}`),
+  });
+};
+
+export const useDeleteAccountantFirm = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from("accountant_firms").delete().eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["accountant_firms"] });
+      toast.success("Accountant firm deleted successfully");
+    },
+    onError: (error) => toast.error(`Failed to delete accountant firm: ${error.message}`),
+  });
+};
+
+// Law Firm mutations
+export const useCreateLawFirm = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (firm: TablesInsert<"law_firms">) => {
+      const { data, error } = await supabase.from("law_firms").insert(firm).select().single();
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["law_firms"] });
+      toast.success("Law firm added successfully");
+    },
+    onError: (error) => toast.error(`Failed to add law firm: ${error.message}`),
+  });
+};
+
+export const useUpdateLawFirm = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, ...firm }: TablesUpdate<"law_firms"> & { id: string }) => {
+      const { data, error } = await supabase.from("law_firms").update(firm).eq("id", id).select().single();
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["law_firms"] });
+      toast.success("Law firm updated successfully");
+    },
+    onError: (error) => toast.error(`Failed to update law firm: ${error.message}`),
+  });
+};
+
+export const useDeleteLawFirm = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from("law_firms").delete().eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["law_firms"] });
+      toast.success("Law firm deleted successfully");
+    },
+    onError: (error) => toast.error(`Failed to delete law firm: ${error.message}`),
+  });
+};
+
+// Registration Agent mutations
+export const useCreateRegistrationAgent = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (agent: TablesInsert<"registration_agents">) => {
+      const { data, error } = await supabase.from("registration_agents").insert(agent).select().single();
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["registration_agents"] });
+      toast.success("Registration agent added successfully");
+    },
+    onError: (error) => toast.error(`Failed to add registration agent: ${error.message}`),
+  });
+};
+
+export const useUpdateRegistrationAgent = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, ...agent }: TablesUpdate<"registration_agents"> & { id: string }) => {
+      const { data, error } = await supabase.from("registration_agents").update(agent).eq("id", id).select().single();
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["registration_agents"] });
+      toast.success("Registration agent updated successfully");
+    },
+    onError: (error) => toast.error(`Failed to update registration agent: ${error.message}`),
+  });
+};
+
+export const useDeleteRegistrationAgent = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from("registration_agents").delete().eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["registration_agents"] });
+      toast.success("Registration agent deleted successfully");
+    },
+    onError: (error) => toast.error(`Failed to delete registration agent: ${error.message}`),
+  });
+};
+
+// Advisor mutations
+export const useCreateAdvisor = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (advisor: TablesInsert<"advisors">) => {
+      const { data, error } = await supabase.from("advisors").insert(advisor).select().single();
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["advisors"] });
+      toast.success("Advisor added successfully");
+    },
+    onError: (error) => toast.error(`Failed to add advisor: ${error.message}`),
+  });
+};
+
+export const useUpdateAdvisor = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, ...advisor }: TablesUpdate<"advisors"> & { id: string }) => {
+      const { data, error } = await supabase.from("advisors").update(advisor).eq("id", id).select().single();
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["advisors"] });
+      toast.success("Advisor updated successfully");
+    },
+    onError: (error) => toast.error(`Failed to update advisor: ${error.message}`),
+  });
+};
+
+export const useDeleteAdvisor = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from("advisors").delete().eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["advisors"] });
+      toast.success("Advisor deleted successfully");
+    },
+    onError: (error) => toast.error(`Failed to delete advisor: ${error.message}`),
+  });
+};
+
+// Consultant mutations
+export const useCreateConsultant = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (consultant: TablesInsert<"consultants">) => {
+      const { data, error } = await supabase.from("consultants").insert(consultant).select().single();
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["consultants"] });
+      toast.success("Consultant added successfully");
+    },
+    onError: (error) => toast.error(`Failed to add consultant: ${error.message}`),
+  });
+};
+
+export const useUpdateConsultant = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, ...consultant }: TablesUpdate<"consultants"> & { id: string }) => {
+      const { data, error } = await supabase.from("consultants").update(consultant).eq("id", id).select().single();
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["consultants"] });
+      toast.success("Consultant updated successfully");
+    },
+    onError: (error) => toast.error(`Failed to update consultant: ${error.message}`),
+  });
+};
+
+export const useDeleteConsultant = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from("consultants").delete().eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["consultants"] });
+      toast.success("Consultant deleted successfully");
+    },
+    onError: (error) => toast.error(`Failed to delete consultant: ${error.message}`),
+  });
+};
+
+// Auditor mutations
+export const useCreateAuditor = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (auditor: TablesInsert<"auditors">) => {
+      const { data, error } = await supabase.from("auditors").insert(auditor).select().single();
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["auditors"] });
+      toast.success("Auditor added successfully");
+    },
+    onError: (error) => toast.error(`Failed to add auditor: ${error.message}`),
+  });
+};
+
+export const useUpdateAuditor = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, ...auditor }: TablesUpdate<"auditors"> & { id: string }) => {
+      const { data, error } = await supabase.from("auditors").update(auditor).eq("id", id).select().single();
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["auditors"] });
+      toast.success("Auditor updated successfully");
+    },
+    onError: (error) => toast.error(`Failed to update auditor: ${error.message}`),
+  });
+};
+
+export const useDeleteAuditor = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from("auditors").delete().eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["auditors"] });
+      toast.success("Auditor deleted successfully");
+    },
+    onError: (error) => toast.error(`Failed to delete auditor: ${error.message}`),
+  });
+};
+

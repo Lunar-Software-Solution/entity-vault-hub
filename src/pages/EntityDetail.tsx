@@ -6,7 +6,13 @@ import {
   useAddresses, 
   useContracts,
   usePhoneNumbers,
-  useTaxIds
+  useTaxIds,
+  useAccountantFirms,
+  useLawFirms,
+  useRegistrationAgents,
+  useAdvisors,
+  useConsultants,
+  useAuditors
 } from "@/hooks/usePortalData";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -23,7 +29,13 @@ import {
   CreditCard,
   FileText,
   ExternalLink,
-  Receipt
+  Receipt,
+  Calculator,
+  Scale,
+  FileCheck,
+  Lightbulb,
+  Briefcase,
+  ClipboardCheck
 } from "lucide-react";
 import { format } from "date-fns";
 import LinkedBankAccounts from "@/components/entity-detail/LinkedBankAccounts";
@@ -32,6 +44,12 @@ import LinkedAddresses from "@/components/entity-detail/LinkedAddresses";
 import LinkedContracts from "@/components/entity-detail/LinkedContracts";
 import LinkedPhoneNumbers from "@/components/entity-detail/LinkedPhoneNumbers";
 import LinkedTaxIds from "@/components/entity-detail/LinkedTaxIds";
+import LinkedAccountantFirms from "@/components/entity-detail/LinkedAccountantFirms";
+import LinkedLawFirms from "@/components/entity-detail/LinkedLawFirms";
+import LinkedRegistrationAgents from "@/components/entity-detail/LinkedRegistrationAgents";
+import LinkedAdvisors from "@/components/entity-detail/LinkedAdvisors";
+import LinkedConsultants from "@/components/entity-detail/LinkedConsultants";
+import LinkedAuditors from "@/components/entity-detail/LinkedAuditors";
 
 const EntityDetail = () => {
   const { id } = useParams<{ id: string }>();
@@ -44,6 +62,12 @@ const EntityDetail = () => {
   const { data: contracts, isLoading: contractsLoading } = useContracts();
   const { data: phoneNumbers, isLoading: phonesLoading } = usePhoneNumbers();
   const { data: taxIds, isLoading: taxIdsLoading } = useTaxIds();
+  const { data: accountantFirms, isLoading: accountantsLoading } = useAccountantFirms();
+  const { data: lawFirms, isLoading: lawFirmsLoading } = useLawFirms();
+  const { data: registrationAgents, isLoading: agentsLoading } = useRegistrationAgents();
+  const { data: advisors, isLoading: advisorsLoading } = useAdvisors();
+  const { data: consultants, isLoading: consultantsLoading } = useConsultants();
+  const { data: auditors, isLoading: auditorsLoading } = useAuditors();
 
   const entity = entities?.find(e => e.id === id);
   const linkedBankAccounts = bankAccounts?.filter(b => b.entity_id === id) ?? [];
@@ -52,8 +76,16 @@ const EntityDetail = () => {
   const linkedContracts = contracts?.filter(c => c.entity_id === id) ?? [];
   const linkedPhoneNumbers = phoneNumbers?.filter(p => p.entity_id === id) ?? [];
   const linkedTaxIds = taxIds?.filter(t => t.entity_id === id) ?? [];
+  const linkedAccountantFirms = accountantFirms?.filter(f => f.entity_id === id) ?? [];
+  const linkedLawFirms = lawFirms?.filter(f => f.entity_id === id) ?? [];
+  const linkedRegistrationAgents = registrationAgents?.filter(a => a.entity_id === id) ?? [];
+  const linkedAdvisors = advisors?.filter(a => a.entity_id === id) ?? [];
+  const linkedConsultants = consultants?.filter(c => c.entity_id === id) ?? [];
+  const linkedAuditors = auditors?.filter(a => a.entity_id === id) ?? [];
 
-  const isLoading = entitiesLoading || bankLoading || cardsLoading || addressesLoading || contractsLoading || phonesLoading || taxIdsLoading;
+  const isLoading = entitiesLoading || bankLoading || cardsLoading || addressesLoading || 
+    contractsLoading || phonesLoading || taxIdsLoading || accountantsLoading || 
+    lawFirmsLoading || agentsLoading || advisorsLoading || consultantsLoading || auditorsLoading;
 
   if (isLoading) {
     return (
@@ -196,8 +228,8 @@ const EntityDetail = () => {
         )}
       </div>
 
-      {/* Stats Summary */}
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-8">
+      {/* Stats Summary - Row 1: Core Data */}
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-4">
         <div className="glass-card rounded-xl p-4 text-center">
           <Wallet className="w-6 h-6 text-primary mx-auto mb-2" />
           <p className="text-2xl font-bold text-foreground">{linkedBankAccounts.length}</p>
@@ -230,6 +262,40 @@ const EntityDetail = () => {
         </div>
       </div>
 
+      {/* Stats Summary - Row 2: Service Providers */}
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-8">
+        <div className="glass-card rounded-xl p-4 text-center">
+          <Calculator className="w-6 h-6 text-primary mx-auto mb-2" />
+          <p className="text-2xl font-bold text-foreground">{linkedAccountantFirms.length}</p>
+          <p className="text-sm text-muted-foreground">Accountants</p>
+        </div>
+        <div className="glass-card rounded-xl p-4 text-center">
+          <Scale className="w-6 h-6 text-primary mx-auto mb-2" />
+          <p className="text-2xl font-bold text-foreground">{linkedLawFirms.length}</p>
+          <p className="text-sm text-muted-foreground">Law Firms</p>
+        </div>
+        <div className="glass-card rounded-xl p-4 text-center">
+          <FileCheck className="w-6 h-6 text-primary mx-auto mb-2" />
+          <p className="text-2xl font-bold text-foreground">{linkedRegistrationAgents.length}</p>
+          <p className="text-sm text-muted-foreground">Reg. Agents</p>
+        </div>
+        <div className="glass-card rounded-xl p-4 text-center">
+          <Lightbulb className="w-6 h-6 text-primary mx-auto mb-2" />
+          <p className="text-2xl font-bold text-foreground">{linkedAdvisors.length}</p>
+          <p className="text-sm text-muted-foreground">Advisors</p>
+        </div>
+        <div className="glass-card rounded-xl p-4 text-center">
+          <Briefcase className="w-6 h-6 text-primary mx-auto mb-2" />
+          <p className="text-2xl font-bold text-foreground">{linkedConsultants.length}</p>
+          <p className="text-sm text-muted-foreground">Consultants</p>
+        </div>
+        <div className="glass-card rounded-xl p-4 text-center">
+          <ClipboardCheck className="w-6 h-6 text-primary mx-auto mb-2" />
+          <p className="text-2xl font-bold text-foreground">{linkedAuditors.length}</p>
+          <p className="text-sm text-muted-foreground">Auditors</p>
+        </div>
+      </div>
+
       {/* Linked Data Sections */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <LinkedBankAccounts accounts={linkedBankAccounts} />
@@ -238,6 +304,12 @@ const EntityDetail = () => {
         <LinkedTaxIds taxIds={linkedTaxIds} entityId={id!} />
         <LinkedAddresses addresses={linkedAddresses} />
         <LinkedContracts contracts={linkedContracts} />
+        <LinkedAccountantFirms firms={linkedAccountantFirms} entityId={id!} />
+        <LinkedLawFirms firms={linkedLawFirms} entityId={id!} />
+        <LinkedRegistrationAgents agents={linkedRegistrationAgents} entityId={id!} />
+        <LinkedAdvisors advisors={linkedAdvisors} entityId={id!} />
+        <LinkedConsultants consultants={linkedConsultants} entityId={id!} />
+        <LinkedAuditors auditors={linkedAuditors} entityId={id!} />
       </div>
     </div>
   );

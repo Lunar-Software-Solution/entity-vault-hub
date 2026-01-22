@@ -89,6 +89,54 @@ export const taxIdSchema = z.object({
   is_primary: z.boolean().default(false),
 });
 
+// Base provider schema for common fields
+const baseProviderSchema = z.object({
+  entity_id: z.string().uuid("Entity is required"),
+  name: z.string().trim().min(1, "Name is required").max(200),
+  contact_name: z.string().trim().max(200).optional().or(z.literal("")),
+  email: z.string().trim().email("Invalid email").optional().or(z.literal("")),
+  phone: z.string().trim().max(30).optional().or(z.literal("")),
+  website: z.string().trim().url("Invalid URL").optional().or(z.literal("")),
+  linkedin_url: z.string().trim().url("Invalid LinkedIn URL").optional().or(z.literal("")),
+  address: z.string().trim().max(500).optional().or(z.literal("")),
+  engagement_start_date: z.string().optional().or(z.literal("")),
+  engagement_end_date: z.string().optional().or(z.literal("")),
+  fee_structure: z.string().trim().max(100).optional().or(z.literal("")),
+  notes: z.string().trim().max(1000).optional().or(z.literal("")),
+  is_active: z.boolean().default(true),
+});
+
+export const accountantFirmSchema = baseProviderSchema.extend({
+  license_number: z.string().trim().max(100).optional().or(z.literal("")),
+  specializations: z.array(z.string()).default([]),
+});
+
+export const lawFirmSchema = baseProviderSchema.extend({
+  bar_number: z.string().trim().max(100).optional().or(z.literal("")),
+  practice_areas: z.array(z.string()).default([]),
+});
+
+export const registrationAgentSchema = baseProviderSchema.extend({
+  agent_type: z.string().trim().max(100).optional().or(z.literal("")),
+  jurisdictions_covered: z.array(z.string()).default([]),
+});
+
+export const advisorSchema = baseProviderSchema.extend({
+  advisor_type: z.string().trim().max(100).optional().or(z.literal("")),
+  certifications: z.array(z.string()).default([]),
+});
+
+export const consultantSchema = baseProviderSchema.extend({
+  consultant_type: z.string().trim().max(100).optional().or(z.literal("")),
+  project_scope: z.string().trim().max(500).optional().or(z.literal("")),
+});
+
+export const auditorSchema = baseProviderSchema.extend({
+  license_number: z.string().trim().max(100).optional().or(z.literal("")),
+  audit_types: z.array(z.string()).default([]),
+  certifications: z.array(z.string()).default([]),
+});
+
 // Use explicit types to ensure required fields are properly typed
 export type EntityFormData = {
   name: string;
@@ -177,4 +225,52 @@ export type TaxIdFormData = {
   expiry_date?: string;
   notes?: string;
   is_primary: boolean;
+};
+
+// Base type for all provider forms
+export type BaseProviderFormData = {
+  entity_id: string;
+  name: string;
+  contact_name?: string;
+  email?: string;
+  phone?: string;
+  website?: string;
+  linkedin_url?: string;
+  address?: string;
+  engagement_start_date?: string;
+  engagement_end_date?: string;
+  fee_structure?: string;
+  notes?: string;
+  is_active: boolean;
+};
+
+export type AccountantFirmFormData = BaseProviderFormData & {
+  license_number?: string;
+  specializations: string[];
+};
+
+export type LawFirmFormData = BaseProviderFormData & {
+  bar_number?: string;
+  practice_areas: string[];
+};
+
+export type RegistrationAgentFormData = BaseProviderFormData & {
+  agent_type?: string;
+  jurisdictions_covered: string[];
+};
+
+export type AdvisorFormData = BaseProviderFormData & {
+  advisor_type?: string;
+  certifications: string[];
+};
+
+export type ConsultantFormData = BaseProviderFormData & {
+  consultant_type?: string;
+  project_scope?: string;
+};
+
+export type AuditorFormData = BaseProviderFormData & {
+  license_number?: string;
+  audit_types: string[];
+  certifications: string[];
 };
