@@ -771,3 +771,99 @@ export const useDeleteAuditor = () => {
   });
 };
 
+// Document Type mutations
+export const useCreateDocumentType = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (type: TablesInsert<"document_types">) => {
+      const { data, error } = await supabase.from("document_types").insert(type).select().single();
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["document_types"] });
+      toast.success("Document type added successfully");
+    },
+    onError: (error) => toast.error(`Failed to add document type: ${error.message}`),
+  });
+};
+
+export const useUpdateDocumentType = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, ...type }: TablesUpdate<"document_types"> & { id: string }) => {
+      const { data, error } = await supabase.from("document_types").update(type).eq("id", id).select().single();
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["document_types"] });
+      toast.success("Document type updated successfully");
+    },
+    onError: (error) => toast.error(`Failed to update document type: ${error.message}`),
+  });
+};
+
+export const useDeleteDocumentType = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from("document_types").delete().eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["document_types"] });
+      toast.success("Document type deleted successfully");
+    },
+    onError: (error) => toast.error(`Failed to delete document type: ${error.message}`),
+  });
+};
+
+// Entity Document mutations
+export const useCreateEntityDocument = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (doc: TablesInsert<"entity_documents">) => {
+      const { data, error } = await supabase.from("entity_documents").insert(doc).select().single();
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["entity_documents"] });
+      toast.success("Document added successfully");
+    },
+    onError: (error) => toast.error(`Failed to add document: ${error.message}`),
+  });
+};
+
+export const useUpdateEntityDocument = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, ...doc }: TablesUpdate<"entity_documents"> & { id: string }) => {
+      const { data, error } = await supabase.from("entity_documents").update(doc).eq("id", id).select().single();
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["entity_documents"] });
+      toast.success("Document updated successfully");
+    },
+    onError: (error) => toast.error(`Failed to update document: ${error.message}`),
+  });
+};
+
+export const useDeleteEntityDocument = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from("entity_documents").delete().eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["entity_documents"] });
+      toast.success("Document deleted successfully");
+    },
+    onError: (error) => toast.error(`Failed to delete document: ${error.message}`),
+  });
+};
+

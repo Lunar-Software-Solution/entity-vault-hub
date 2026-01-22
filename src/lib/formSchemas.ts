@@ -1,5 +1,32 @@
 import { z } from "zod";
 
+// Document Type Schema
+export const documentTypeSchema = z.object({
+  code: z.string().trim().min(1, "Code is required").max(20, "Code must be 20 characters or less"),
+  name: z.string().trim().min(1, "Name is required").max(100, "Name must be 100 characters or less"),
+  category: z.string().trim().min(1, "Category is required"),
+  description: z.string().trim().max(500, "Description must be 500 characters or less").optional().or(z.literal("")),
+});
+
+export type DocumentTypeFormData = z.infer<typeof documentTypeSchema>;
+
+// Entity Document Schema
+export const entityDocumentSchema = z.object({
+  entity_id: z.string().uuid("Entity is required"),
+  document_type_id: z.string().uuid("Document type is required").optional().or(z.literal("")),
+  title: z.string().trim().min(1, "Title is required").max(200, "Title must be 200 characters or less"),
+  file_path: z.string().optional().or(z.literal("")),
+  file_name: z.string().optional().or(z.literal("")),
+  issued_date: z.string().optional().or(z.literal("")),
+  expiry_date: z.string().optional().or(z.literal("")),
+  issuing_authority: z.string().trim().max(200, "Issuing authority must be 200 characters or less").optional().or(z.literal("")),
+  reference_number: z.string().trim().max(100, "Reference number must be 100 characters or less").optional().or(z.literal("")),
+  notes: z.string().trim().max(1000, "Notes must be 1000 characters or less").optional().or(z.literal("")),
+  status: z.enum(["current", "superseded", "expired"]).default("current"),
+});
+
+export type EntityDocumentFormData = z.infer<typeof entityDocumentSchema>;
+
 export const entitySchema = z.object({
   name: z.string().trim().min(1, "Name is required").max(200, "Name must be less than 200 characters"),
   type: z.string().min(1, "Type is required"),

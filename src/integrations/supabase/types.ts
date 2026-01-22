@@ -510,6 +510,36 @@ export type Database = {
           },
         ]
       }
+      document_types: {
+        Row: {
+          category: string
+          code: string
+          created_at: string
+          description: string | null
+          id: string
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          category?: string
+          code: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          category?: string
+          code?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       entities: {
         Row: {
           created_at: string
@@ -563,6 +593,72 @@ export type Database = {
           website?: string | null
         }
         Relationships: []
+      }
+      entity_documents: {
+        Row: {
+          created_at: string
+          document_type_id: string | null
+          entity_id: string
+          expiry_date: string | null
+          file_name: string | null
+          file_path: string | null
+          id: string
+          issued_date: string | null
+          issuing_authority: string | null
+          notes: string | null
+          reference_number: string | null
+          status: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          document_type_id?: string | null
+          entity_id: string
+          expiry_date?: string | null
+          file_name?: string | null
+          file_path?: string | null
+          id?: string
+          issued_date?: string | null
+          issuing_authority?: string | null
+          notes?: string | null
+          reference_number?: string | null
+          status?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          document_type_id?: string | null
+          entity_id?: string
+          expiry_date?: string | null
+          file_name?: string | null
+          file_path?: string | null
+          id?: string
+          issued_date?: string | null
+          issuing_authority?: string | null
+          notes?: string | null
+          reference_number?: string | null
+          status?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "entity_documents_document_type_id_fkey"
+            columns: ["document_type_id"]
+            isOneToOne: false
+            referencedRelation: "document_types"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "entity_documents_entity_id_fkey"
+            columns: ["entity_id"]
+            isOneToOne: false
+            referencedRelation: "entities"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       entity_provider_contracts: {
         Row: {
