@@ -1,9 +1,10 @@
 import { useState, useMemo } from "react";
-import { useTaxIdTypes, useIssuingAuthorities, useDocumentTypes, type TaxIdType, type IssuingAuthority, type DocumentType } from "@/hooks/usePortalData";
+import { useTaxIdTypes, useIssuingAuthorities, useDocumentTypes, useFilingTypes, type TaxIdType, type IssuingAuthority, type DocumentType, type FilingType } from "@/hooks/usePortalData";
 import { 
   useCreateTaxIdType, useUpdateTaxIdType, useDeleteTaxIdType,
   useCreateIssuingAuthority, useUpdateIssuingAuthority, useDeleteIssuingAuthority,
-  useCreateDocumentType, useUpdateDocumentType, useDeleteDocumentType
+  useCreateDocumentType, useUpdateDocumentType, useDeleteDocumentType,
+  useCreateFilingType, useUpdateFilingType, useDeleteFilingType
 } from "@/hooks/usePortalMutations";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -15,12 +16,13 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 
 import { Badge } from "@/components/ui/badge";
 import DeleteConfirmDialog from "@/components/shared/DeleteConfirmDialog";
-import { Plus, Edit, Trash2, FileText, Building2, Search, ArrowUpDown, ArrowUp, ArrowDown, FolderOpen } from "lucide-react";
+import { Plus, Edit, Trash2, FileText, Building2, Search, ArrowUpDown, ArrowUp, ArrowDown, FolderOpen, Calendar } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Textarea } from "@/components/ui/textarea";
 import { countries } from "@/lib/countries";
 import { usStates, canadaProvinces } from "@/lib/states";
+import { FILING_CATEGORY_COLORS } from "@/lib/filingUtils";
 
 // Tax ID Type Form
 interface TaxIdTypeFormData {
@@ -230,7 +232,128 @@ const IssuingAuthorityForm = ({
 type AuthoritySortKey = "name" | "country" | "province_state" | "description";
 type TypeSortKey = "code" | "label" | "description";
 type DocTypeSortKey = "code" | "name" | "category" | "description";
+type FilingTypeSortKey = "code" | "name" | "category" | "default_frequency" | "description";
 type SortDirection = "asc" | "desc";
+
+// Filing Type Form
+interface FilingTypeFormData {
+  code: string;
+  name: string;
+  category: string;
+  default_frequency: string;
+  description?: string;
+}
+
+const filingCategories = ["State", "Federal", "Tax", "Payroll", "Corporate", "Other"];
+const filingFrequencies = ["annual", "quarterly", "monthly", "one-time"];
+
+const frequencyLabels: Record<string, string> = {
+  annual: "Annual",
+  quarterly: "Quarterly",
+  monthly: "Monthly",
+  "one-time": "One-Time",
+};
+
+const FilingTypeForm = ({ 
+  item, 
+  onSubmit, 
+  onCancel, 
+  isLoading
+}: { 
+  item?: FilingType | null; 
+  onSubmit: (data: FilingTypeFormData) => void; 
+  onCancel: () => void; 
+  isLoading?: boolean;
+}) => {
+  const form = useForm<FilingTypeFormData>({
+    defaultValues: {
+      code: item?.code ?? "",
+      name: item?.name ?? "",
+      category: item?.category ?? "Other",
+      default_frequency: item?.default_frequency ?? "annual",
+      description: item?.description ?? "",
+    },
+  });
+
+  return (
+    <Form {...form}>
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+        <FormField control={form.control} name="code" render={({ field }) => (
+          <FormItem>
+            <FormLabel>Code *</FormLabel>
+            <FormControl><Input placeholder="e.g., AR, FTX, 941" {...field} /></FormControl>
+            <FormMessage />
+          </FormItem>
+        )} />
+        <FormField control={form.control} name="name" render={({ field }) => (
+          <FormItem>
+            <FormLabel>Name *</FormLabel>
+            <FormControl><Input placeholder="e.g., Annual Report, Form 941" {...field} /></FormControl>
+            <FormMessage />
+          </FormItem>
+        )} />
+        <div className="grid grid-cols-2 gap-4">
+          <FormField control={form.control} name="category" render={({ field }) => (
+            <FormItem>
+              <FormLabel>Category *</FormLabel>
+              <Select onValueChange={field.onChange} value={field.value || "Other"}>
+                <FormControl>
+                  <SelectTrigger className="bg-background">
+                    <SelectValue placeholder="Select a category" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent className="bg-background">
+                  {filingCategories.map((cat) => (
+                    <SelectItem key={cat} value={cat}>
+                      <div className="flex items-center gap-2">
+                        <span className={`w-2 h-2 rounded-full ${FILING_CATEGORY_COLORS[cat]?.split(' ')[0] || 'bg-zinc-500'}`}></span>
+                        {cat}
+                      </div>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <FormMessage />
+            </FormItem>
+          )} />
+          <FormField control={form.control} name="default_frequency" render={({ field }) => (
+            <FormItem>
+              <FormLabel>Default Frequency *</FormLabel>
+              <Select onValueChange={field.onChange} value={field.value || "annual"}>
+                <FormControl>
+                  <SelectTrigger className="bg-background">
+                    <SelectValue placeholder="Select frequency" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent className="bg-background">
+                  {filingFrequencies.map((freq) => (
+                    <SelectItem key={freq} value={freq}>
+                      {frequencyLabels[freq]}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <FormMessage />
+            </FormItem>
+          )} />
+        </div>
+        <FormField control={form.control} name="description" render={({ field }) => (
+          <FormItem>
+            <FormLabel>Description</FormLabel>
+            <FormControl><Textarea placeholder="Optional description..." rows={2} {...field} /></FormControl>
+            <FormMessage />
+          </FormItem>
+        )} />
+        <div className="flex justify-end gap-3 pt-4">
+          <Button type="button" variant="outline" onClick={onCancel}>Cancel</Button>
+          <Button type="submit" disabled={isLoading}>
+            {isLoading ? "Saving..." : item ? "Update" : "Add Type"}
+          </Button>
+        </div>
+      </form>
+    </Form>
+  );
+};
 
 // Document Type Form
 interface DocumentTypeFormData {
@@ -340,6 +463,10 @@ const SettingsSection = () => {
   const [showDocTypeForm, setShowDocTypeForm] = useState(false);
   const [editingDocType, setEditingDocType] = useState<DocumentType | null>(null);
   const [deletingDocType, setDeletingDocType] = useState<DocumentType | null>(null);
+
+  const [showFilingTypeForm, setShowFilingTypeForm] = useState(false);
+  const [editingFilingType, setEditingFilingType] = useState<FilingType | null>(null);
+  const [deletingFilingType, setDeletingFilingType] = useState<FilingType | null>(null);
   
   // Search and sort state for Tax ID Types
   const [typeSearch, setTypeSearch] = useState("");
@@ -356,9 +483,15 @@ const SettingsSection = () => {
   const [docTypeSortKey, setDocTypeSortKey] = useState<DocTypeSortKey>("code");
   const [docTypeSortDirection, setDocTypeSortDirection] = useState<SortDirection>("asc");
 
+  // Search and sort state for Filing Types
+  const [filingTypeSearch, setFilingTypeSearch] = useState("");
+  const [filingTypeSortKey, setFilingTypeSortKey] = useState<FilingTypeSortKey>("code");
+  const [filingTypeSortDirection, setFilingTypeSortDirection] = useState<SortDirection>("asc");
+
   const { data: taxIdTypes, isLoading: typesLoading } = useTaxIdTypes();
   const { data: issuingAuthorities, isLoading: authoritiesLoading } = useIssuingAuthorities();
   const { data: documentTypes, isLoading: docTypesLoading } = useDocumentTypes();
+  const { data: filingTypes, isLoading: filingTypesLoading } = useFilingTypes();
 
   const createTypeMutation = useCreateTaxIdType();
   const updateTypeMutation = useUpdateTaxIdType();
@@ -371,7 +504,10 @@ const SettingsSection = () => {
   const createDocTypeMutation = useCreateDocumentType();
   const updateDocTypeMutation = useUpdateDocumentType();
   const deleteDocTypeMutation = useDeleteDocumentType();
-  
+
+  const createFilingTypeMutation = useCreateFilingType();
+  const updateFilingTypeMutation = useUpdateFilingType();
+  const deleteFilingTypeMutation = useDeleteFilingType();
   // Get authority name for a tax id type
   const getAuthorityName = (authorityId: string | null | undefined) => {
     if (!authorityId) return null;
@@ -453,6 +589,36 @@ const SettingsSection = () => {
     });
   }, [issuingAuthorities, authoritySearch, authoritySortKey, authoritySortDirection]);
 
+  // Filter and sort Filing Types
+  const filteredAndSortedFilingTypes = useMemo(() => {
+    if (!filingTypes) return [];
+    
+    let filtered = filingTypes;
+    
+    // Apply search filter
+    if (filingTypeSearch.trim()) {
+      const searchLower = filingTypeSearch.toLowerCase();
+      filtered = filingTypes.filter((type) => 
+        type.code.toLowerCase().includes(searchLower) ||
+        type.name.toLowerCase().includes(searchLower) ||
+        type.category.toLowerCase().includes(searchLower) ||
+        (type.description || "").toLowerCase().includes(searchLower)
+      );
+    }
+    
+    // Apply sort
+    return [...filtered].sort((a, b) => {
+      const aVal = (a[filingTypeSortKey] || "").toLowerCase();
+      const bVal = (b[filingTypeSortKey] || "").toLowerCase();
+      
+      if (filingTypeSortDirection === "asc") {
+        return aVal.localeCompare(bVal);
+      } else {
+        return bVal.localeCompare(aVal);
+      }
+    });
+  }, [filingTypes, filingTypeSearch, filingTypeSortKey, filingTypeSortDirection]);
+
   const handleTypeSort = (key: TypeSortKey) => {
     if (typeSortKey === key) {
       setTypeSortDirection(prev => prev === "asc" ? "desc" : "asc");
@@ -527,7 +693,39 @@ const SettingsSection = () => {
     }
   };
 
-  if (typesLoading || authoritiesLoading) {
+  const handleFilingTypeSort = (key: FilingTypeSortKey) => {
+    if (filingTypeSortKey === key) {
+      setFilingTypeSortDirection(prev => prev === "asc" ? "desc" : "asc");
+    } else {
+      setFilingTypeSortKey(key);
+      setFilingTypeSortDirection("asc");
+    }
+  };
+
+  const handleFilingTypeSubmit = (data: FilingTypeFormData) => {
+    const payload = { 
+      ...data, 
+      description: data.description || null,
+    };
+    if (editingFilingType) {
+      updateFilingTypeMutation.mutate({ id: editingFilingType.id, ...payload }, {
+        onSuccess: () => { setShowFilingTypeForm(false); setEditingFilingType(null); },
+      });
+    } else {
+      createFilingTypeMutation.mutate(payload, {
+        onSuccess: () => setShowFilingTypeForm(false),
+      });
+    }
+  };
+
+  const getFilingTypeSortIcon = (key: FilingTypeSortKey) => {
+    if (filingTypeSortKey !== key) return <ArrowUpDown className="w-4 h-4 ml-1 opacity-50" />;
+    return filingTypeSortDirection === "asc" 
+      ? <ArrowUp className="w-4 h-4 ml-1" /> 
+      : <ArrowDown className="w-4 h-4 ml-1" />;
+  };
+
+  if (typesLoading || authoritiesLoading || filingTypesLoading) {
     return (
       <div className="space-y-6">
         <Skeleton className="h-8 w-48" />
@@ -540,18 +738,22 @@ const SettingsSection = () => {
     <div className="space-y-6">
       <div>
         <h2 className="text-2xl font-bold text-foreground">Settings</h2>
-        <p className="text-muted-foreground">Manage lookup tables for Tax ID Types and Issuing Authorities</p>
+        <p className="text-muted-foreground">Manage lookup tables for Tax ID Types, Issuing Authorities, and Filing Types</p>
       </div>
 
       <Tabs defaultValue="tax-id-types" className="w-full">
-        <TabsList className="grid w-full max-w-md grid-cols-2">
+        <TabsList className="grid w-full max-w-lg grid-cols-3">
           <TabsTrigger value="tax-id-types" className="gap-2">
             <FileText className="w-4 h-4" />
             Tax ID Types
           </TabsTrigger>
           <TabsTrigger value="issuing-authorities" className="gap-2">
             <Building2 className="w-4 h-4" />
-            Issuing Authorities
+            Authorities
+          </TabsTrigger>
+          <TabsTrigger value="filing-types" className="gap-2">
+            <Calendar className="w-4 h-4" />
+            Filing Types
           </TabsTrigger>
         </TabsList>
 
@@ -779,6 +981,121 @@ const SettingsSection = () => {
             </div>
           </div>
         </TabsContent>
+
+        <TabsContent value="filing-types" className="mt-6">
+          <div className="glass-card rounded-xl p-6">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-4">
+              <h3 className="text-lg font-semibold text-foreground">Filing Types</h3>
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full sm:w-auto">
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                  <Input
+                    placeholder="Search filing types..."
+                    value={filingTypeSearch}
+                    onChange={(e) => setFilingTypeSearch(e.target.value)}
+                    className="pl-9 w-full sm:w-64"
+                  />
+                </div>
+                <Button onClick={() => setShowFilingTypeForm(true)} size="sm" className="gap-2">
+                  <Plus className="w-4 h-4" />
+                  Add Type
+                </Button>
+              </div>
+            </div>
+            
+            <div className="overflow-x-auto">
+              <Table className="table-fixed w-full">
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="w-[100px]">
+                      <button 
+                        onClick={() => handleFilingTypeSort("code")} 
+                        className="flex items-center hover:text-foreground transition-colors text-foreground"
+                      >
+                        Code {getFilingTypeSortIcon("code")}
+                      </button>
+                    </TableHead>
+                    <TableHead className="w-[200px]">
+                      <button 
+                        onClick={() => handleFilingTypeSort("name")} 
+                        className="flex items-center hover:text-foreground transition-colors text-foreground"
+                      >
+                        Name {getFilingTypeSortIcon("name")}
+                      </button>
+                    </TableHead>
+                    <TableHead className="w-[100px]">
+                      <button 
+                        onClick={() => handleFilingTypeSort("category")} 
+                        className="flex items-center hover:text-foreground transition-colors text-foreground"
+                      >
+                        Category {getFilingTypeSortIcon("category")}
+                      </button>
+                    </TableHead>
+                    <TableHead className="w-[100px]">
+                      <button 
+                        onClick={() => handleFilingTypeSort("default_frequency")} 
+                        className="flex items-center hover:text-foreground transition-colors text-foreground"
+                      >
+                        Frequency {getFilingTypeSortIcon("default_frequency")}
+                      </button>
+                    </TableHead>
+                    <TableHead className="w-auto">
+                      <button 
+                        onClick={() => handleFilingTypeSort("description")} 
+                        className="flex items-center hover:text-foreground transition-colors text-foreground"
+                      >
+                        Description {getFilingTypeSortIcon("description")}
+                      </button>
+                    </TableHead>
+                    <TableHead className="w-[100px] text-foreground">Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {filteredAndSortedFilingTypes.map((type) => (
+                    <TableRow key={type.id}>
+                      <TableCell className="font-mono font-medium text-foreground">{type.code}</TableCell>
+                      <TableCell className="text-foreground">{type.name}</TableCell>
+                      <TableCell>
+                        <Badge variant="outline" className={`text-xs ${FILING_CATEGORY_COLORS[type.category] || FILING_CATEGORY_COLORS.Other}`}>
+                          {type.category}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-foreground capitalize">{frequencyLabels[type.default_frequency] || type.default_frequency}</TableCell>
+                      <TableCell className="text-muted-foreground text-sm">{type.description || "—"}</TableCell>
+                      <TableCell>
+                        <div className="flex gap-1">
+                          <Button 
+                            variant="ghost" 
+                            size="icon" 
+                            className="h-8 w-8 text-primary hover:text-primary"
+                            onClick={() => { setEditingFilingType(type); setShowFilingTypeForm(true); }}
+                          >
+                            <Edit className="w-4 h-4" />
+                          </Button>
+                          <Button 
+                            variant="ghost" 
+                            size="icon" 
+                            className="h-8 w-8 text-destructive hover:text-destructive"
+                            onClick={() => setDeletingFilingType(type)}
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                  {!filteredAndSortedFilingTypes.length && (
+                    <TableRow>
+                      <TableCell colSpan={6} className="text-center text-muted-foreground py-8">
+                        {filingTypeSearch ? "No filing types match your search" : "No filing types defined yet"}
+                      </TableCell>
+                    </TableRow>
+                  )}
+                </TableBody>
+              </Table>
+            </div>
+          </div>
+        </TabsContent>
       </Tabs>
 
       {/* Tax ID Type Dialog */}
@@ -812,6 +1129,21 @@ const SettingsSection = () => {
         </DialogContent>
       </Dialog>
 
+      {/* Filing Type Dialog */}
+      <Dialog open={showFilingTypeForm} onOpenChange={() => { setShowFilingTypeForm(false); setEditingFilingType(null); }}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>{editingFilingType ? "Edit Filing Type" : "Add Filing Type"}</DialogTitle>
+          </DialogHeader>
+          <FilingTypeForm
+            item={editingFilingType}
+            onSubmit={handleFilingTypeSubmit}
+            onCancel={() => { setShowFilingTypeForm(false); setEditingFilingType(null); }}
+            isLoading={createFilingTypeMutation.isPending || updateFilingTypeMutation.isPending}
+          />
+        </DialogContent>
+      </Dialog>
+
       {/* Delete Confirmations */}
       <DeleteConfirmDialog
         open={!!deletingType}
@@ -833,6 +1165,17 @@ const SettingsSection = () => {
         title="Delete Issuing Authority"
         description={`Are you sure you want to delete "${deletingAuthority?.name}"? This may affect existing tax IDs using this authority.`}
         isLoading={deleteAuthorityMutation.isPending}
+      />
+
+      <DeleteConfirmDialog
+        open={!!deletingFilingType}
+        onOpenChange={() => setDeletingFilingType(null)}
+        onConfirm={() => {
+          if (deletingFilingType) deleteFilingTypeMutation.mutate(deletingFilingType.id, { onSuccess: () => setDeletingFilingType(null) });
+        }}
+        title="Delete Filing Type"
+        description={`Are you sure you want to delete "${deletingFilingType?.code} - ${deletingFilingType?.name}"? This may affect existing filings using this type.`}
+        isLoading={deleteFilingTypeMutation.isPending}
       />
     </div>
   );
