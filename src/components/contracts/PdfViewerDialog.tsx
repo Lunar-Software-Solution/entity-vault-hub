@@ -16,7 +16,7 @@ interface PdfViewerDialogProps {
 }
 
 const PdfViewerDialog = ({ open, onOpenChange, filePath, fileName }: PdfViewerDialogProps) => {
-  const [pdfData, setPdfData] = useState<ArrayBuffer | null>(null);
+  const [pdfData, setPdfData] = useState<Uint8Array | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [numPages, setNumPages] = useState<number>(0);
@@ -44,8 +44,10 @@ const PdfViewerDialog = ({ open, onOpenChange, filePath, fileName }: PdfViewerDi
           }
           
           if (data) {
+            // Convert to Uint8Array to avoid detached ArrayBuffer issue
             const arrayBuffer = await data.arrayBuffer();
-            setPdfData(arrayBuffer);
+            const uint8Array = new Uint8Array(arrayBuffer);
+            setPdfData(uint8Array);
           }
         } catch (err) {
           setError('Failed to load PDF');
