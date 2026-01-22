@@ -1,8 +1,9 @@
-import { useState, useMemo } from "react";
-import { useTaxIdTypes, useIssuingAuthorities, type TaxIdType, type IssuingAuthority } from "@/hooks/usePortalData";
+import { useState, useMemo, useEffect } from "react";
+import { useTaxIdTypes, useIssuingAuthorities, useAllAuthorityTaxIdTypes, type TaxIdType, type IssuingAuthority } from "@/hooks/usePortalData";
 import { 
   useCreateTaxIdType, useUpdateTaxIdType, useDeleteTaxIdType,
-  useCreateIssuingAuthority, useUpdateIssuingAuthority, useDeleteIssuingAuthority 
+  useCreateIssuingAuthority, useUpdateIssuingAuthority, useDeleteIssuingAuthority,
+  useUpdateAuthorityTaxIdTypes
 } from "@/hooks/usePortalMutations";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -11,6 +12,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Badge } from "@/components/ui/badge";
 import DeleteConfirmDialog from "@/components/shared/DeleteConfirmDialog";
 import { Plus, Edit, Trash2, FileText, Building2, Search, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
 import { useForm } from "react-hook-form";
@@ -86,20 +89,31 @@ interface IssuingAuthorityFormData {
   country: string;
   province_state?: string;
   description?: string;
+  tax_id_type_ids: string[];
 }
 
 const IssuingAuthorityForm = ({ 
   item, 
   onSubmit, 
   onCancel, 
-  isLoading 
+  isLoading,
+  taxIdTypes,
+  initialTaxIdTypeIds
 }: { 
   item?: IssuingAuthority | null; 
   onSubmit: (data: IssuingAuthorityFormData) => void; 
   onCancel: () => void; 
   isLoading?: boolean;
+  taxIdTypes?: TaxIdType[];
+  initialTaxIdTypeIds?: string[];
 }) => {
-  const form = useForm<IssuingAuthorityFormData>({
+  const [selectedTypeIds, setSelectedTypeIds] = useState<string[]>(initialTaxIdTypeIds || []);
+  
+  useEffect(() => {
+    setSelectedTypeIds(initialTaxIdTypeIds || []);
+  }, [initialTaxIdTypeIds]);
+
+  const form = useForm<Omit<IssuingAuthorityFormData, 'tax_id_type_ids'>>({
     defaultValues: {
       name: item?.name ?? "",
       country: item?.country ?? "",
@@ -110,12 +124,8 @@ const IssuingAuthorityForm = ({
 
   const selectedCountry = form.watch("country");
   
-  // Clear province_state when country changes to one without dropdown options
   const handleCountryChange = (value: string) => {
     form.setValue("country", value);
-    if (value !== "United States" && value !== "Canada") {
-      // Keep the value as-is for free text entry
-    }
   };
 
   const getProvinceStateOptions = () => {
@@ -126,9 +136,21 @@ const IssuingAuthorityForm = ({
 
   const provinceStateOptions = getProvinceStateOptions();
 
+  const handleTypeToggle = (typeId: string) => {
+    setSelectedTypeIds(prev => 
+      prev.includes(typeId) 
+        ? prev.filter(id => id !== typeId)
+        : [...prev, typeId]
+    );
+  };
+
+  const handleSubmit = (data: Omit<IssuingAuthorityFormData, 'tax_id_type_ids'>) => {
+    onSubmit({ ...data, tax_id_type_ids: selectedTypeIds });
+  };
+
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+      <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
         <FormField control={form.control} name="name" render={({ field }) => (
           <FormItem>
             <FormLabel>Name *</FormLabel>
@@ -185,6 +207,34 @@ const IssuingAuthorityForm = ({
             <FormMessage />
           </FormItem>
         )} />
+        
+        {/* Tax ID Types multi-select */}
+        <div className="space-y-2">
+          <FormLabel>Tax ID Types Issued</FormLabel>
+          <div className="border border-border rounded-md p-3 max-h-[150px] overflow-y-auto space-y-2 bg-background">
+            {taxIdTypes?.length ? (
+              taxIdTypes.map((type) => (
+                <div key={type.id} className="flex items-center space-x-2">
+                  <Checkbox
+                    id={`type-${type.id}`}
+                    checked={selectedTypeIds.includes(type.id)}
+                    onCheckedChange={() => handleTypeToggle(type.id)}
+                  />
+                  <label 
+                    htmlFor={`type-${type.id}`} 
+                    className="text-sm text-foreground cursor-pointer flex-1"
+                  >
+                    <span className="font-mono font-medium">{type.code}</span>
+                    <span className="text-muted-foreground ml-2">— {type.label}</span>
+                  </label>
+                </div>
+              ))
+            ) : (
+              <p className="text-sm text-muted-foreground">No tax ID types defined yet</p>
+            )}
+          </div>
+        </div>
+        
         <FormField control={form.control} name="description" render={({ field }) => (
           <FormItem>
             <FormLabel>Description</FormLabel>
@@ -228,6 +278,7 @@ const SettingsSection = () => {
 
   const { data: taxIdTypes, isLoading: typesLoading } = useTaxIdTypes();
   const { data: issuingAuthorities, isLoading: authoritiesLoading } = useIssuingAuthorities();
+  const { data: authorityTaxIdTypes } = useAllAuthorityTaxIdTypes();
 
   const createTypeMutation = useCreateTaxIdType();
   const updateTypeMutation = useUpdateTaxIdType();
@@ -236,6 +287,22 @@ const SettingsSection = () => {
   const createAuthorityMutation = useCreateIssuingAuthority();
   const updateAuthorityMutation = useUpdateIssuingAuthority();
   const deleteAuthorityMutation = useDeleteIssuingAuthority();
+  const updateAuthorityTypesMutation = useUpdateAuthorityTaxIdTypes();
+  
+  // Get tax id type ids for an authority
+  const getAuthorityTypeIds = (authorityId: string) => {
+    return authorityTaxIdTypes
+      ?.filter(rel => rel.authority_id === authorityId)
+      .map(rel => rel.tax_id_type_id) || [];
+  };
+  
+  // Get tax id type codes for display
+  const getAuthorityTypeCodes = (authorityId: string) => {
+    const typeIds = getAuthorityTypeIds(authorityId);
+    return taxIdTypes
+      ?.filter(type => typeIds.includes(type.id))
+      .map(type => type.code) || [];
+  };
 
   // Filter and sort Tax ID Types
   const filteredAndSortedTypes = useMemo(() => {
@@ -351,18 +418,37 @@ const SettingsSection = () => {
 
   const handleAuthoritySubmit = (data: IssuingAuthorityFormData) => {
     const provinceState = data.province_state === "__none__" ? null : (data.province_state || null);
+    const { tax_id_type_ids, ...rest } = data;
     const payload = { 
-      ...data, 
+      ...rest, 
       description: data.description || null,
       province_state: provinceState,
     };
+    
     if (editingAuthority) {
       updateAuthorityMutation.mutate({ id: editingAuthority.id, ...payload }, {
-        onSuccess: () => { setShowAuthorityForm(false); setEditingAuthority(null); },
+        onSuccess: () => {
+          // Update tax id type relationships
+          updateAuthorityTypesMutation.mutate({
+            authorityId: editingAuthority.id,
+            taxIdTypeIds: tax_id_type_ids,
+          });
+          setShowAuthorityForm(false);
+          setEditingAuthority(null);
+        },
       });
     } else {
       createAuthorityMutation.mutate(payload, {
-        onSuccess: () => setShowAuthorityForm(false),
+        onSuccess: (newAuthority) => {
+          // Create tax id type relationships for new authority
+          if (newAuthority && tax_id_type_ids.length > 0) {
+            updateAuthorityTypesMutation.mutate({
+              authorityId: newAuthority.id,
+              taxIdTypeIds: tax_id_type_ids,
+            });
+          }
+          setShowAuthorityForm(false);
+        },
       });
     }
   };
@@ -513,7 +599,7 @@ const SettingsSection = () => {
               <Table className="table-fixed w-full">
                 <TableHeader>
                   <TableRow>
-                    <TableHead className="w-[180px]">
+                    <TableHead className="w-[150px]">
                       <button 
                         onClick={() => handleAuthoritySort("name")} 
                         className="flex items-center hover:text-foreground transition-colors text-foreground"
@@ -521,7 +607,7 @@ const SettingsSection = () => {
                         Name {getAuthoritySortIcon("name")}
                       </button>
                     </TableHead>
-                    <TableHead className="w-[150px]">
+                    <TableHead className="w-[130px]">
                       <button 
                         onClick={() => handleAuthoritySort("country")} 
                         className="flex items-center hover:text-foreground transition-colors text-foreground"
@@ -529,14 +615,15 @@ const SettingsSection = () => {
                         Country {getAuthoritySortIcon("country")}
                       </button>
                     </TableHead>
-                    <TableHead className="w-[130px]">
+                    <TableHead className="w-[110px]">
                       <button 
                         onClick={() => handleAuthoritySort("province_state")} 
                         className="flex items-center hover:text-foreground transition-colors text-foreground"
                       >
-                        Province/State {getAuthoritySortIcon("province_state")}
+                        State/Province {getAuthoritySortIcon("province_state")}
                       </button>
                     </TableHead>
+                    <TableHead className="w-[180px] text-foreground">Tax ID Types</TableHead>
                     <TableHead className="w-auto">
                       <button 
                         onClick={() => handleAuthoritySort("description")} 
@@ -549,37 +636,53 @@ const SettingsSection = () => {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {filteredAndSortedAuthorities.map((authority) => (
-                    <TableRow key={authority.id}>
-                      <TableCell className="font-medium text-foreground">{authority.name}</TableCell>
-                      <TableCell className="text-foreground">{authority.country}</TableCell>
-                      <TableCell className="text-foreground">{(authority as any).province_state || "—"}</TableCell>
-                      <TableCell className="text-muted-foreground text-sm">{authority.description || "—"}</TableCell>
-                      <TableCell>
-                        <div className="flex gap-1">
-                          <Button 
-                            variant="ghost" 
-                            size="icon" 
-                            className="h-8 w-8 text-primary hover:text-primary"
-                            onClick={() => { setEditingAuthority(authority); setShowAuthorityForm(true); }}
-                          >
-                            <Edit className="w-4 h-4" />
-                          </Button>
-                          <Button 
-                            variant="ghost" 
-                            size="icon" 
-                            className="h-8 w-8 text-destructive hover:text-destructive"
-                            onClick={() => setDeletingAuthority(authority)}
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </Button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))}
+                  {filteredAndSortedAuthorities.map((authority) => {
+                    const typeCodes = getAuthorityTypeCodes(authority.id);
+                    return (
+                      <TableRow key={authority.id}>
+                        <TableCell className="font-medium text-foreground">{authority.name}</TableCell>
+                        <TableCell className="text-foreground">{authority.country}</TableCell>
+                        <TableCell className="text-foreground">{(authority as any).province_state || "—"}</TableCell>
+                        <TableCell>
+                          <div className="flex flex-wrap gap-1">
+                            {typeCodes.length > 0 ? (
+                              typeCodes.map((code) => (
+                                <Badge key={code} variant="secondary" className="text-xs font-mono">
+                                  {code}
+                                </Badge>
+                              ))
+                            ) : (
+                              <span className="text-muted-foreground text-sm">—</span>
+                            )}
+                          </div>
+                        </TableCell>
+                        <TableCell className="text-muted-foreground text-sm">{authority.description || "—"}</TableCell>
+                        <TableCell>
+                          <div className="flex gap-1">
+                            <Button 
+                              variant="ghost" 
+                              size="icon" 
+                              className="h-8 w-8 text-primary hover:text-primary"
+                              onClick={() => { setEditingAuthority(authority); setShowAuthorityForm(true); }}
+                            >
+                              <Edit className="w-4 h-4" />
+                            </Button>
+                            <Button 
+                              variant="ghost" 
+                              size="icon" 
+                              className="h-8 w-8 text-destructive hover:text-destructive"
+                              onClick={() => setDeletingAuthority(authority)}
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
                   {!filteredAndSortedAuthorities.length && (
                     <TableRow>
-                      <TableCell colSpan={5} className="text-center text-muted-foreground py-8">
+                      <TableCell colSpan={6} className="text-center text-muted-foreground py-8">
                         {authoritySearch ? "No authorities match your search" : "No issuing authorities defined yet"}
                       </TableCell>
                     </TableRow>
@@ -617,6 +720,8 @@ const SettingsSection = () => {
             onSubmit={handleAuthoritySubmit}
             onCancel={() => { setShowAuthorityForm(false); setEditingAuthority(null); }}
             isLoading={createAuthorityMutation.isPending || updateAuthorityMutation.isPending}
+            taxIdTypes={taxIdTypes}
+            initialTaxIdTypeIds={editingAuthority ? getAuthorityTypeIds(editingAuthority.id) : []}
           />
         </DialogContent>
       </Dialog>

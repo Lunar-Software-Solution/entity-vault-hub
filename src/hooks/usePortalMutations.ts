@@ -482,3 +482,34 @@ export const useDeleteIssuingAuthority = () => {
     onError: (error) => toast.error(`Failed to delete issuing authority: ${error.message}`),
   });
 };
+
+// Authority Tax ID Types mutations
+export const useUpdateAuthorityTaxIdTypes = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ authorityId, taxIdTypeIds }: { authorityId: string; taxIdTypeIds: string[] }) => {
+      // First delete existing relationships
+      const { error: deleteError } = await supabase
+        .from("authority_tax_id_types")
+        .delete()
+        .eq("authority_id", authorityId);
+      if (deleteError) throw deleteError;
+      
+      // Then insert new relationships
+      if (taxIdTypeIds.length > 0) {
+        const inserts = taxIdTypeIds.map(taxIdTypeId => ({
+          authority_id: authorityId,
+          tax_id_type_id: taxIdTypeId,
+        }));
+        const { error: insertError } = await supabase
+          .from("authority_tax_id_types")
+          .insert(inserts);
+        if (insertError) throw insertError;
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["authority_tax_id_types"] });
+    },
+    onError: (error) => toast.error(`Failed to update tax ID types: ${error.message}`),
+  });
+};
