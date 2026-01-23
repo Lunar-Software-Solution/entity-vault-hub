@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Plus, MoreVertical, Edit2, Trash2, Building2 } from "lucide-react";
+import { Plus, MoreVertical, Edit2, Trash2, Building2, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useBankAccounts, useEntities } from "@/hooks/usePortalData";
 import { useCreateBankAccount, useUpdateBankAccount, useDeleteBankAccount } from "@/hooks/usePortalMutations";
@@ -9,6 +9,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import BankAccountForm from "@/components/forms/BankAccountForm";
 import DeleteConfirmDialog from "@/components/shared/DeleteConfirmDialog";
 import CompanyLogo from "@/components/shared/CompanyLogo";
+import CopyButton from "@/components/shared/CopyButton";
 import type { BankAccount } from "@/hooks/usePortalData";
 import type { BankAccountFormData } from "@/lib/formSchemas";
 
@@ -63,6 +64,10 @@ const BankAccountsSection = ({ entityFilter }: BankAccountsSectionProps) => {
   const handleCloseForm = () => {
     setIsFormOpen(false);
     setEditingAccount(null);
+  };
+
+  const openBankWebsite = (url: string) => {
+    window.open(url, '_blank', 'noopener,noreferrer');
   };
 
   if (isLoading) {
@@ -121,12 +126,13 @@ const BankAccountsSection = ({ entityFilter }: BankAccountsSectionProps) => {
         <div className="grid grid-cols-1 gap-4">
           {filteredAccounts.map((account) => {
             const linkedEntity = entities?.find(e => e.id === account.entity_id);
+            const bankWebsite = (account as any).bank_website;
             return (
               <div key={account.id} className="glass-card rounded-xl p-6 hover:border-primary/30 transition-all duration-300">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-4">
                     <CompanyLogo
-                      domain={(account as any).bank_website}
+                      domain={bankWebsite}
                       name={account.bank}
                       size="md"
                     />
@@ -141,50 +147,81 @@ const BankAccountsSection = ({ entityFilter }: BankAccountsSectionProps) => {
                       )}
                     </div>
                   </div>
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <button className="p-2 hover:bg-muted rounded-lg transition-colors">
-                        <MoreVertical className="w-5 h-5 text-muted-foreground" />
-                      </button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      <DropdownMenuItem onClick={() => handleEdit(account)}>
-                        <Edit2 className="w-4 h-4 mr-2" /> Edit
-                      </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => setDeletingId(account.id)} className="text-destructive">
-                        <Trash2 className="w-4 h-4 mr-2" /> Delete
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
+                  <div className="flex items-center gap-2">
+                    {/* Open Bank Website Button */}
+                    {bankWebsite && (
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        className="gap-1.5"
+                        onClick={() => openBankWebsite(bankWebsite)}
+                      >
+                        <ExternalLink className="w-3.5 h-3.5" />
+                        Open Bank
+                      </Button>
+                    )}
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <button className="p-2 hover:bg-muted rounded-lg transition-colors">
+                          <MoreVertical className="w-5 h-5 text-muted-foreground" />
+                        </button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem onClick={() => handleEdit(account)}>
+                          <Edit2 className="w-4 h-4 mr-2" /> Edit
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => setDeletingId(account.id)} className="text-destructive">
+                          <Trash2 className="w-4 h-4 mr-2" /> Delete
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </div>
                 </div>
 
                 {/* Account Holder */}
                 {(account as any).account_holder_name && (
                   <div className="mt-4 px-3 py-2 bg-muted/50 rounded-lg">
                     <p className="text-xs text-muted-foreground mb-0.5">Account Holder</p>
-                    <p className="text-sm font-medium text-foreground">{(account as any).account_holder_name}</p>
+                    <div className="flex items-center gap-2">
+                      <p className="text-sm font-medium text-foreground">{(account as any).account_holder_name}</p>
+                      <CopyButton value={(account as any).account_holder_name} label="Account holder" />
+                    </div>
                   </div>
                 )}
 
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4">
                   <div>
                     <p className="text-xs text-muted-foreground mb-1">Account Number</p>
-                    <p className="font-mono text-foreground">{account.account_number}</p>
+                    <div className="flex items-center gap-1">
+                      <p className="font-mono text-foreground">{account.account_number}</p>
+                      <CopyButton value={account.account_number} label="Account number" />
+                    </div>
                   </div>
                   {(account as any).iban && (
                     <div>
                       <p className="text-xs text-muted-foreground mb-1">IBAN</p>
-                      <p className="font-mono text-foreground text-sm">{(account as any).iban}</p>
+                      <div className="flex items-center gap-1">
+                        <p className="font-mono text-foreground text-sm">{(account as any).iban}</p>
+                        <CopyButton value={(account as any).iban.replace(/\s/g, '')} label="IBAN" />
+                      </div>
                     </div>
                   )}
                   <div>
                     <p className="text-xs text-muted-foreground mb-1">Routing Number</p>
-                    <p className="font-mono text-foreground">{account.routing_number || "—"}</p>
+                    <div className="flex items-center gap-1">
+                      <p className="font-mono text-foreground">{account.routing_number || "—"}</p>
+                      {account.routing_number && (
+                        <CopyButton value={account.routing_number} label="Routing number" />
+                      )}
+                    </div>
                   </div>
                   {(account as any).swift_bic && (
                     <div>
                       <p className="text-xs text-muted-foreground mb-1">SWIFT/BIC</p>
-                      <p className="font-mono text-foreground">{(account as any).swift_bic}</p>
+                      <div className="flex items-center gap-1">
+                        <p className="font-mono text-foreground">{(account as any).swift_bic}</p>
+                        <CopyButton value={(account as any).swift_bic} label="SWIFT/BIC" />
+                      </div>
                     </div>
                   )}
                   <div>
@@ -201,7 +238,10 @@ const BankAccountsSection = ({ entityFilter }: BankAccountsSectionProps) => {
                 {(account as any).bank_address && (
                   <div className="mt-4 px-3 py-2 bg-muted/30 rounded-lg border border-border/50">
                     <p className="text-xs text-muted-foreground mb-0.5">Bank Address</p>
-                    <p className="text-sm text-foreground">{(account as any).bank_address}</p>
+                    <div className="flex items-start gap-2">
+                      <p className="text-sm text-foreground flex-1">{(account as any).bank_address}</p>
+                      <CopyButton value={(account as any).bank_address} label="Bank address" />
+                    </div>
                   </div>
                 )}
               </div>
