@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import braxLogo from "@/assets/braxtech-logo.png";
+import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
 
 interface Invitation {
   id: string;
@@ -46,6 +47,12 @@ const Auth = () => {
   const [invitation, setInvitation] = useState<Invitation | null>(null);
   const [inviteLoading, setInviteLoading] = useState(!!inviteToken);
   const [inviteError, setInviteError] = useState<string | null>(null);
+  
+  // 2FA state
+  const [needs2FA, setNeeds2FA] = useState(false);
+  const [pending2FAUser, setPending2FAUser] = useState<{ id: string; email: string } | null>(null);
+  const [otpCode, setOtpCode] = useState("");
+  const [verifying2FA, setVerifying2FA] = useState(false);
   
   const { user, signIn, signUp, signOut, loading: authLoading } = useAuth();
   const { toast } = useToast();
@@ -172,6 +179,69 @@ const Auth = () => {
     return <Navigate to="/" replace />;
   }
 
+  // Send 2FA code
+  const send2FACode = async (userId: string, userEmail: string) => {
+    try {
+      const { error } = await supabase.functions.invoke("send-2fa-code", {
+        body: { userId, email: userEmail },
+      });
+      
+      if (error) throw error;
+      
+      toast({
+        title: "Verification code sent",
+        description: "Check your email for the 6-digit code.",
+      });
+    } catch (err: any) {
+      console.error("Error sending 2FA code:", err);
+      toast({
+        variant: "destructive",
+        title: "Failed to send verification code",
+        description: err.message,
+      });
+    }
+  };
+  
+  // Verify 2FA code
+  const verify2FACode = async () => {
+    if (!pending2FAUser || otpCode.length !== 6) return;
+    
+    setVerifying2FA(true);
+    
+    try {
+      const { data, error } = await supabase.functions.invoke("verify-2fa-code", {
+        body: { userId: pending2FAUser.id, code: otpCode },
+      });
+      
+      if (error || !data?.valid) {
+        toast({
+          variant: "destructive",
+          title: "Invalid code",
+          description: "The verification code is incorrect or expired.",
+        });
+        setOtpCode("");
+        return;
+      }
+      
+      // 2FA verified, proceed with login
+      setNeeds2FA(false);
+      setPending2FAUser(null);
+      toast({
+        title: "Verified!",
+        description: "You're now logged in.",
+      });
+      // The auth state listener will redirect
+    } catch (err: any) {
+      toast({
+        variant: "destructive",
+        title: "Verification failed",
+        description: err.message,
+      });
+    } finally {
+      setVerifying2FA(false);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -197,13 +267,23 @@ const Auth = () => {
           setIsForgotPassword(false);
         }
       } else if (isLogin) {
-        const { error } = await signIn(email, password);
+        const { data, error } = await supabase.auth.signInWithPassword({
+          email,
+          password,
+        });
+        
         if (error) {
           toast({
             variant: "destructive",
             title: "Login failed",
             description: error.message,
           });
+        } else if (data.user) {
+          // Sign out immediately and require 2FA
+          await supabase.auth.signOut();
+          setPending2FAUser({ id: data.user.id, email: data.user.email || email });
+          setNeeds2FA(true);
+          await send2FACode(data.user.id, data.user.email || email);
         }
       } else {
         const { error } = await signUp(email, password);
@@ -226,6 +306,34 @@ const Auth = () => {
       setLoading(false);
     }
   };
+  
+  // Complete login after 2FA verification
+  const completeLoginAfter2FA = async () => {
+    if (!pending2FAUser) return;
+    
+    // Re-sign in after 2FA verification
+    const { error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
+    
+    if (error) {
+      toast({
+        variant: "destructive",
+        title: "Login failed",
+        description: error.message,
+      });
+      setNeeds2FA(false);
+      setPending2FAUser(null);
+    }
+  };
+  
+  // Auto-complete login when 2FA is verified
+  useEffect(() => {
+    if (pending2FAUser && !needs2FA && !user) {
+      completeLoginAfter2FA();
+    }
+  }, [needs2FA, pending2FAUser]);
 
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-4">
@@ -237,7 +345,16 @@ const Auth = () => {
               <img src={braxLogo} alt="Entity Hub" className="w-12 h-12 object-contain" />
             </div>
             <div>
-              {invitation ? (
+              {needs2FA ? (
+                <>
+                  <h1 className="text-2xl font-bold text-foreground">
+                    Verify Your Identity
+                  </h1>
+                  <p className="text-muted-foreground mt-1">
+                    Enter the 6-digit code sent to {pending2FAUser?.email}
+                  </p>
+                </>
+              ) : invitation ? (
                 <>
                   <h1 className="text-2xl font-bold text-foreground">
                     You're Invited!
@@ -290,8 +407,60 @@ const Auth = () => {
             </div>
           )}
 
-          {/* Form - show if no invite error */}
-          {!inviteError && (
+          {/* 2FA Verification Form */}
+          {needs2FA && (
+            <div className="space-y-6">
+              <div className="flex justify-center">
+                <InputOTP
+                  maxLength={6}
+                  value={otpCode}
+                  onChange={setOtpCode}
+                >
+                  <InputOTPGroup>
+                    <InputOTPSlot index={0} />
+                    <InputOTPSlot index={1} />
+                    <InputOTPSlot index={2} />
+                    <InputOTPSlot index={3} />
+                    <InputOTPSlot index={4} />
+                    <InputOTPSlot index={5} />
+                  </InputOTPGroup>
+                </InputOTP>
+              </div>
+              
+              <Button 
+                className="w-full h-11" 
+                onClick={verify2FACode}
+                disabled={otpCode.length !== 6 || verifying2FA}
+              >
+                {verifying2FA ? "Verifying..." : "Verify Code"}
+              </Button>
+              
+              <div className="text-center space-y-2">
+                <button
+                  type="button"
+                  onClick={() => send2FACode(pending2FAUser!.id, pending2FAUser!.email)}
+                  className="text-sm text-primary hover:underline"
+                >
+                  Resend code
+                </button>
+                <br />
+                <button
+                  type="button"
+                  onClick={() => {
+                    setNeeds2FA(false);
+                    setPending2FAUser(null);
+                    setOtpCode("");
+                  }}
+                  className="text-sm text-muted-foreground hover:text-foreground"
+                >
+                  ← Back to login
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Standard Login/Signup Form - show if no invite error and not in 2FA mode */}
+          {!inviteError && !needs2FA && (
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="email">Email</Label>
@@ -348,7 +517,7 @@ const Auth = () => {
           )}
 
           {/* Back to login from forgot password */}
-          {!inviteError && isForgotPassword && (
+          {!inviteError && !needs2FA && isForgotPassword && (
             <div className="text-center">
               <button
                 type="button"
@@ -361,7 +530,7 @@ const Auth = () => {
           )}
 
           {/* Toggle - only show for invitations */}
-          {!inviteError && invitation && !isForgotPassword && (
+          {!inviteError && !needs2FA && invitation && !isForgotPassword && (
             <div className="text-center">
               <button
                 type="button"

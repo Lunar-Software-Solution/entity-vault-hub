@@ -736,6 +736,36 @@ export type Database = {
         }
         Relationships: []
       }
+      email_2fa_codes: {
+        Row: {
+          code: string
+          created_at: string
+          email: string
+          expires_at: string
+          id: string
+          used: boolean
+          user_id: string
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          email: string
+          expires_at: string
+          id?: string
+          used?: boolean
+          user_id: string
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          email?: string
+          expires_at?: string
+          id?: string
+          used?: boolean
+          user_id?: string
+        }
+        Relationships: []
+      }
       email_addresses: {
         Row: {
           created_at: string
@@ -1984,6 +2014,7 @@ export type Database = {
     }
     Functions: {
       can_write: { Args: never; Returns: boolean }
+      cleanup_expired_2fa_codes: { Args: never; Returns: undefined }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
