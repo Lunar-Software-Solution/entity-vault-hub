@@ -62,10 +62,15 @@ const Auth = () => {
   useEffect(() => {
     // Debug: log the current URL and token
     console.log("Auth page loaded with URL:", window.location.href);
-    console.log("Invite token from searchParams:", inviteToken);
+    console.log("Invite token:", inviteToken);
+    console.log("Auth loading:", authLoading);
+    console.log("User:", user);
     
     if (inviteToken) {
       loadInvitation(inviteToken);
+    } else {
+      // No token, ensure we're not stuck in loading
+      setInviteLoading(false);
     }
   }, [inviteToken]);
 
@@ -162,6 +167,7 @@ const Auth = () => {
     }
   }, [user, invitation]);
 
+  // Loading state
   if (authLoading || inviteLoading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
@@ -170,12 +176,8 @@ const Auth = () => {
     );
   }
 
-  if (user && !invitation) {
-    return <Navigate to="/" replace />;
-  }
-
-  if (user && invitation) {
-    // User just accepted invitation, redirect after a moment
+  // Redirect authenticated users
+  if (user) {
     return <Navigate to="/" replace />;
   }
 
