@@ -11,10 +11,17 @@ interface Filing {
   entity_id: string;
   title: string;
   due_date: string;
+  due_day: number | null;
   status: string;
   frequency: string;
   reminder_days: number;
   filing_type_id: string | null;
+}
+
+interface Entity {
+  id: string;
+  name: string;
+  fiscal_year_end: string | null;
 }
 
 interface FilingType {
@@ -22,13 +29,128 @@ interface FilingType {
   name: string;
 }
 
-interface Entity {
-  id: string;
-  name: string;
+// Calculate all due dates for a fiscal year based on frequency
+function calculateFiscalYearDueDates(
+  fiscalYearEnd: string,
+  frequency: string,
+  dueDay: number,
+  currentYear: number
+): Date[] {
+  const dueDates: Date[] = [];
+  
+  // Parse fiscal year end (MM-DD format)
+  const [fyMonth, fyDay] = fiscalYearEnd.split("-").map(Number);
+  
+  // Calculate fiscal year start and end dates
+  const fyEndDate = new Date(currentYear, fyMonth - 1, fyDay);
+  const fyStartDate = new Date(currentYear - 1, fyMonth - 1, fyDay + 1);
+  
+  // If we're past the fiscal year end, move to next fiscal year
+  const today = new Date();
+  if (today > fyEndDate) {
+    fyStartDate.setFullYear(fyStartDate.getFullYear() + 1);
+    fyEndDate.setFullYear(fyEndDate.getFullYear() + 1);
+  }
+  
+  switch (frequency) {
+    case "monthly": {
+      // Generate 12 monthly due dates
+      for (let month = 0; month < 12; month++) {
+        const startMonth = fyStartDate.getMonth();
+        const startYear = fyStartDate.getFullYear();
+        let targetMonth = startMonth + month;
+        let targetYear = startYear;
+        
+        if (targetMonth > 11) {
+          targetMonth -= 12;
+          targetYear += 1;
+        }
+        
+        // Handle months with fewer days
+        const lastDayOfMonth = new Date(targetYear, targetMonth + 1, 0).getDate();
+        const actualDay = Math.min(dueDay, lastDayOfMonth);
+        
+        const dueDate = new Date(targetYear, targetMonth, actualDay);
+        
+        // Only include dates within the fiscal year
+        if (dueDate >= fyStartDate && dueDate <= fyEndDate) {
+          dueDates.push(dueDate);
+        }
+      }
+      break;
+    }
+    
+    case "quarterly": {
+      // Generate 4 quarterly due dates
+      for (let quarter = 0; quarter < 4; quarter++) {
+        const startMonth = fyStartDate.getMonth();
+        const startYear = fyStartDate.getFullYear();
+        let targetMonth = startMonth + (quarter * 3);
+        let targetYear = startYear;
+        
+        while (targetMonth > 11) {
+          targetMonth -= 12;
+          targetYear += 1;
+        }
+        
+        const lastDayOfMonth = new Date(targetYear, targetMonth + 1, 0).getDate();
+        const actualDay = Math.min(dueDay, lastDayOfMonth);
+        
+        const dueDate = new Date(targetYear, targetMonth, actualDay);
+        
+        if (dueDate >= fyStartDate && dueDate <= fyEndDate) {
+          dueDates.push(dueDate);
+        }
+      }
+      break;
+    }
+    
+    case "semi-annual": {
+      // Generate 2 semi-annual due dates
+      for (let half = 0; half < 2; half++) {
+        const startMonth = fyStartDate.getMonth();
+        const startYear = fyStartDate.getFullYear();
+        let targetMonth = startMonth + (half * 6);
+        let targetYear = startYear;
+        
+        while (targetMonth > 11) {
+          targetMonth -= 12;
+          targetYear += 1;
+        }
+        
+        const lastDayOfMonth = new Date(targetYear, targetMonth + 1, 0).getDate();
+        const actualDay = Math.min(dueDay, lastDayOfMonth);
+        
+        const dueDate = new Date(targetYear, targetMonth, actualDay);
+        
+        if (dueDate >= fyStartDate && dueDate <= fyEndDate) {
+          dueDates.push(dueDate);
+        }
+      }
+      break;
+    }
+    
+    case "annual": {
+      // Single annual due date
+      const lastDayOfMonth = new Date(fyEndDate.getFullYear(), fyEndDate.getMonth() + 1, 0).getDate();
+      const actualDay = Math.min(dueDay, lastDayOfMonth);
+      dueDates.push(new Date(fyEndDate.getFullYear(), fyEndDate.getMonth(), actualDay));
+      break;
+    }
+  }
+  
+  return dueDates;
+}
+
+// Calculate priority based on days until due
+function calculatePriority(daysUntilDue: number): string {
+  if (daysUntilDue <= 7) return "urgent";
+  if (daysUntilDue <= 14) return "high";
+  if (daysUntilDue <= 30) return "medium";
+  return "low";
 }
 
 serve(async (req) => {
-  // Handle CORS preflight
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
@@ -39,13 +161,22 @@ serve(async (req) => {
     
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    // Get all pending recurring filings
+    // Get all entities with their fiscal year end
+    const { data: entities, error: entitiesError } = await supabase
+      .from("entities")
+      .select("id, name, fiscal_year_end");
+
+    if (entitiesError) {
+      throw new Error(`Failed to fetch entities: ${entitiesError.message}`);
+    }
+
+    const entityMap = new Map<string, Entity>((entities || []).map(e => [e.id, e]));
+
+    // Get all recurring filings (not one-time)
     const { data: filings, error: filingsError } = await supabase
       .from("entity_filings")
       .select("*")
-      .eq("status", "pending")
-      .neq("frequency", "one-time")
-      .not("due_date", "is", null);
+      .neq("frequency", "one-time");
 
     if (filingsError) {
       throw new Error(`Failed to fetch filings: ${filingsError.message}`);
@@ -68,81 +199,82 @@ serve(async (req) => {
         .in("id", filingTypeIds);
       filingTypes = types || [];
     }
-
-    // Get entity names
-    const entityIds = [...new Set(filings.map(f => f.entity_id))];
-    const { data: entities } = await supabase
-      .from("entities")
-      .select("id, name")
-      .in("id", entityIds);
-    const entityMap = new Map((entities || []).map(e => [e.id, e.name]));
     const filingTypeMap = new Map(filingTypes.map(t => [t.id, t.name]));
+
+    // Get existing tasks to avoid duplicates
+    const { data: existingTasks } = await supabase
+      .from("filing_tasks")
+      .select("filing_id, due_date, is_auto_generated")
+      .eq("is_auto_generated", true)
+      .neq("status", "completed");
+
+    const existingTaskKeys = new Set(
+      (existingTasks || []).map(t => `${t.filing_id}-${t.due_date}`)
+    );
 
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-    
+    const currentYear = today.getFullYear();
+
     let tasksCreated = 0;
     const errors: string[] = [];
 
     for (const filing of filings as Filing[]) {
       try {
-        const dueDate = new Date(filing.due_date);
-        dueDate.setHours(0, 0, 0, 0);
+        const entity = entityMap.get(filing.entity_id);
+        if (!entity) continue;
+
+        const fiscalYearEnd = entity.fiscal_year_end || "12-31";
+        const dueDay = filing.due_day || new Date(filing.due_date).getDate();
         
-        const daysUntilDue = Math.ceil((dueDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
-        
-        // Skip if not within reminder period or already past
-        if (daysUntilDue > filing.reminder_days || daysUntilDue < 0) {
-          continue;
-        }
+        // Calculate all due dates for the fiscal year
+        const dueDates = calculateFiscalYearDueDates(
+          fiscalYearEnd,
+          filing.frequency,
+          dueDay,
+          currentYear
+        );
 
-        // Check if task already exists for this filing
-        const { data: existingTask } = await supabase
-          .from("filing_tasks")
-          .select("id")
-          .eq("filing_id", filing.id)
-          .eq("is_auto_generated", true)
-          .neq("status", "completed")
-          .limit(1)
-          .single();
-
-        if (existingTask) {
-          continue; // Task already exists
-        }
-
-        // Determine priority based on days remaining
-        let priority = "low";
-        if (daysUntilDue <= 7) {
-          priority = "urgent";
-        } else if (daysUntilDue <= 14) {
-          priority = "high";
-        } else if (daysUntilDue <= 30) {
-          priority = "medium";
-        }
-
-        const entityName = entityMap.get(filing.entity_id) || "Entity";
+        const entityName = entity.name;
         const filingTypeName = filing.filing_type_id 
           ? filingTypeMap.get(filing.filing_type_id) || "Filing"
           : "Filing";
 
-        // Create the task
-        const { error: insertError } = await supabase
-          .from("filing_tasks")
-          .insert({
-            entity_id: filing.entity_id,
-            filing_id: filing.id,
-            title: `${filingTypeName} due for ${entityName}`,
-            description: `Auto-generated reminder for: ${filing.title}`,
-            due_date: filing.due_date,
-            priority,
-            status: "pending",
-            is_auto_generated: true,
-          });
+        for (const dueDate of dueDates) {
+          // Skip past dates
+          if (dueDate < today) continue;
 
-        if (insertError) {
-          errors.push(`Failed to create task for filing ${filing.id}: ${insertError.message}`);
-        } else {
-          tasksCreated++;
+          const dueDateStr = dueDate.toISOString().split("T")[0];
+          const taskKey = `${filing.id}-${dueDateStr}`;
+
+          // Skip if task already exists
+          if (existingTaskKeys.has(taskKey)) continue;
+
+          const daysUntilDue = Math.ceil((dueDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+          const priority = calculatePriority(daysUntilDue);
+
+          // Format month name for task title
+          const monthName = dueDate.toLocaleDateString("en-US", { month: "long", year: "numeric" });
+
+          const { error: insertError } = await supabase
+            .from("filing_tasks")
+            .insert({
+              entity_id: filing.entity_id,
+              filing_id: filing.id,
+              title: `${filingTypeName} - ${monthName} (${entityName})`,
+              description: `Auto-generated task for: ${filing.title}`,
+              due_date: dueDateStr,
+              priority,
+              status: "pending",
+              is_auto_generated: true,
+            });
+
+          if (insertError) {
+            errors.push(`Failed to create task for filing ${filing.id} on ${dueDateStr}: ${insertError.message}`);
+          } else {
+            tasksCreated++;
+            existingTaskKeys.add(taskKey); // Prevent duplicates within same run
+          }
         }
       } catch (err) {
         errors.push(`Error processing filing ${filing.id}: ${err.message}`);

@@ -39,6 +39,7 @@ export const entitySchema = z.object({
   ein_tax_id: z.string().trim().max(50).optional().or(z.literal("")),
   registration_number: z.string().trim().max(50).optional().or(z.literal("")),
   duns_number: z.string().trim().max(50).optional().or(z.literal("")),
+  fiscal_year_end: z.string().trim().max(5).regex(/^(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$/, "Must be MM-DD format").optional().or(z.literal("")),
   is_verified: z.boolean().default(false),
 });
 
@@ -181,6 +182,7 @@ export type EntityFormData = {
   ein_tax_id?: string;
   registration_number?: string;
   duns_number?: string;
+  fiscal_year_end?: string;
   is_verified: boolean;
 };
 
@@ -328,6 +330,7 @@ export const entityFilingSchema = z.object({
   title: z.string().trim().min(1, "Title is required").max(200, "Title must be 200 characters or less"),
   jurisdiction: z.string().trim().max(100, "Jurisdiction must be 100 characters or less").optional().or(z.literal("")),
   due_date: z.string().min(1, "Due date is required"),
+  due_day: z.coerce.number().min(1, "Day must be 1-31").max(31, "Day must be 1-31").optional(),
   filing_date: z.string().optional().or(z.literal("")),
   frequency: z.string().trim().min(1, "Frequency is required"),
   amount: z.coerce.number().min(0, "Amount must be positive").default(0),

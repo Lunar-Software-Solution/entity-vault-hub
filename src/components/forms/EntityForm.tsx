@@ -30,6 +30,7 @@ const EntityForm = ({ entity, onSubmit, onCancel, isLoading }: EntityFormProps) 
       ein_tax_id: entity?.ein_tax_id ?? "",
       registration_number: entity?.registration_number ?? "",
       duns_number: entity?.duns_number ?? "",
+      fiscal_year_end: (entity as any)?.fiscal_year_end ?? "12-31",
       is_verified: entity?.is_verified ?? false,
     },
   });
@@ -140,6 +141,14 @@ const EntityForm = ({ entity, onSubmit, onCancel, isLoading }: EntityFormProps) 
             <FormItem>
               <FormLabel>DUNS Number</FormLabel>
               <FormControl><Input placeholder="XX-XXX-XXXX" {...field} /></FormControl>
+              <FormMessage />
+            </FormItem>
+          )} />
+
+          <FormField control={form.control} name="fiscal_year_end" render={({ field }) => (
+            <FormItem>
+              <FormLabel>Fiscal Year End</FormLabel>
+              <FormControl><Input placeholder="MM-DD (e.g., 12-31)" maxLength={5} {...field} /></FormControl>
               <FormMessage />
             </FormItem>
           )} />

@@ -48,6 +48,7 @@ const EntityFilingForm = ({
       title: "",
       jurisdiction: "",
       due_date: "",
+      due_day: undefined,
       filing_date: "",
       frequency: "annual",
       amount: 0,
@@ -180,7 +181,7 @@ const EntityFilingForm = ({
           />
         </div>
 
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-3 gap-4">
           <FormField
             control={form.control}
             name="due_date"
@@ -189,6 +190,27 @@ const EntityFilingForm = ({
                 <FormLabel>Due Date *</FormLabel>
                 <FormControl>
                   <Input type="date" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="due_day"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Recurring Day</FormLabel>
+                <FormControl>
+                  <Input 
+                    type="number" 
+                    min="1" 
+                    max="31" 
+                    placeholder="1-31"
+                    {...field}
+                    value={field.value ?? ""}
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
