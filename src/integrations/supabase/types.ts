@@ -823,8 +823,6 @@ export type Database = {
       entities: {
         Row: {
           created_at: string
-          duns_number: string | null
-          ein_tax_id: string | null
           email: string | null
           fiscal_year_end: string | null
           founded_date: string | null
@@ -833,7 +831,6 @@ export type Database = {
           jurisdiction: string | null
           name: string
           phone: string | null
-          registration_number: string | null
           status: string
           type: string
           updated_at: string
@@ -841,8 +838,6 @@ export type Database = {
         }
         Insert: {
           created_at?: string
-          duns_number?: string | null
-          ein_tax_id?: string | null
           email?: string | null
           fiscal_year_end?: string | null
           founded_date?: string | null
@@ -851,7 +846,6 @@ export type Database = {
           jurisdiction?: string | null
           name: string
           phone?: string | null
-          registration_number?: string | null
           status?: string
           type?: string
           updated_at?: string
@@ -859,8 +853,6 @@ export type Database = {
         }
         Update: {
           created_at?: string
-          duns_number?: string | null
-          ein_tax_id?: string | null
           email?: string | null
           fiscal_year_end?: string | null
           founded_date?: string | null
@@ -869,7 +861,6 @@ export type Database = {
           jurisdiction?: string | null
           name?: string
           phone?: string | null
-          registration_number?: string | null
           status?: string
           type?: string
           updated_at?: string

@@ -241,34 +241,6 @@ const EntityDetail = () => {
           </div>
         )}
 
-        {/* Identification Numbers */}
-        {(entity.ein_tax_id || entity.registration_number || entity.duns_number) && (
-          <div className="mt-6 pt-6 border-t border-border">
-            <h4 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-4">
-              Identification
-            </h4>
-            <div className="flex flex-wrap gap-4">
-              {entity.ein_tax_id && (
-                <div className="bg-muted/50 rounded-lg px-4 py-2">
-                  <p className="text-xs text-muted-foreground">EIN/Tax ID</p>
-                  <p className="font-mono text-foreground">{entity.ein_tax_id}</p>
-                </div>
-              )}
-              {entity.registration_number && (
-                <div className="bg-muted/50 rounded-lg px-4 py-2">
-                  <p className="text-xs text-muted-foreground">Registration #</p>
-                  <p className="font-mono text-foreground">{entity.registration_number}</p>
-                </div>
-              )}
-              {entity.duns_number && (
-                <div className="bg-muted/50 rounded-lg px-4 py-2">
-                  <p className="text-xs text-muted-foreground">DUNS #</p>
-                  <p className="font-mono text-foreground">{entity.duns_number}</p>
-                </div>
-              )}
-            </div>
-          </div>
-        )}
       </div>
 
       {/* Stats Summary - Row 1: Core Data */}

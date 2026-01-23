@@ -27,9 +27,6 @@ const EntityForm = ({ entity, onSubmit, onCancel, isLoading }: EntityFormProps) 
       website: entity?.website ?? "",
       jurisdiction: entity?.jurisdiction ?? "",
       founded_date: entity?.founded_date ?? "",
-      ein_tax_id: entity?.ein_tax_id ?? "",
-      registration_number: entity?.registration_number ?? "",
-      duns_number: entity?.duns_number ?? "",
       fiscal_year_end: (entity as any)?.fiscal_year_end ?? "12-31",
       is_verified: entity?.is_verified ?? false,
     },
@@ -117,30 +114,6 @@ const EntityForm = ({ entity, onSubmit, onCancel, isLoading }: EntityFormProps) 
             <FormItem>
               <FormLabel>Founded Date</FormLabel>
               <FormControl><Input type="date" {...field} /></FormControl>
-              <FormMessage />
-            </FormItem>
-          )} />
-
-          <FormField control={form.control} name="ein_tax_id" render={({ field }) => (
-            <FormItem>
-              <FormLabel>EIN / Tax ID</FormLabel>
-              <FormControl><Input placeholder="XX-XXXXXXX" {...field} /></FormControl>
-              <FormMessage />
-            </FormItem>
-          )} />
-
-          <FormField control={form.control} name="registration_number" render={({ field }) => (
-            <FormItem>
-              <FormLabel>Registration Number</FormLabel>
-              <FormControl><Input placeholder="REG-123456" {...field} /></FormControl>
-              <FormMessage />
-            </FormItem>
-          )} />
-
-          <FormField control={form.control} name="duns_number" render={({ field }) => (
-            <FormItem>
-              <FormLabel>DUNS Number</FormLabel>
-              <FormControl><Input placeholder="XX-XXX-XXXX" {...field} /></FormControl>
               <FormMessage />
             </FormItem>
           )} />

@@ -34,9 +34,6 @@ const EntitySection = () => {
       website: data.website || null,
       jurisdiction: data.jurisdiction || null,
       founded_date: data.founded_date || null,
-      ein_tax_id: data.ein_tax_id || null,
-      registration_number: data.registration_number || null,
-      duns_number: data.duns_number || null,
     };
     
     if (editingEntity) {

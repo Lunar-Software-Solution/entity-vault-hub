@@ -36,9 +36,6 @@ export const entitySchema = z.object({
   website: z.string().trim().url("Invalid URL").optional().or(z.literal("")),
   jurisdiction: z.string().trim().max(100).optional().or(z.literal("")),
   founded_date: z.string().optional().or(z.literal("")),
-  ein_tax_id: z.string().trim().max(50).optional().or(z.literal("")),
-  registration_number: z.string().trim().max(50).optional().or(z.literal("")),
-  duns_number: z.string().trim().max(50).optional().or(z.literal("")),
   fiscal_year_end: z.string().trim().max(5).regex(/^(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$/, "Must be MM-DD format").optional().or(z.literal("")),
   is_verified: z.boolean().default(false),
 });
@@ -199,9 +196,6 @@ export type EntityFormData = {
   website?: string;
   jurisdiction?: string;
   founded_date?: string;
-  ein_tax_id?: string;
-  registration_number?: string;
-  duns_number?: string;
   fiscal_year_end?: string;
   is_verified: boolean;
 };
