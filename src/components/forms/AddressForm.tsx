@@ -1,13 +1,14 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { addressSchema, AddressFormData } from "@/lib/formSchemas";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import type { Address } from "@/hooks/usePortalData";
 import { useEntities } from "@/hooks/usePortalData";
+import { countries } from "@/lib/countries";
 
 interface AddressFormProps {
   address?: Address | null;
@@ -83,6 +84,7 @@ const AddressForm = ({ address, onSubmit, onCancel, isLoading }: AddressFormProp
             <FormItem className="md:col-span-2">
               <FormLabel>Street Address *</FormLabel>
               <FormControl><Input placeholder="123 Main Street, Suite 100" {...field} /></FormControl>
+              <FormDescription className="text-xs">Include building number, street name, and suite/unit if applicable</FormDescription>
               <FormMessage />
             </FormItem>
           )} />
@@ -114,7 +116,14 @@ const AddressForm = ({ address, onSubmit, onCancel, isLoading }: AddressFormProp
           <FormField control={form.control} name="country" render={({ field }) => (
             <FormItem>
               <FormLabel>Country *</FormLabel>
-              <FormControl><Input placeholder="United States" {...field} /></FormControl>
+              <Select onValueChange={field.onChange} defaultValue={field.value}>
+                <FormControl><SelectTrigger className="text-foreground"><SelectValue placeholder="Select country" /></SelectTrigger></FormControl>
+                <SelectContent className="max-h-60">
+                  {countries.map((country) => (
+                    <SelectItem key={country} value={country}>{country}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
               <FormMessage />
             </FormItem>
           )} />

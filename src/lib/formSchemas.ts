@@ -67,13 +67,33 @@ export const creditCardSchema = z.object({
 });
 
 export const addressSchema = z.object({
-  label: z.string().trim().min(1, "Label is required").max(100),
+  label: z.string().trim().min(1, "Label is required").max(100, "Label must be 100 characters or less"),
   type: z.string().min(1, "Type is required"),
-  street: z.string().trim().min(1, "Street address is required").max(200),
-  city: z.string().trim().min(1, "City is required").max(100),
-  state: z.string().trim().max(100).optional().or(z.literal("")),
-  zip: z.string().trim().max(20).optional().or(z.literal("")),
-  country: z.string().trim().min(1, "Country is required").max(100),
+  street: z.string().trim()
+    .min(1, "Street address is required")
+    .min(5, "Street address must be at least 5 characters")
+    .max(200, "Street address must be 200 characters or less")
+    .regex(/^[a-zA-Z0-9\s.,#\-/']+$/, "Street address contains invalid characters"),
+  city: z.string().trim()
+    .min(1, "City is required")
+    .min(2, "City must be at least 2 characters")
+    .max(100, "City must be 100 characters or less")
+    .regex(/^[a-zA-Z\s\-'.]+$/, "City contains invalid characters"),
+  state: z.string().trim()
+    .max(100, "State must be 100 characters or less")
+    .regex(/^[a-zA-Z\s\-'.]*$/, "State contains invalid characters")
+    .optional()
+    .or(z.literal("")),
+  zip: z.string().trim()
+    .max(20, "ZIP code must be 20 characters or less")
+    .regex(/^[a-zA-Z0-9\s\-]*$/, "ZIP code contains invalid characters")
+    .optional()
+    .or(z.literal("")),
+  country: z.string().trim()
+    .min(1, "Country is required")
+    .min(2, "Country must be at least 2 characters")
+    .max(100, "Country must be 100 characters or less")
+    .regex(/^[a-zA-Z\s\-'.]+$/, "Country contains invalid characters"),
   is_primary: z.boolean().default(false),
   entity_id: z.string().uuid().optional().or(z.literal("")),
 });
