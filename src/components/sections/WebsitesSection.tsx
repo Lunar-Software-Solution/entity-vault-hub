@@ -9,6 +9,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { Badge } from "@/components/ui/badge";
 import WebsiteForm from "@/components/forms/WebsiteForm";
 import DeleteConfirmDialog from "@/components/shared/DeleteConfirmDialog";
+import { useUserRole } from "@/hooks/useUserRole";
 import type { EntityWebsiteFormData } from "@/lib/formSchemas";
 import { format, differenceInDays, parseISO } from "date-fns";
 
@@ -19,6 +20,7 @@ interface WebsitesSectionProps {
 const WebsitesSection = ({ entityFilter }: WebsitesSectionProps) => {
   const { data: websites, isLoading } = useEntityWebsites();
   const { data: entities } = useEntities();
+  const { canWrite } = useUserRole();
   
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingWebsite, setEditingWebsite] = useState<EntityWebsite | null>(null);

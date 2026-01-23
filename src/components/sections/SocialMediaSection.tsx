@@ -9,6 +9,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import SocialMediaForm from "@/components/forms/SocialMediaForm";
 import DeleteConfirmDialog from "@/components/shared/DeleteConfirmDialog";
+import { useUserRole } from "@/hooks/useUserRole";
 import type { SocialMediaAccount } from "@/hooks/usePortalData";
 import type { SocialMediaFormData } from "@/lib/formSchemas";
 
@@ -19,6 +20,7 @@ interface SocialMediaSectionProps {
 const SocialMediaSection = ({ entityFilter }: SocialMediaSectionProps) => {
   const { data: socialAccounts, isLoading } = useSocialMediaAccounts();
   const { data: entities } = useEntities();
+  const { canWrite } = useUserRole();
   
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingAccount, setEditingAccount] = useState<SocialMediaAccount | null>(null);
@@ -104,10 +106,12 @@ const SocialMediaSection = ({ entityFilter }: SocialMediaSectionProps) => {
           <h2 className="text-2xl font-bold text-foreground mb-2">Social Media</h2>
           <p className="text-muted-foreground">Manage your connected social media accounts.</p>
         </div>
-        <Button className="gap-2" onClick={() => setIsFormOpen(true)}>
-          <Plus className="w-4 h-4" />
-          Link Account
-        </Button>
+        {canWrite && (
+          <Button className="gap-2" onClick={() => setIsFormOpen(true)}>
+            <Plus className="w-4 h-4" />
+            Link Account
+          </Button>
+        )}
       </div>
 
       {filteredAccounts.length === 0 ? (
@@ -115,10 +119,12 @@ const SocialMediaSection = ({ entityFilter }: SocialMediaSectionProps) => {
           <p className="text-muted-foreground mb-4">
             {entityFilter ? "No social media accounts linked to this entity." : "No social media accounts linked yet."}
           </p>
-          <Button className="gap-2" onClick={() => setIsFormOpen(true)}>
-            <Plus className="w-4 h-4" />
-            Link Your First Account
-          </Button>
+          {canWrite && (
+            <Button className="gap-2" onClick={() => setIsFormOpen(true)}>
+              <Plus className="w-4 h-4" />
+              Link Your First Account
+            </Button>
+          )}
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -173,21 +179,23 @@ const SocialMediaSection = ({ entityFilter }: SocialMediaSectionProps) => {
                       <p className="text-sm text-muted-foreground">{account.username}</p>
                     </div>
                   </div>
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <button className="p-1.5 hover:bg-muted rounded-lg transition-colors">
-                        <MoreVertical className="w-4 h-4 text-muted-foreground" />
-                      </button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      <DropdownMenuItem onClick={() => handleEdit(account)}>
-                        <Edit2 className="w-4 h-4 mr-2" /> Edit
-                      </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => setDeletingId(account.id)} className="text-destructive">
-                        <Trash2 className="w-4 h-4 mr-2" /> Remove
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
+                  {canWrite && (
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <button className="p-1.5 hover:bg-muted rounded-lg transition-colors">
+                          <MoreVertical className="w-4 h-4 text-muted-foreground" />
+                        </button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem onClick={() => handleEdit(account)}>
+                          <Edit2 className="w-4 h-4 mr-2" /> Edit
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => setDeletingId(account.id)} className="text-destructive">
+                          <Trash2 className="w-4 h-4 mr-2" /> Remove
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  )}
                 </div>
 
                 {entityName && (

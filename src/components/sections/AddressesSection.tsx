@@ -8,6 +8,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import AddressForm from "@/components/forms/AddressForm";
 import DeleteConfirmDialog from "@/components/shared/DeleteConfirmDialog";
 import { toast } from "sonner";
+import { useUserRole } from "@/hooks/useUserRole";
 import type { Address } from "@/hooks/usePortalData";
 import type { AddressFormData } from "@/lib/formSchemas";
 
@@ -31,6 +32,7 @@ interface AddressesSectionProps {
 const AddressesSection = ({ entityFilter }: AddressesSectionProps) => {
   const { data: addresses, isLoading } = useAddresses();
   const { data: entities } = useEntities();
+  const { canWrite } = useUserRole();
   
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingAddress, setEditingAddress] = useState<Address | null>(null);
@@ -137,10 +139,12 @@ const AddressesSection = ({ entityFilter }: AddressesSectionProps) => {
               : "Manage your registered addresses for different purposes."}
           </p>
         </div>
-        <Button className="gap-2" onClick={() => setIsFormOpen(true)}>
-          <Plus className="w-4 h-4" />
-          Add Address
-        </Button>
+        {canWrite && (
+          <Button className="gap-2" onClick={() => setIsFormOpen(true)}>
+            <Plus className="w-4 h-4" />
+            Add Address
+          </Button>
+        )}
       </div>
 
       {isEmpty ? (
@@ -148,10 +152,12 @@ const AddressesSection = ({ entityFilter }: AddressesSectionProps) => {
           <p className="text-muted-foreground mb-4">
             {entityFilter ? "No addresses linked to this entity." : "No addresses added yet."}
           </p>
-          <Button className="gap-2" onClick={() => setIsFormOpen(true)}>
-            <Plus className="w-4 h-4" />
-            Add Your First Address
-          </Button>
+          {canWrite && (
+            <Button className="gap-2" onClick={() => setIsFormOpen(true)}>
+              <Plus className="w-4 h-4" />
+              Add Your First Address
+            </Button>
+          )}
         </div>
       ) : (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -184,20 +190,22 @@ const AddressesSection = ({ entityFilter }: AddressesSectionProps) => {
                       )}
                     </div>
                   </div>
-                  <div className="flex gap-1">
-                    <button 
-                      className="p-2 hover:bg-muted rounded-lg transition-colors"
-                      onClick={() => handleEdit(address)}
-                    >
-                      <Edit2 className="w-4 h-4 text-muted-foreground" />
-                    </button>
-                    <button 
-                      className="p-2 hover:bg-destructive/10 rounded-lg transition-colors"
-                      onClick={() => setDeletingId(address.id)}
-                    >
-                      <Trash2 className="w-4 h-4 text-destructive" />
-                    </button>
-                  </div>
+                  {canWrite && (
+                    <div className="flex gap-1">
+                      <button 
+                        className="p-2 hover:bg-muted rounded-lg transition-colors"
+                        onClick={() => handleEdit(address)}
+                      >
+                        <Edit2 className="w-4 h-4 text-muted-foreground" />
+                      </button>
+                      <button 
+                        className="p-2 hover:bg-destructive/10 rounded-lg transition-colors"
+                        onClick={() => setDeletingId(address.id)}
+                      >
+                        <Trash2 className="w-4 h-4 text-destructive" />
+                      </button>
+                    </div>
+                  )}
                 </div>
 
                 <div className="flex items-start gap-3 p-4 bg-muted rounded-lg">

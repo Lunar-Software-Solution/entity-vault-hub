@@ -10,6 +10,7 @@ import BankAccountForm from "@/components/forms/BankAccountForm";
 import DeleteConfirmDialog from "@/components/shared/DeleteConfirmDialog";
 import CompanyLogo from "@/components/shared/CompanyLogo";
 import CopyButton from "@/components/shared/CopyButton";
+import { useUserRole } from "@/hooks/useUserRole";
 import type { BankAccount } from "@/hooks/usePortalData";
 import type { BankAccountFormData } from "@/lib/formSchemas";
 
@@ -20,6 +21,7 @@ interface BankAccountsSectionProps {
 const BankAccountsSection = ({ entityFilter }: BankAccountsSectionProps) => {
   const { data: bankAccounts, isLoading } = useBankAccounts();
   const { data: entities } = useEntities();
+  const { canWrite } = useUserRole();
   
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingAccount, setEditingAccount] = useState<BankAccount | null>(null);
@@ -133,10 +135,12 @@ const BankAccountsSection = ({ entityFilter }: BankAccountsSectionProps) => {
               : "Manage your connected bank accounts."}
           </p>
         </div>
-        <Button className="gap-2" onClick={() => setIsFormOpen(true)}>
-          <Plus className="w-4 h-4" />
-          Add Account
-        </Button>
+        {canWrite && (
+          <Button className="gap-2" onClick={() => setIsFormOpen(true)}>
+            <Plus className="w-4 h-4" />
+            Add Account
+          </Button>
+        )}
       </div>
 
       {isEmpty ? (
@@ -144,10 +148,12 @@ const BankAccountsSection = ({ entityFilter }: BankAccountsSectionProps) => {
           <p className="text-muted-foreground mb-4">
             {entityFilter ? "No bank accounts linked to this entity." : "No bank accounts added yet."}
           </p>
-          <Button className="gap-2" onClick={() => setIsFormOpen(true)}>
-            <Plus className="w-4 h-4" />
-            Add Your First Account
-          </Button>
+          {canWrite && (
+            <Button className="gap-2" onClick={() => setIsFormOpen(true)}>
+              <Plus className="w-4 h-4" />
+              Add Your First Account
+            </Button>
+          )}
         </div>
       ) : (
         <div className="grid grid-cols-1 gap-4">
@@ -193,21 +199,23 @@ const BankAccountsSection = ({ entityFilter }: BankAccountsSectionProps) => {
                         Open Bank
                       </Button>
                     )}
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <button className="p-2 hover:bg-muted rounded-lg transition-colors">
-                          <MoreVertical className="w-5 h-5 text-muted-foreground" />
-                        </button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem onClick={() => handleEdit(account)}>
-                          <Edit2 className="w-4 h-4 mr-2" /> Edit
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => setDeletingId(account.id)} className="text-destructive">
-                          <Trash2 className="w-4 h-4 mr-2" /> Delete
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
+                    {canWrite && (
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <button className="p-2 hover:bg-muted rounded-lg transition-colors">
+                            <MoreVertical className="w-5 h-5 text-muted-foreground" />
+                          </button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem onClick={() => handleEdit(account)}>
+                            <Edit2 className="w-4 h-4 mr-2" /> Edit
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => setDeletingId(account.id)} className="text-destructive">
+                            <Trash2 className="w-4 h-4 mr-2" /> Delete
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    )}
                   </div>
                 </div>
 

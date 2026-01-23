@@ -9,6 +9,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import DeleteConfirmDialog from "@/components/shared/DeleteConfirmDialog";
 import PhoneNumberForm from "@/components/forms/PhoneNumberForm";
 import { Phone, Plus, MoreHorizontal, Edit, Trash2, Star, Building2 } from "lucide-react";
+import { useUserRole } from "@/hooks/useUserRole";
 import type { PhoneNumberFormData } from "@/lib/formSchemas";
 
 interface PhoneNumbersSectionProps {
@@ -22,6 +23,7 @@ const PhoneNumbersSection = ({ entityFilter }: PhoneNumbersSectionProps) => {
 
   const { data: phoneNumbers, isLoading: phonesLoading } = usePhoneNumbers();
   const { data: entities, isLoading: entitiesLoading } = useEntities();
+  const { canWrite } = useUserRole();
   
   const createMutation = useCreatePhoneNumber();
   const updateMutation = useUpdatePhoneNumber();
@@ -95,20 +97,24 @@ const PhoneNumbersSection = ({ entityFilter }: PhoneNumbersSectionProps) => {
           <h2 className="text-2xl font-bold text-foreground">Phone Numbers</h2>
           <p className="text-muted-foreground">Manage phone numbers for your entities</p>
         </div>
-        <Button onClick={() => setShowForm(true)} className="gap-2">
-          <Plus className="w-4 h-4" />
-          Add Phone
-        </Button>
+        {canWrite && (
+          <Button onClick={() => setShowForm(true)} className="gap-2">
+            <Plus className="w-4 h-4" />
+            Add Phone
+          </Button>
+        )}
       </div>
 
       {!filteredPhones?.length ? (
         <div className="glass-card rounded-xl p-12 text-center">
           <Phone className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
           <p className="text-muted-foreground mb-4">No phone numbers added yet</p>
-          <Button onClick={() => setShowForm(true)} variant="outline" className="gap-2">
-            <Plus className="w-4 h-4" />
-            Add Your First Phone Number
-          </Button>
+          {canWrite && (
+            <Button onClick={() => setShowForm(true)} variant="outline" className="gap-2">
+              <Plus className="w-4 h-4" />
+              Add Your First Phone Number
+            </Button>
+          )}
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -131,26 +137,28 @@ const PhoneNumbersSection = ({ entityFilter }: PhoneNumbersSectionProps) => {
                     </p>
                   </div>
                 </div>
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="icon" className="h-8 w-8 text-foreground">
-                      <MoreHorizontal className="w-4 h-4" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    <DropdownMenuItem onClick={() => handleEdit(phone)}>
-                      <Edit className="w-4 h-4 mr-2" />
-                      Edit
-                    </DropdownMenuItem>
-                    <DropdownMenuItem 
-                      onClick={() => setDeletingPhone(phone)}
-                      className="text-destructive focus:text-destructive"
-                    >
-                      <Trash2 className="w-4 h-4 mr-2" />
-                      Delete
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
+                {canWrite && (
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" size="icon" className="h-8 w-8 text-foreground">
+                        <MoreHorizontal className="w-4 h-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuItem onClick={() => handleEdit(phone)}>
+                        <Edit className="w-4 h-4 mr-2" />
+                        Edit
+                      </DropdownMenuItem>
+                      <DropdownMenuItem 
+                        onClick={() => setDeletingPhone(phone)}
+                        className="text-destructive focus:text-destructive"
+                      >
+                        <Trash2 className="w-4 h-4 mr-2" />
+                        Delete
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                )}
               </div>
 
               <div className="space-y-2 text-sm">

@@ -11,6 +11,7 @@ import DeleteConfirmDialog from "@/components/shared/DeleteConfirmDialog";
 import PdfViewerDialog from "@/components/contracts/PdfViewerDialog";
 import { format, differenceInDays } from "date-fns";
 import { supabase } from "@/integrations/supabase/client";
+import { useUserRole } from "@/hooks/useUserRole";
 import type { Contract } from "@/hooks/usePortalData";
 import type { ContractFormData } from "@/lib/formSchemas";
 
@@ -24,6 +25,7 @@ interface ContractsSectionProps {
 const ContractsSection = ({ entityFilter }: ContractsSectionProps) => {
   const { data: contracts, isLoading } = useContracts();
   const { data: entities } = useEntities();
+  const { canWrite } = useUserRole();
   
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingContract, setEditingContract] = useState<Contract | null>(null);
@@ -182,10 +184,12 @@ const ContractsSection = ({ entityFilter }: ContractsSectionProps) => {
               : "Track and manage all your business and personal contracts."}
           </p>
         </div>
-        <Button className="gap-2" onClick={() => setIsFormOpen(true)}>
-          <Plus className="w-4 h-4" />
-          Add Contract
-        </Button>
+        {canWrite && (
+          <Button className="gap-2" onClick={() => setIsFormOpen(true)}>
+            <Plus className="w-4 h-4" />
+            Add Contract
+          </Button>
+        )}
       </div>
 
       {/* Summary Cards */}
@@ -330,18 +334,22 @@ const ContractsSection = ({ entityFilter }: ContractsSectionProps) => {
                           >
                             <Eye className="w-4 h-4 text-muted-foreground" />
                           </button>
-                          <button 
-                            className="p-2 hover:bg-muted rounded-lg transition-colors"
-                            onClick={() => handleEdit(contract)}
-                          >
-                            <Edit2 className="w-4 h-4 text-muted-foreground" />
-                          </button>
-                          <button 
-                            className="p-2 hover:bg-destructive/10 rounded-lg transition-colors"
-                            onClick={() => setDeletingId(contract.id)}
-                          >
-                            <Trash2 className="w-4 h-4 text-destructive" />
-                          </button>
+                          {canWrite && (
+                            <>
+                              <button 
+                                className="p-2 hover:bg-muted rounded-lg transition-colors"
+                                onClick={() => handleEdit(contract)}
+                              >
+                                <Edit2 className="w-4 h-4 text-muted-foreground" />
+                              </button>
+                              <button 
+                                className="p-2 hover:bg-destructive/10 rounded-lg transition-colors"
+                                onClick={() => setDeletingId(contract.id)}
+                              >
+                                <Trash2 className="w-4 h-4 text-destructive" />
+                              </button>
+                            </>
+                          )}
                           <button 
                             className="p-2 hover:bg-muted rounded-lg transition-colors disabled:opacity-50"
                             disabled={!contract.file_path}
