@@ -21,12 +21,8 @@ const EntityForm = ({ entity, onSubmit, onCancel, isLoading }: EntityFormProps) 
       name: entity?.name ?? "",
       type: entity?.type ?? "LLC",
       status: entity?.status ?? "Active",
-      email: entity?.email ?? "",
-      phone: entity?.phone ?? "",
-      website: entity?.website ?? "",
       jurisdiction: entity?.jurisdiction ?? "",
       founded_date: entity?.founded_date ?? "",
-      fiscal_year_end: (entity as any)?.fiscal_year_end ?? "12-31",
     },
   });
 
@@ -84,30 +80,6 @@ const EntityForm = ({ entity, onSubmit, onCancel, isLoading }: EntityFormProps) 
             </FormItem>
           )} />
 
-          <FormField control={form.control} name="email" render={({ field }) => (
-            <FormItem>
-              <FormLabel>Email</FormLabel>
-              <FormControl><Input type="email" placeholder="contact@company.com" {...field} /></FormControl>
-              <FormMessage />
-            </FormItem>
-          )} />
-
-          <FormField control={form.control} name="phone" render={({ field }) => (
-            <FormItem>
-              <FormLabel>Phone</FormLabel>
-              <FormControl><Input placeholder="+1 (555) 123-4567" {...field} /></FormControl>
-              <FormMessage />
-            </FormItem>
-          )} />
-
-          <FormField control={form.control} name="website" render={({ field }) => (
-            <FormItem>
-              <FormLabel>Website</FormLabel>
-              <FormControl><Input placeholder="https://www.company.com" {...field} /></FormControl>
-              <FormMessage />
-            </FormItem>
-          )} />
-
           <FormField control={form.control} name="founded_date" render={({ field }) => (
             <FormItem>
               <FormLabel>Founded Date</FormLabel>
@@ -115,15 +87,6 @@ const EntityForm = ({ entity, onSubmit, onCancel, isLoading }: EntityFormProps) 
               <FormMessage />
             </FormItem>
           )} />
-
-          <FormField control={form.control} name="fiscal_year_end" render={({ field }) => (
-            <FormItem>
-              <FormLabel>Fiscal Year End</FormLabel>
-              <FormControl><Input placeholder="MM-DD (e.g., 12-31)" maxLength={5} {...field} /></FormControl>
-              <FormMessage />
-            </FormItem>
-          )} />
-
         </div>
 
         <div className="flex justify-end gap-3 pt-4">
