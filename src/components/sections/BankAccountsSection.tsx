@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Plus, MoreVertical, Edit2, Trash2, Building2, ExternalLink } from "lucide-react";
+import { Plus, MoreVertical, Edit2, Trash2, Building2, ExternalLink, Eye, EyeOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useBankAccounts, useEntities } from "@/hooks/usePortalData";
 import { useCreateBankAccount, useUpdateBankAccount, useDeleteBankAccount } from "@/hooks/usePortalMutations";
@@ -24,6 +24,7 @@ const BankAccountsSection = ({ entityFilter }: BankAccountsSectionProps) => {
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingAccount, setEditingAccount] = useState<BankAccount | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [revealedAccounts, setRevealedAccounts] = useState<Set<string>>(new Set());
   
   const createAccount = useCreateBankAccount();
   const updateAccount = useUpdateBankAccount();
@@ -68,6 +69,31 @@ const BankAccountsSection = ({ entityFilter }: BankAccountsSectionProps) => {
 
   const openBankWebsite = (url: string) => {
     window.open(url, '_blank', 'noopener,noreferrer');
+  };
+
+  const toggleReveal = (accountId: string) => {
+    setRevealedAccounts(prev => {
+      const next = new Set(prev);
+      if (next.has(accountId)) {
+        next.delete(accountId);
+      } else {
+        next.add(accountId);
+      }
+      return next;
+    });
+  };
+
+  const maskAccountNumber = (number: string): string => {
+    if (number.length <= 4) return number;
+    const lastFour = number.slice(-4);
+    return `****${lastFour}`;
+  };
+
+  const maskIban = (iban: string): string => {
+    const clean = iban.replace(/\s/g, '');
+    if (clean.length <= 4) return iban;
+    const lastFour = clean.slice(-4);
+    return `****${lastFour}`;
   };
 
   if (isLoading) {
@@ -127,6 +153,7 @@ const BankAccountsSection = ({ entityFilter }: BankAccountsSectionProps) => {
           {filteredAccounts.map((account) => {
             const linkedEntity = entities?.find(e => e.id === account.entity_id);
             const bankWebsite = (account as any).bank_website;
+            const isRevealed = revealedAccounts.has(account.id);
             return (
               <div key={account.id} className="glass-card rounded-xl p-6 hover:border-primary/30 transition-all duration-300">
                 <div className="flex items-center justify-between">
@@ -148,12 +175,23 @@ const BankAccountsSection = ({ entityFilter }: BankAccountsSectionProps) => {
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
+                    {/* Reveal/Hide Toggle */}
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      className="gap-1.5 text-foreground"
+                      onClick={() => toggleReveal(account.id)}
+                      title={isRevealed ? "Hide details" : "Show details"}
+                    >
+                      {isRevealed ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                      {isRevealed ? "Hide" : "Show"}
+                    </Button>
                     {/* Open Bank Website Button */}
                     {bankWebsite && (
                       <Button 
                         variant="outline" 
                         size="sm"
-                        className="gap-1.5"
+                        className="gap-1.5 text-foreground"
                         onClick={() => openBankWebsite(bankWebsite)}
                       >
                         <ExternalLink className="w-3.5 h-3.5" />
@@ -193,7 +231,9 @@ const BankAccountsSection = ({ entityFilter }: BankAccountsSectionProps) => {
                   <div>
                     <p className="text-xs text-muted-foreground mb-1">Account Number</p>
                     <div className="flex items-center gap-1">
-                      <p className="font-mono text-foreground">{account.account_number}</p>
+                      <p className="font-mono text-foreground">
+                        {isRevealed ? account.account_number : maskAccountNumber(account.account_number)}
+                      </p>
                       <CopyButton value={account.account_number} label="Account number" />
                     </div>
                   </div>
@@ -201,7 +241,9 @@ const BankAccountsSection = ({ entityFilter }: BankAccountsSectionProps) => {
                     <div>
                       <p className="text-xs text-muted-foreground mb-1">IBAN</p>
                       <div className="flex items-center gap-1">
-                        <p className="font-mono text-foreground text-sm">{(account as any).iban}</p>
+                        <p className="font-mono text-foreground text-sm">
+                          {isRevealed ? (account as any).iban : maskIban((account as any).iban)}
+                        </p>
                         <CopyButton value={(account as any).iban.replace(/\s/g, '')} label="IBAN" />
                       </div>
                     </div>
