@@ -329,6 +329,7 @@ export type Database = {
         Row: {
           account_number: string
           bank: string
+          bank_website: string | null
           created_at: string
           currency: string
           entity_id: string | null
@@ -341,6 +342,7 @@ export type Database = {
         Insert: {
           account_number: string
           bank: string
+          bank_website?: string | null
           created_at?: string
           currency?: string
           entity_id?: string | null
@@ -353,6 +355,7 @@ export type Database = {
         Update: {
           account_number?: string
           bank?: string
+          bank_website?: string | null
           created_at?: string
           currency?: string
           entity_id?: string | null
@@ -513,6 +516,7 @@ export type Database = {
           entity_id: string | null
           expiry_date: string | null
           id: string
+          issuer_website: string | null
           name: string
           updated_at: string
         }
@@ -526,6 +530,7 @@ export type Database = {
           entity_id?: string | null
           expiry_date?: string | null
           id?: string
+          issuer_website?: string | null
           name: string
           updated_at?: string
         }
@@ -539,6 +544,7 @@ export type Database = {
           entity_id?: string | null
           expiry_date?: string | null
           id?: string
+          issuer_website?: string | null
           name?: string
           updated_at?: string
         }

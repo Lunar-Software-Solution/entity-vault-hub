@@ -8,6 +8,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import CreditCardForm from "@/components/forms/CreditCardForm";
 import DeleteConfirmDialog from "@/components/shared/DeleteConfirmDialog";
+import CompanyLogo from "@/components/shared/CompanyLogo";
 import { format } from "date-fns";
 import type { CreditCard as CreditCardType } from "@/hooks/usePortalData";
 import type { CreditCardFormData } from "@/lib/formSchemas";
@@ -34,6 +35,7 @@ const CreditCardsSection = ({ entityFilter }: CreditCardsSectionProps) => {
       cardholder_name: data.cardholder_name || null,
       expiry_date: data.expiry_date || null,
       due_date: data.due_date || null,
+      issuer_website: data.issuer_website || null,
       entity_id: data.entity_id || null,
     };
     
@@ -125,7 +127,12 @@ const CreditCardsSection = ({ entityFilter }: CreditCardsSectionProps) => {
                   <div className="absolute top-0 right-0 w-40 h-40 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/2" />
                   <div className="relative">
                     <div className="flex items-center justify-between mb-8">
-                      <CreditCard className="w-10 h-10" />
+                      <CompanyLogo 
+                        domain={(card as any).issuer_website} 
+                        name={card.name} 
+                        size="sm"
+                        className="bg-white/20 rounded-lg"
+                      />
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                           <button className="p-1 hover:bg-white/20 rounded transition-colors">

@@ -8,6 +8,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import BankAccountForm from "@/components/forms/BankAccountForm";
 import DeleteConfirmDialog from "@/components/shared/DeleteConfirmDialog";
+import CompanyLogo from "@/components/shared/CompanyLogo";
 import type { BankAccount } from "@/hooks/usePortalData";
 import type { BankAccountFormData } from "@/lib/formSchemas";
 
@@ -31,6 +32,7 @@ const BankAccountsSection = ({ entityFilter }: BankAccountsSectionProps) => {
     const cleanData = {
       ...data,
       routing_number: data.routing_number || null,
+      bank_website: data.bank_website || null,
       entity_id: data.entity_id || null,
     };
     
@@ -119,9 +121,11 @@ const BankAccountsSection = ({ entityFilter }: BankAccountsSectionProps) => {
               <div key={account.id} className="glass-card rounded-xl p-6 hover:border-primary/30 transition-all duration-300">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center">
-                      <span className="text-xl font-bold text-primary">{account.bank.charAt(0)}</span>
-                    </div>
+                    <CompanyLogo
+                      domain={(account as any).bank_website}
+                      name={account.bank}
+                      size="md"
+                    />
                     <div>
                       <h3 className="font-semibold text-foreground">{account.name}</h3>
                       <p className="text-sm text-muted-foreground">{account.bank}</p>

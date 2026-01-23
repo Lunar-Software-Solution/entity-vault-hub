@@ -31,6 +31,7 @@ const CreditCardForm = ({ card, onSubmit, onCancel, isLoading }: CreditCardFormP
     resolver: zodResolver(creditCardSchema),
     defaultValues: {
       name: card?.name ?? "",
+      issuer_website: (card as any)?.issuer_website ?? "",
       card_number: card?.card_number ?? "",
       cardholder_name: card?.cardholder_name ?? "",
       expiry_date: card?.expiry_date ?? "",
@@ -65,6 +66,14 @@ const CreditCardForm = ({ card, onSubmit, onCancel, isLoading }: CreditCardFormP
             <FormItem>
               <FormLabel>Card Name *</FormLabel>
               <FormControl><Input placeholder="Sapphire Preferred" {...field} /></FormControl>
+              <FormMessage />
+            </FormItem>
+          )} />
+
+          <FormField control={form.control} name="issuer_website" render={({ field }) => (
+            <FormItem>
+              <FormLabel>Issuer Website</FormLabel>
+              <FormControl><Input placeholder="https://chase.com" {...field} /></FormControl>
               <FormMessage />
             </FormItem>
           )} />
