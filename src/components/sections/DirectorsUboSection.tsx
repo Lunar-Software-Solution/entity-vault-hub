@@ -13,6 +13,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useEntities } from "@/hooks/usePortalData";
 import { useUserRole } from "@/hooks/useUserRole";
 import DeleteConfirmDialog from "@/components/shared/DeleteConfirmDialog";
+import GravatarAvatar from "@/components/shared/GravatarAvatar";
 import DirectorUboForm, { DirectorUboFormData } from "@/components/forms/DirectorUboForm";
 
 interface DirectorUbo {
@@ -399,9 +400,18 @@ const DirectorsUboSection = ({ entityFilter }: DirectorsUboSectionProps) => {
                 >
                   <div className="flex items-start justify-between mb-3">
                     <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-                        <User className="w-5 h-5 text-primary" />
-                      </div>
+                      <GravatarAvatar
+                        email={item.email}
+                        name={item.name}
+                        size="md"
+                        fallbackIcon={
+                          item.role_type === "ubo" ? (
+                            <Crown className="w-5 h-5 text-purple-400" />
+                          ) : (
+                            <User className="w-5 h-5 text-primary" />
+                          )
+                        }
+                      />
                       <div>
                         <h3 className="font-medium text-foreground flex items-center gap-2">
                           {item.name}
