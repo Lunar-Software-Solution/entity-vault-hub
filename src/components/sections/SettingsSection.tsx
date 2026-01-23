@@ -761,6 +761,50 @@ const SettingsSection = () => {
     });
   }, [filingTypes, filingTypeSearch, filingTypeSortKey, filingTypeSortDirection]);
 
+  // Software category labels
+  const softwareCategoryLabels: Record<string, string> = {
+    erp: "ERP System",
+    accounting: "Accounting",
+    payroll: "Payroll",
+    hr: "HR Management",
+    crm: "CRM",
+    bi: "Business Intelligence",
+    project_management: "Project Management",
+    communication: "Communication",
+    document_management: "Document Management",
+    other: "Other",
+  };
+
+  // Filter and sort Software Catalog
+  const filteredAndSortedSoftware = useMemo(() => {
+    if (!softwareCatalog) return [];
+    
+    let filtered = softwareCatalog;
+    
+    // Apply search filter
+    if (softwareSearch.trim()) {
+      const searchLower = softwareSearch.toLowerCase();
+      filtered = softwareCatalog.filter((sw) => 
+        sw.name.toLowerCase().includes(searchLower) ||
+        sw.category.toLowerCase().includes(searchLower) ||
+        (sw.vendor || "").toLowerCase().includes(searchLower) ||
+        (sw.description || "").toLowerCase().includes(searchLower)
+      );
+    }
+    
+    // Apply sort
+    return [...filtered].sort((a, b) => {
+      const aVal = (a[softwareSortKey] || "").toLowerCase();
+      const bVal = (b[softwareSortKey] || "").toLowerCase();
+      
+      if (softwareSortDirection === "asc") {
+        return aVal.localeCompare(bVal);
+      } else {
+        return bVal.localeCompare(aVal);
+      }
+    });
+  }, [softwareCatalog, softwareSearch, softwareSortKey, softwareSortDirection]);
+
   const handleTypeSort = (key: TypeSortKey) => {
     if (typeSortKey === key) {
       setTypeSortDirection(prev => prev === "asc" ? "desc" : "asc");
