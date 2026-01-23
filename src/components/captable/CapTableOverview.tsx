@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { PieChart, Users, Layers, DollarSign, TrendingUp, Percent } from "lucide-react";
+import GravatarAvatar from "@/components/shared/GravatarAvatar";
 
 interface CapTableOverviewProps {
   entityId?: string;
@@ -162,9 +163,16 @@ const CapTableOverview = ({ entityId, shareClasses, shareholders, transactions, 
                 {shareholderOwnership.map((sh) => (
                   <TableRow key={sh.id}>
                     <TableCell className="font-medium text-foreground">
-                      <div className="flex items-center gap-2">
-                        {sh.name}
-                        {sh.is_founder && <Badge variant="default" className="text-xs">Founder</Badge>}
+                      <div className="flex items-center gap-3">
+                        <GravatarAvatar
+                          email={sh.email}
+                          name={sh.name}
+                          size="sm"
+                        />
+                        <div className="flex items-center gap-2">
+                          {sh.name}
+                          {sh.is_founder && <Badge variant="default" className="text-xs">Founder</Badge>}
+                        </div>
                       </div>
                     </TableCell>
                     <TableCell>
