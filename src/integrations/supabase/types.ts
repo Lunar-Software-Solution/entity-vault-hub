@@ -334,6 +334,7 @@ export type Database = {
           currency: string
           entity_id: string | null
           id: string
+          is_primary: boolean | null
           name: string
           routing_number: string | null
           type: string
@@ -347,6 +348,7 @@ export type Database = {
           currency?: string
           entity_id?: string | null
           id?: string
+          is_primary?: boolean | null
           name: string
           routing_number?: string | null
           type?: string
@@ -360,6 +362,7 @@ export type Database = {
           currency?: string
           entity_id?: string | null
           id?: string
+          is_primary?: boolean | null
           name?: string
           routing_number?: string | null
           type?: string
@@ -623,6 +626,7 @@ export type Database = {
           id_expiry_date: string | null
           is_active: boolean | null
           is_pep: boolean | null
+          is_primary: boolean | null
           name: string
           nationality: string | null
           notes: string | null
@@ -653,6 +657,7 @@ export type Database = {
           id_expiry_date?: string | null
           is_active?: boolean | null
           is_pep?: boolean | null
+          is_primary?: boolean | null
           name: string
           nationality?: string | null
           notes?: string | null
@@ -683,6 +688,7 @@ export type Database = {
           id_expiry_date?: string | null
           is_active?: boolean | null
           is_pep?: boolean | null
+          is_primary?: boolean | null
           name?: string
           nationality?: string | null
           notes?: string | null
@@ -933,6 +939,47 @@ export type Database = {
           },
           {
             foreignKeyName: "entity_documents_entity_id_fkey"
+            columns: ["entity_id"]
+            isOneToOne: false
+            referencedRelation: "entities"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      entity_emails: {
+        Row: {
+          created_at: string
+          email: string
+          entity_id: string
+          id: string
+          is_primary: boolean | null
+          label: string
+          purpose: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          entity_id: string
+          id?: string
+          is_primary?: boolean | null
+          label?: string
+          purpose?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          entity_id?: string
+          id?: string
+          is_primary?: boolean | null
+          label?: string
+          purpose?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "entity_emails_entity_id_fkey"
             columns: ["entity_id"]
             isOneToOne: false
             referencedRelation: "entities"
