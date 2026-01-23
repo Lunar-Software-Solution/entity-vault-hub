@@ -15,6 +15,7 @@ import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { Plus, Search, Users, Shield, Clock, UserPlus, Mail } from "lucide-react";
+import GravatarAvatar from "@/components/shared/GravatarAvatar";
 
 interface UserProfile {
   id: string;
@@ -321,8 +322,17 @@ const UserManagementSection = () => {
               <TableBody>
                 {filteredProfiles.map((profile) => (
                   <TableRow key={profile.id}>
-                    <TableCell className="font-medium text-foreground">
-                      {profile.full_name || profile.user_id.slice(0, 8) + "..."}
+                    <TableCell>
+                      <div className="flex items-center gap-3">
+                        <GravatarAvatar
+                          email={null}
+                          name={profile.full_name || "User"}
+                          size="sm"
+                        />
+                        <span className="font-medium text-foreground">
+                          {profile.full_name || profile.user_id.slice(0, 8) + "..."}
+                        </span>
+                      </div>
                     </TableCell>
                     <TableCell>
                       <Badge variant={getRoleBadgeVariant(getUserRole(profile.user_id))}>
@@ -381,7 +391,16 @@ const UserManagementSection = () => {
                 <TableBody>
                   {invitations?.map((invitation) => (
                     <TableRow key={invitation.id}>
-                      <TableCell className="font-medium text-foreground">{invitation.email}</TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-3">
+                          <GravatarAvatar
+                            email={invitation.email}
+                            name={invitation.email.split("@")[0]}
+                            size="sm"
+                          />
+                          <span className="font-medium text-foreground">{invitation.email}</span>
+                        </div>
+                      </TableCell>
                       <TableCell>
                         <Badge variant={getRoleBadgeVariant(invitation.role)}>{invitation.role}</Badge>
                       </TableCell>
@@ -446,8 +465,17 @@ const UserManagementSection = () => {
                       <TableCell>
                         <Badge variant="outline">{log.action}</Badge>
                       </TableCell>
-                      <TableCell className="text-muted-foreground">
-                        {log.user_email || log.user_id.slice(0, 8) + "..."}
+                      <TableCell>
+                        <div className="flex items-center gap-2">
+                          <GravatarAvatar
+                            email={log.user_email}
+                            name={log.user_email || "User"}
+                            size="sm"
+                          />
+                          <span className="text-muted-foreground">
+                            {log.user_email || log.user_id.slice(0, 8) + "..."}
+                          </span>
+                        </div>
                       </TableCell>
                       <TableCell className="text-muted-foreground">{log.table_name || "—"}</TableCell>
                       <TableCell className="text-muted-foreground">
