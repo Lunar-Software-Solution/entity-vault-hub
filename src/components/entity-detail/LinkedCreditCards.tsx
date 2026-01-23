@@ -3,6 +3,8 @@ import type { CreditCard } from "@/hooks/usePortalData";
 import { CreditCard as CreditCardIcon, Eye, EyeOff, ExternalLink } from "lucide-react";
 import CompanyLogo from "@/components/shared/CompanyLogo";
 import CopyButton from "@/components/shared/CopyButton";
+import CardBrandIcon from "@/components/shared/CardBrandIcon";
+import { detectCardBrand } from "@/lib/cardBrandUtils";
 import { Button } from "@/components/ui/button";
 
 interface LinkedCreditCardsProps {
@@ -71,6 +73,8 @@ const LinkedCreditCards = ({ cards }: LinkedCreditCardsProps) => {
                       size="sm"
                       className="bg-white/20 rounded-lg"
                     />
+                    {/* Card Brand Icon */}
+                    <CardBrandIcon brand={detectCardBrand(card.card_number)} size="sm" />
                     {issuerWebsite && (
                       <Button 
                         variant="ghost" 
