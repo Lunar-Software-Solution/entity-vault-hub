@@ -97,7 +97,16 @@ const AddressesSection = ({ entityFilter }: AddressesSectionProps) => {
     ].filter(Boolean).join(", ");
     
     const query = encodeURIComponent(addressParts);
-    window.open(`https://www.google.com/maps/search/?api=1&query=${query}`, "_blank");
+    const url = `https://www.google.com/maps/search/?api=1&query=${query}`;
+    
+    // Use anchor element click for better cross-browser/iframe compatibility
+    const link = document.createElement("a");
+    link.href = url;
+    link.target = "_blank";
+    link.rel = "noopener noreferrer";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   };
 
   if (isLoading) {
