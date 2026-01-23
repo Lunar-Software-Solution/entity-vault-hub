@@ -1,5 +1,5 @@
 import { useState, useRef } from "react";
-import { Upload, FileText, Loader2, X } from "lucide-react";
+import { Upload, FileText, Loader2, X, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -10,6 +10,7 @@ interface DocumentFileUploadProps {
   existingFilePath?: string | null;
   existingFileName?: string | null;
   onUploadComplete: (filePath: string, fileName: string) => void;
+  onSummaryGenerated?: (summary: string, generatedAt: string) => void;
 }
 
 const DocumentFileUpload = ({
@@ -17,14 +18,47 @@ const DocumentFileUpload = ({
   existingFilePath,
   existingFileName,
   onUploadComplete,
+  onSummaryGenerated,
 }: DocumentFileUploadProps) => {
   const [isUploading, setIsUploading] = useState(false);
+  const [isSummarizing, setIsSummarizing] = useState(false);
   const [uploadedFile, setUploadedFile] = useState<{ path: string; name: string } | null>(
     existingFilePath && existingFileName
       ? { path: existingFilePath, name: existingFileName }
       : null
   );
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const generateSummary = async (filePath: string) => {
+    setIsSummarizing(true);
+
+    try {
+      const response = await supabase.functions.invoke("summarize-document", {
+        body: { documentId, filePath },
+      });
+
+      if (response.error) {
+        throw new Error(response.error.message || "Failed to generate summary");
+      }
+
+      if (response.data?.summary && onSummaryGenerated) {
+        onSummaryGenerated(response.data.summary, new Date().toISOString());
+        toast.success("AI summary generated");
+      }
+    } catch (error) {
+      console.error("Summary error:", error);
+      const message = error instanceof Error ? error.message : "Failed to generate summary";
+      if (message.includes("Rate limit")) {
+        toast.error("Rate limit exceeded. Please try again later.");
+      } else if (message.includes("credits")) {
+        toast.error("AI credits exhausted. Please add credits to continue.");
+      } else {
+        toast.error(message);
+      }
+    } finally {
+      setIsSummarizing(false);
+    }
+  };
 
   const handleFileSelect = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -55,6 +89,9 @@ const DocumentFileUpload = ({
       setUploadedFile({ path: filePath, name: file.name });
       onUploadComplete(filePath, file.name);
       toast.success("File uploaded successfully");
+
+      // Automatically generate AI summary
+      generateSummary(filePath);
     } catch (error) {
       console.error("Upload error:", error);
       toast.error("Failed to upload file");
@@ -77,6 +114,12 @@ const DocumentFileUpload = ({
     }
   };
 
+  const handleRegenerateSummary = () => {
+    if (uploadedFile) {
+      generateSummary(uploadedFile.path);
+    }
+  };
+
   return (
     <div className="space-y-3">
       <input
@@ -94,15 +137,33 @@ const DocumentFileUpload = ({
             <p className="text-sm font-medium text-foreground truncate">
               {uploadedFile.name}
             </p>
+            {isSummarizing && (
+              <p className="text-xs text-muted-foreground flex items-center gap-1">
+                <Loader2 className="w-3 h-3 animate-spin" />
+                Generating AI summary...
+              </p>
+            )}
           </div>
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon"
-            onClick={handleRemoveFile}
-          >
-            <X className="w-4 h-4" />
-          </Button>
+          <div className="flex items-center gap-1">
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              onClick={handleRegenerateSummary}
+              disabled={isSummarizing}
+              title="Regenerate AI Summary"
+            >
+              <Sparkles className="w-4 h-4" />
+            </Button>
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              onClick={handleRemoveFile}
+            >
+              <X className="w-4 h-4" />
+            </Button>
+          </div>
         </div>
       ) : (
         <button
@@ -125,7 +186,7 @@ const DocumentFileUpload = ({
               {isUploading ? "Uploading..." : "Upload Document PDF"}
             </p>
             <p className="text-xs text-muted-foreground mt-1">
-              PDF files up to 10MB
+              PDF files up to 10MB • AI summary will be generated automatically
             </p>
           </div>
         </button>
