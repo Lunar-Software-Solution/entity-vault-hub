@@ -254,14 +254,30 @@ const Auth = () => {
         return;
       }
       
-      // 2FA verified, proceed with login
+      // 2FA verified - complete the login by re-authenticating
+      const { error: loginError } = await supabase.auth.signInWithPassword({
+        email: pending2FAUser.email,
+        password,
+      });
+      
+      if (loginError) {
+        toast({
+          variant: "destructive",
+          title: "Login failed",
+          description: loginError.message,
+        });
+        setNeeds2FA(false);
+        setPending2FAUser(null);
+        return;
+      }
+      
+      // Clear 2FA state - the auth listener will handle redirect
       setNeeds2FA(false);
       setPending2FAUser(null);
       toast({
         title: "Verified!",
         description: "You're now logged in.",
       });
-      // The auth state listener will redirect
     } catch (err: any) {
       toast({
         variant: "destructive",
