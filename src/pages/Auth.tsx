@@ -144,22 +144,34 @@ const Auth = () => {
 
     try {
       // Update invitation status
-      await supabase
+      const { error: inviteError } = await supabase
         .from("team_invitations")
         .update({ status: "accepted", accepted_at: new Date().toISOString() })
         .eq("id", invitation.id);
+      
+      if (inviteError) {
+        console.error("Error updating invitation status:", inviteError);
+      }
 
       // Update user role to match invitation
-      await supabase
+      const { error: roleError } = await supabase
         .from("user_roles")
         .update({ role: invitation.role })
         .eq("user_id", userId);
+      
+      if (roleError) {
+        console.error("Error updating user role:", roleError);
+      }
 
       // Update user profile with invited_at timestamp
-      await supabase
+      const { error: profileError } = await supabase
         .from("user_profiles")
         .update({ invited_at: new Date().toISOString() })
         .eq("user_id", userId);
+      
+      if (profileError) {
+        console.error("Error updating user profile:", profileError);
+      }
 
       toast({
         title: "Welcome to Entity Hub!",
