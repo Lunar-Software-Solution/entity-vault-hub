@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -21,9 +22,12 @@ import {
   useSocialMediaAccounts,
   useEmailAddresses
 } from "@/hooks/usePortalData";
+import { useUpdateEntity } from "@/hooks/usePortalMutations";
+import { useUserRole } from "@/hooks/useUserRole";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { 
   ArrowLeft, 
   Building2, 
@@ -46,10 +50,12 @@ import {
   FolderOpen,
   CheckSquare,
   Share2,
-  Users
+  Users,
+  Pencil
 } from "lucide-react";
 import { format } from "date-fns";
 import CompanyLogo from "@/components/shared/CompanyLogo";
+import EntityForm from "@/components/forms/EntityForm";
 import LinkedBankAccounts from "@/components/entity-detail/LinkedBankAccounts";
 import LinkedCreditCards from "@/components/entity-detail/LinkedCreditCards";
 import LinkedAddresses from "@/components/entity-detail/LinkedAddresses";
@@ -67,6 +73,7 @@ import LinkedFilings from "@/components/entity-detail/LinkedFilings";
 import LinkedFilingTasks from "@/components/entity-detail/LinkedFilingTasks";
 import LinkedSocialMedia from "@/components/entity-detail/LinkedSocialMedia";
 import LinkedDirectorsUbos from "@/components/entity-detail/LinkedDirectorsUbos";
+import type { EntityFormData } from "@/lib/formSchemas";
 
 const useDirectorsUbosForEntity = (entityId: string) => {
   return useQuery({
@@ -87,6 +94,9 @@ const useDirectorsUbosForEntity = (entityId: string) => {
 const EntityDetail = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const { canWrite } = useUserRole();
+  const updateEntity = useUpdateEntity();
   
   const { data: entities, isLoading: entitiesLoading } = useEntities();
   const { data: bankAccounts, isLoading: bankLoading } = useBankAccounts();
@@ -185,6 +195,12 @@ const EntityDetail = () => {
               </Badge>
             </div>
           </div>
+          {canWrite && (
+            <Button variant="outline" size="sm" onClick={() => setIsEditDialogOpen(true)} className="gap-2">
+              <Pencil className="w-4 h-4" />
+              Edit
+            </Button>
+          )}
         </div>
 
         {/* Entity Info Grid */}
@@ -457,6 +473,32 @@ const EntityDetail = () => {
         <LinkedConsultants consultants={linkedConsultants} entityId={id!} />
         <LinkedAuditors auditors={linkedAuditors} entityId={id!} />
       </div>
+
+      {/* Edit Entity Dialog */}
+      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Edit Entity</DialogTitle>
+          </DialogHeader>
+          <EntityForm
+            entity={entity}
+            onSubmit={(data: EntityFormData) => {
+              const cleanedData = Object.fromEntries(
+                Object.entries(data).map(([key, value]) => [
+                  key,
+                  value === "" ? null : value,
+                ])
+              );
+              updateEntity.mutate(
+                { id: entity.id, ...cleanedData },
+                { onSuccess: () => setIsEditDialogOpen(false) }
+              );
+            }}
+            onCancel={() => setIsEditDialogOpen(false)}
+            isLoading={updateEntity.isPending}
+          />
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
