@@ -188,7 +188,7 @@ const EntityDetail = () => {
         </div>
 
         {/* Entity Info Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mt-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
           <div className="space-y-2">
             <div className="flex items-center gap-2 text-muted-foreground">
               <Calendar className="w-4 h-4" />
@@ -207,22 +207,6 @@ const EntityDetail = () => {
               <span className="text-sm">Jurisdiction</span>
             </div>
             <p className="text-foreground font-medium">{entity.jurisdiction || "Not specified"}</p>
-          </div>
-          
-          <div className="space-y-2">
-            <div className="flex items-center gap-2 text-muted-foreground">
-              <Mail className="w-4 h-4" />
-              <span className="text-sm">Email</span>
-            </div>
-            <p className="text-foreground font-medium">{entity.email || "Not specified"}</p>
-          </div>
-          
-          <div className="space-y-2">
-            <div className="flex items-center gap-2 text-muted-foreground">
-              <Phone className="w-4 h-4" />
-              <span className="text-sm">Phone</span>
-            </div>
-            <p className="text-foreground font-medium">{entity.phone || "Not specified"}</p>
           </div>
         </div>
 
