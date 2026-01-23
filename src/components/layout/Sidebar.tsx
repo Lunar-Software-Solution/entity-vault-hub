@@ -16,6 +16,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import ProfileDialog from "./ProfileDialog";
 
 interface SidebarProps {
   activeSection: string;
@@ -100,6 +101,7 @@ const Sidebar = ({
 }: SidebarProps) => {
   const { user, signOut } = useAuth();
   const [openGroups, setOpenGroups] = useState<string[]>(["main", "corporate", "financial", "contact", "legal", "admin"]);
+  const [profileOpen, setProfileOpen] = useState(false);
 
   const handleLogout = async () => {
     await signOut();
@@ -297,11 +299,17 @@ const Sidebar = ({
                 </div>
               </DropdownMenuLabel>
               <DropdownMenuSeparator />
-              <DropdownMenuItem className="cursor-pointer text-popover-foreground">
+              <DropdownMenuItem 
+                onClick={() => setProfileOpen(true)}
+                className="cursor-pointer text-popover-foreground"
+              >
                 <User className="w-4 h-4 mr-2" />
                 Profile
               </DropdownMenuItem>
-              <DropdownMenuItem className="cursor-pointer text-popover-foreground">
+              <DropdownMenuItem 
+                onClick={() => onSectionChange("settings")}
+                className="cursor-pointer text-popover-foreground"
+              >
                 <Settings className="w-4 h-4 mr-2" />
                 Settings
               </DropdownMenuItem>
@@ -316,6 +324,9 @@ const Sidebar = ({
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
+
+        {/* Profile Dialog */}
+        <ProfileDialog open={profileOpen} onOpenChange={setProfileOpen} />
       </aside>
     </TooltipProvider>
   );
