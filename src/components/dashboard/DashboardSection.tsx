@@ -1,8 +1,9 @@
-import { Wallet, CreditCard, Share2, FileText, MapPin, Building2, Calendar, CheckSquare, Phone, Receipt, Briefcase, FolderOpen } from "lucide-react";
+import { Wallet, CreditCard, Share2, FileText, MapPin, Building2, Calendar, CheckSquare, Phone, Receipt, Briefcase, FolderOpen, Users, PieChart, Mail, AlertCircle } from "lucide-react";
 import StatCard from "./StatCard";
 import { useDashboardStats, useBankAccounts, useContracts, useUpcomingFilings, useOpenTasks } from "@/hooks/usePortalData";
 import { Skeleton } from "@/components/ui/skeleton";
 import { format } from "date-fns";
+import { Badge } from "@/components/ui/badge";
 
 interface DashboardSectionProps {
   onNavigate?: (section: string) => void;
@@ -163,24 +164,89 @@ const DashboardSection = ({ onNavigate }: DashboardSectionProps) => {
         />
       </div>
 
-      {/* Recent Activity */}
-      <div className="glass-card rounded-xl p-6">
-        <h3 className="text-lg font-semibold text-foreground mb-4">Recent Activity</h3>
-        {recentActivity.length > 0 ? (
-          <div className="space-y-4">
-            {recentActivity.map((activity, index) => (
-              <div key={index} className="flex items-center justify-between py-3 border-b border-border last:border-0">
-                <div>
-                  <p className="text-sm font-medium text-foreground">{activity.action}</p>
-                  <p className="text-xs text-muted-foreground">{activity.item}</p>
+      {/* Bottom Grid: Recent Activity, Upcoming Tasks, Quick Actions */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Recent Activity */}
+        <div className="glass-card rounded-xl p-6">
+          <h3 className="text-lg font-semibold text-foreground mb-4">Recent Activity</h3>
+          {recentActivity.length > 0 ? (
+            <div className="space-y-4">
+              {recentActivity.map((activity, index) => (
+                <div key={index} className="flex items-center justify-between py-3 border-b border-border last:border-0">
+                  <div>
+                    <p className="text-sm font-medium text-foreground">{activity.action}</p>
+                    <p className="text-xs text-muted-foreground">{activity.item}</p>
+                  </div>
+                  <span className="text-xs text-muted-foreground">{activity.time}</span>
                 </div>
-                <span className="text-xs text-muted-foreground">{activity.time}</span>
-              </div>
+              ))}
+            </div>
+          ) : (
+            <p className="text-muted-foreground text-sm">No recent activity. Start by adding some data!</p>
+          )}
+        </div>
+
+        {/* Upcoming Tasks */}
+        <div className="glass-card rounded-xl p-6">
+          <h3 className="text-lg font-semibold text-foreground mb-4">Upcoming Tasks</h3>
+          {openTasks && openTasks.length > 0 ? (
+            <div className="space-y-4">
+              {openTasks.slice(0, 4).map((task) => (
+                <div key={task.id} className="flex items-start justify-between py-3 border-b border-border last:border-0">
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-foreground truncate">{task.title}</p>
+                    <p className="text-xs text-muted-foreground">
+                      Due: {format(new Date(task.due_date), "MMM d, yyyy")}
+                    </p>
+                  </div>
+                  <Badge 
+                    variant={task.priority === "urgent" || task.priority === "high" ? "destructive" : "secondary"}
+                    className="ml-2 flex-shrink-0"
+                  >
+                    {task.priority}
+                  </Badge>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="flex flex-col items-center justify-center py-8 text-muted-foreground">
+              <CheckSquare className="w-8 h-8 mb-2 opacity-50" />
+              <p className="text-sm">No pending tasks</p>
+            </div>
+          )}
+        </div>
+
+        {/* Quick Actions */}
+        <div className="glass-card rounded-xl p-6">
+          <h3 className="text-lg font-semibold text-foreground mb-4">Quick Actions</h3>
+          <div className="grid grid-cols-2 gap-3">
+            {[
+              { label: "Add Entity", icon: Building2, section: "entity" },
+              { label: "Add Director", icon: Users, section: "directors-ubo" },
+              { label: "Add Cap Table", icon: PieChart, section: "cap-table" },
+              { label: "Add Provider", icon: Briefcase, section: "service-providers" },
+              { label: "Add Filing", icon: Calendar, section: "filings" },
+              { label: "Add Bank", icon: Wallet, section: "bank-accounts" },
+              { label: "Add Card", icon: CreditCard, section: "credit-cards" },
+              { label: "Add Tax ID", icon: Receipt, section: "tax-ids" },
+              { label: "Add Phone", icon: Phone, section: "phone-numbers" },
+              { label: "Add Email", icon: Mail, section: "email" },
+              { label: "Add Social", icon: Share2, section: "social-media" },
+              { label: "Add Address", icon: MapPin, section: "addresses" },
+              { label: "Add Document", icon: FolderOpen, section: "documents" },
+              { label: "Add Contract", icon: FileText, section: "contracts" },
+            ].map((action, index) => (
+              <button
+                key={index}
+                onClick={() => onNavigate?.(action.section)}
+                className="flex items-center gap-2 p-2 rounded-lg bg-muted text-foreground hover:bg-primary/10 hover:text-primary transition-all duration-200 text-xs font-medium cursor-pointer"
+              >
+                <action.icon className="w-4 h-4 flex-shrink-0" />
+                <span className="truncate">{action.label}</span>
+              </button>
             ))}
           </div>
-        ) : (
-          <p className="text-muted-foreground text-sm">No recent activity. Start by adding some data!</p>
-        )}
+        </div>
       </div>
     </div>
   );
