@@ -10,10 +10,11 @@ import CreditCardForm from "@/components/forms/CreditCardForm";
 import DeleteConfirmDialog from "@/components/shared/DeleteConfirmDialog";
 import CompanyLogo from "@/components/shared/CompanyLogo";
 import CopyButton from "@/components/shared/CopyButton";
+import CardBrandIcon from "@/components/shared/CardBrandIcon";
+import { detectCardBrand, getCardBrandInfo } from "@/lib/cardBrandUtils";
 import { format } from "date-fns";
 import type { CreditCard as CreditCardType } from "@/hooks/usePortalData";
 import type { CreditCardFormData } from "@/lib/formSchemas";
-
 interface CreditCardsSectionProps {
   entityFilter?: string | null;
 }
@@ -163,21 +164,25 @@ const CreditCardsSection = ({ entityFilter }: CreditCardsSectionProps) => {
                         size="sm"
                         className="bg-white/20 rounded-lg"
                       />
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <button className="p-1 hover:bg-white/20 rounded transition-colors">
-                            <MoreVertical className="w-5 h-5" />
-                          </button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem onClick={() => handleEdit(card)}>
-                            <Edit2 className="w-4 h-4 mr-2" /> Edit
-                          </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => setDeletingId(card.id)} className="text-destructive">
-                            <Trash2 className="w-4 h-4 mr-2" /> Delete
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
+                      <div className="flex items-center gap-2">
+                        {/* Card Brand Icon */}
+                        <CardBrandIcon brand={detectCardBrand(card.card_number)} size="md" />
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <button className="p-1 hover:bg-white/20 rounded transition-colors">
+                              <MoreVertical className="w-5 h-5" />
+                            </button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem onClick={() => handleEdit(card)}>
+                              <Edit2 className="w-4 h-4 mr-2" /> Edit
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => setDeletingId(card.id)} className="text-destructive">
+                              <Trash2 className="w-4 h-4 mr-2" /> Delete
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </div>
                     </div>
                     
                     {/* Card Number with Reveal Toggle and Copy */}
