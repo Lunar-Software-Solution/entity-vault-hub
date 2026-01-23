@@ -25,7 +25,23 @@ export type FilingType = Tables<"filing_types">;
 export type EntityFiling = Tables<"entity_filings">;
 export type FilingTask = Tables<"filing_tasks">;
 export type FilingDocument = Tables<"filing_documents">;
+export type AuditLog = Tables<"audit_logs">;
 
+// Recent audit logs hook
+export const useRecentAuditLogs = (limit: number = 10) => {
+  return useQuery({
+    queryKey: ["audit_logs", "recent", limit],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("audit_logs")
+        .select("*")
+        .order("created_at", { ascending: false })
+        .limit(limit);
+      if (error) throw error;
+      return data as AuditLog[];
+    },
+  });
+};
 export const useEntities = () => {
   return useQuery({
     queryKey: ["entities"],

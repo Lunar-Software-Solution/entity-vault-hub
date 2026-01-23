@@ -1,39 +1,53 @@
-import { Wallet, CreditCard, Share2, FileText, MapPin, Building2, Calendar, CheckSquare, Phone, Receipt, Briefcase, FolderOpen, Users, PieChart, Mail, AlertCircle } from "lucide-react";
+import { Wallet, CreditCard, Share2, FileText, MapPin, Building2, Calendar, CheckSquare, Phone, Receipt, Briefcase, FolderOpen, Users, PieChart, Mail, Plus, Edit, Trash2, Activity } from "lucide-react";
 import StatCard from "./StatCard";
-import { useDashboardStats, useBankAccounts, useContracts, useUpcomingFilings, useOpenTasks } from "@/hooks/usePortalData";
+import { useDashboardStats, useUpcomingFilings, useOpenTasks, useRecentAuditLogs } from "@/hooks/usePortalData";
 import { Skeleton } from "@/components/ui/skeleton";
-import { format } from "date-fns";
+import { format, formatDistanceToNow } from "date-fns";
 import { Badge } from "@/components/ui/badge";
 
 interface DashboardSectionProps {
   onNavigate?: (section: string) => void;
 }
 
+// Helper to format table names nicely
+const formatTableName = (tableName: string): string => {
+  return tableName
+    .replace(/_/g, " ")
+    .replace(/\b\w/g, l => l.toUpperCase())
+    .replace("Entity ", "")
+    .replace(" Ubos", "/UBOs");
+};
+
+// Helper to get action icon
+const getActionIcon = (action: string) => {
+  switch (action) {
+    case "INSERT": return Plus;
+    case "UPDATE": return Edit;
+    case "DELETE": return Trash2;
+    default: return Activity;
+  }
+};
+
+// Helper to get action color
+const getActionVariant = (action: string): "default" | "secondary" | "destructive" | "outline" => {
+  switch (action) {
+    case "INSERT": return "default";
+    case "UPDATE": return "secondary";
+    case "DELETE": return "destructive";
+    default: return "outline";
+  }
+};
+
 const DashboardSection = ({ onNavigate }: DashboardSectionProps) => {
   const stats = useDashboardStats();
-  const { data: bankAccounts, isLoading: loadingBanks } = useBankAccounts();
-  const { data: contracts, isLoading: loadingContracts } = useContracts();
   const { data: upcomingFilings, isLoading: loadingFilings } = useUpcomingFilings();
   const { data: openTasks, isLoading: loadingTasks } = useOpenTasks();
+  const { data: auditLogs, isLoading: loadingAudit } = useRecentAuditLogs(6);
 
-  const isLoading = loadingBanks || loadingContracts || loadingFilings || loadingTasks;
+  const isLoading = loadingFilings || loadingTasks || loadingAudit;
   
   const overdueFilings = upcomingFilings?.filter(f => f.status === "overdue" || new Date(f.due_date) < new Date()).length || 0;
   const urgentTasks = openTasks?.filter(t => t.priority === "urgent" || t.priority === "high").length || 0;
-
-  // Build recent activity from actual data
-  const recentActivity = [
-    ...(bankAccounts?.slice(0, 2).map(acc => ({
-      action: "Bank account added",
-      item: acc.name,
-      time: format(new Date(acc.created_at), "MMM d, yyyy")
-    })) ?? []),
-    ...(contracts?.slice(0, 2).map(c => ({
-      action: "Contract created",
-      item: c.title,
-      time: format(new Date(c.created_at), "MMM d, yyyy")
-    })) ?? [])
-  ].slice(0, 4);
 
   if (isLoading) {
     return (
@@ -166,23 +180,43 @@ const DashboardSection = ({ onNavigate }: DashboardSectionProps) => {
 
       {/* Bottom Grid: Recent Activity, Upcoming Tasks, Quick Actions */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Recent Activity */}
+        {/* Recent Activity from Audit Logs */}
         <div className="glass-card rounded-xl p-6">
           <h3 className="text-lg font-semibold text-foreground mb-4">Recent Activity</h3>
-          {recentActivity.length > 0 ? (
-            <div className="space-y-4">
-              {recentActivity.map((activity, index) => (
-                <div key={index} className="flex items-center justify-between py-3 border-b border-border last:border-0">
-                  <div>
-                    <p className="text-sm font-medium text-foreground">{activity.action}</p>
-                    <p className="text-xs text-muted-foreground">{activity.item}</p>
+          {auditLogs && auditLogs.length > 0 ? (
+            <div className="space-y-3">
+              {auditLogs.map((log) => {
+                const ActionIcon = getActionIcon(log.action);
+                return (
+                  <div key={log.id} className="flex items-start gap-3 py-2 border-b border-border last:border-0">
+                    <div className={`p-1.5 rounded-full flex-shrink-0 ${
+                      log.action === "INSERT" ? "bg-green-500/10 text-green-500" :
+                      log.action === "UPDATE" ? "bg-blue-500/10 text-blue-500" :
+                      log.action === "DELETE" ? "bg-red-500/10 text-red-500" :
+                      "bg-muted text-muted-foreground"
+                    }`}>
+                      <ActionIcon className="w-3 h-3" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-foreground truncate">
+                        {log.action === "INSERT" ? "Created" : log.action === "UPDATE" ? "Updated" : "Deleted"} {formatTableName(log.table_name || "record")}
+                      </p>
+                      <p className="text-xs text-muted-foreground truncate">
+                        by {log.user_email?.split("@")[0] || "System"}
+                      </p>
+                    </div>
+                    <span className="text-xs text-muted-foreground flex-shrink-0">
+                      {formatDistanceToNow(new Date(log.created_at), { addSuffix: true })}
+                    </span>
                   </div>
-                  <span className="text-xs text-muted-foreground">{activity.time}</span>
-                </div>
-              ))}
+                );
+              })}
             </div>
           ) : (
-            <p className="text-muted-foreground text-sm">No recent activity. Start by adding some data!</p>
+            <div className="flex flex-col items-center justify-center py-8 text-muted-foreground">
+              <Activity className="w-8 h-8 mb-2 opacity-50" />
+              <p className="text-sm">No recent activity</p>
+            </div>
           )}
         </div>
 
