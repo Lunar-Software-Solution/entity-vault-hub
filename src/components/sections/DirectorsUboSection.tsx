@@ -11,6 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useEntities } from "@/hooks/usePortalData";
+import { useUserRole } from "@/hooks/useUserRole";
 import DeleteConfirmDialog from "@/components/shared/DeleteConfirmDialog";
 import DirectorUboForm, { DirectorUboFormData } from "@/components/forms/DirectorUboForm";
 
@@ -133,6 +134,7 @@ const DirectorsUboSection = ({ entityFilter }: DirectorsUboSectionProps) => {
 
   const { data: directorsUbos = [], isLoading } = useDirectorsUbos();
   const { data: entities = [] } = useEntities();
+  const { canWrite } = useUserRole();
   const createMutation = useCreateDirectorUbo();
   const updateMutation = useUpdateDirectorUbo();
   const deleteMutation = useDeleteDirectorUbo();
@@ -271,10 +273,12 @@ const DirectorsUboSection = ({ entityFilter }: DirectorsUboSectionProps) => {
             Manage directors and ultimate beneficial owners
           </p>
         </div>
-        <Button onClick={() => setShowForm(true)} className="gap-2">
-          <Plus className="w-4 h-4" />
-          Add Director/UBO
-        </Button>
+        {canWrite && (
+          <Button onClick={() => setShowForm(true)} className="gap-2">
+            <Plus className="w-4 h-4" />
+            Add Director/UBO
+          </Button>
+        )}
       </div>
 
       {/* Stats Cards */}
@@ -379,10 +383,12 @@ const DirectorsUboSection = ({ entityFilter }: DirectorsUboSectionProps) => {
               <p className="text-muted-foreground mb-4">
                 {searchQuery ? "Try adjusting your search criteria" : "Add your first director or UBO"}
               </p>
-              <Button onClick={() => setShowForm(true)}>
-                <Plus className="w-4 h-4 mr-2" />
-                Add Director/UBO
-              </Button>
+              {canWrite && (
+                <Button onClick={() => setShowForm(true)}>
+                  <Plus className="w-4 h-4 mr-2" />
+                  Add Director/UBO
+                </Button>
+              )}
             </div>
           ) : (
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
@@ -408,22 +414,24 @@ const DirectorsUboSection = ({ entityFilter }: DirectorsUboSectionProps) => {
                         <p className="text-sm text-muted-foreground">{item.title || "No title"}</p>
                       </div>
                     </div>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon" className="h-8 w-8">
-                          <MoreVertical className="w-4 h-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem onClick={() => handleEdit(item)}>Edit</DropdownMenuItem>
-                        <DropdownMenuItem
-                          onClick={() => setDeletingItem(item)}
-                          className="text-destructive"
-                        >
-                          Delete
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
+                    {canWrite && (
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="icon" className="h-8 w-8">
+                            <MoreVertical className="w-4 h-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem onClick={() => handleEdit(item)}>Edit</DropdownMenuItem>
+                          <DropdownMenuItem
+                            onClick={() => setDeletingItem(item)}
+                            className="text-destructive"
+                          >
+                            Delete
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    )}
                   </div>
 
                   <div className="flex flex-wrap gap-2 mb-3">

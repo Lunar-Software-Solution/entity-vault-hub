@@ -9,12 +9,14 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import EntityForm from "@/components/forms/EntityForm";
 import DeleteConfirmDialog from "@/components/shared/DeleteConfirmDialog";
+import { useUserRole } from "@/hooks/useUserRole";
 import type { EntityFormData } from "@/lib/formSchemas";
 import type { Entity } from "@/hooks/usePortalData";
 
 const EntitySection = () => {
   const navigate = useNavigate();
   const { data: entities, isLoading } = useEntities();
+  const { canWrite } = useUserRole();
   
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingEntity, setEditingEntity] = useState<Entity | null>(null);
@@ -88,10 +90,12 @@ const EntitySection = () => {
           <h2 className="text-2xl font-bold text-foreground mb-2">Entities</h2>
           <p className="text-muted-foreground">Manage your business or personal entities.</p>
         </div>
-        <Button className="gap-2" onClick={handleAddNew}>
-          <Plus className="w-4 h-4" />
-          Add Entity
-        </Button>
+        {canWrite && (
+          <Button className="gap-2" onClick={handleAddNew}>
+            <Plus className="w-4 h-4" />
+            Add Entity
+          </Button>
+        )}
       </div>
 
       {!entities || entities.length === 0 ? (
@@ -100,10 +104,12 @@ const EntitySection = () => {
             <Plus className="w-8 h-8 text-primary-foreground" />
           </div>
           <p className="text-muted-foreground mb-4">No entities registered yet.</p>
-          <Button className="gap-2" onClick={handleAddNew}>
-            <Plus className="w-4 h-4" />
-            Register Your First Entity
-          </Button>
+          {canWrite && (
+            <Button className="gap-2" onClick={handleAddNew}>
+              <Plus className="w-4 h-4" />
+              Register Your First Entity
+            </Button>
+          )}
         </div>
       ) : (
         <div className="space-y-3">
