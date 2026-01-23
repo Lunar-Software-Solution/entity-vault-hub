@@ -49,6 +49,7 @@ export const bankAccountSchema = z.object({
   swift_bic: z.string().trim().max(11).optional().or(z.literal("")),
   account_holder_name: z.string().trim().max(200).optional().or(z.literal("")),
   bank_address: z.string().trim().max(500).optional().or(z.literal("")),
+  is_primary: z.boolean().default(false),
 });
 
 export const creditCardSchema = z.object({
@@ -215,6 +216,7 @@ export type BankAccountFormData = {
   swift_bic?: string;
   account_holder_name?: string;
   bank_address?: string;
+  is_primary: boolean;
 };
 
 export type CreditCardFormData = {
