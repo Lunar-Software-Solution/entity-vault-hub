@@ -16,6 +16,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { Plus, Edit, Trash2, Search, Mail, CheckCircle2 } from "lucide-react";
+import { useUserRole } from "@/hooks/useUserRole";
 
 interface EmailAddress {
   id: string;
@@ -262,6 +263,7 @@ const EmailSection = () => {
   const [deletingEmail, setDeletingEmail] = useState<EmailAddress | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [entityFilter, setEntityFilter] = useState("all");
+  const { canWrite } = useUserRole();
 
   const { data: emailAddresses, isLoading: emailsLoading } = useEmailAddresses();
   const { data: mailServers, isLoading: serversLoading } = useMailServers();
@@ -364,10 +366,12 @@ const EmailSection = () => {
               ))}
             </SelectContent>
           </Select>
-          <Button onClick={() => setShowForm(true)} className="gap-2 ml-auto">
-            <Plus className="w-4 h-4" />
-            Add Email
-          </Button>
+          {canWrite && (
+            <Button onClick={() => setShowForm(true)} className="gap-2 ml-auto">
+              <Plus className="w-4 h-4" />
+              Add Email
+            </Button>
+          )}
         </div>
 
         <div className="overflow-x-auto">
@@ -410,24 +414,26 @@ const EmailSection = () => {
                     )}
                   </TableCell>
                   <TableCell>
-                    <div className="flex gap-1">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-8 w-8 text-primary"
-                        onClick={() => { setEditingEmail(email); setShowForm(true); }}
-                      >
-                        <Edit className="w-4 h-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-8 w-8 text-destructive"
-                        onClick={() => setDeletingEmail(email)}
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
-                    </div>
+                    {canWrite && (
+                      <div className="flex gap-1">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8 text-primary"
+                          onClick={() => { setEditingEmail(email); setShowForm(true); }}
+                        >
+                          <Edit className="w-4 h-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8 text-destructive"
+                          onClick={() => setDeletingEmail(email)}
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      </div>
+                    )}
                   </TableCell>
                 </TableRow>
               ))}

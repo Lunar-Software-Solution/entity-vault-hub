@@ -18,6 +18,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import DeleteConfirmDialog from "@/components/shared/DeleteConfirmDialog";
 import { Plus, Edit, Trash2, FileText, Building2, Search, ArrowUpDown, ArrowUp, ArrowDown, FolderOpen, Calendar, Monitor } from "lucide-react";
+import { useUserRole } from "@/hooks/useUserRole";
 import { useForm } from "react-hook-form";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Textarea } from "@/components/ui/textarea";
@@ -580,6 +581,8 @@ const SoftwareCatalogForm = ({
 };
 
 const SettingsSection = () => {
+  const { canWrite } = useUserRole();
+  
   const [showTypeForm, setShowTypeForm] = useState(false);
   const [editingType, setEditingType] = useState<TaxIdType | null>(null);
   const [deletingType, setDeletingType] = useState<TaxIdType | null>(null);
@@ -1032,10 +1035,12 @@ const SettingsSection = () => {
                     className="pl-9 w-full sm:w-64"
                   />
                 </div>
-                <Button onClick={() => setShowTypeForm(true)} size="sm" className="gap-2">
-                  <Plus className="w-4 h-4" />
-                  Add Type
-                </Button>
+                {canWrite && (
+                  <Button onClick={() => setShowTypeForm(true)} size="sm" className="gap-2">
+                    <Plus className="w-4 h-4" />
+                    Add Type
+                  </Button>
+                )}
               </div>
             </div>
             
@@ -1089,24 +1094,26 @@ const SettingsSection = () => {
                         </TableCell>
                         <TableCell className="text-muted-foreground text-sm">{type.description || "—"}</TableCell>
                         <TableCell>
-                          <div className="flex gap-1">
-                            <Button 
-                              variant="ghost" 
-                              size="icon" 
-                              className="h-8 w-8 text-primary hover:text-primary"
-                              onClick={() => { setEditingType(type); setShowTypeForm(true); }}
-                            >
-                              <Edit className="w-4 h-4" />
-                            </Button>
-                            <Button 
-                              variant="ghost" 
-                              size="icon" 
-                              className="h-8 w-8 text-destructive hover:text-destructive"
-                              onClick={() => setDeletingType(type)}
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </Button>
-                          </div>
+                          {canWrite && (
+                            <div className="flex gap-1">
+                              <Button 
+                                variant="ghost" 
+                                size="icon" 
+                                className="h-8 w-8 text-primary hover:text-primary"
+                                onClick={() => { setEditingType(type); setShowTypeForm(true); }}
+                              >
+                                <Edit className="w-4 h-4" />
+                              </Button>
+                              <Button 
+                                variant="ghost" 
+                                size="icon" 
+                                className="h-8 w-8 text-destructive hover:text-destructive"
+                                onClick={() => setDeletingType(type)}
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </Button>
+                            </div>
+                          )}
                         </TableCell>
                       </TableRow>
                     );
@@ -1138,10 +1145,12 @@ const SettingsSection = () => {
                     className="pl-9 w-full sm:w-64"
                   />
                 </div>
-                <Button onClick={() => setShowAuthorityForm(true)} size="sm" className="gap-2">
-                  <Plus className="w-4 h-4" />
-                  Add Authority
-                </Button>
+                {canWrite && (
+                  <Button onClick={() => setShowAuthorityForm(true)} size="sm" className="gap-2">
+                    <Plus className="w-4 h-4" />
+                    Add Authority
+                  </Button>
+                )}
               </div>
             </div>
             
@@ -1208,24 +1217,26 @@ const SettingsSection = () => {
                         </TableCell>
                         <TableCell className="text-muted-foreground text-sm">{authority.description || "—"}</TableCell>
                         <TableCell>
-                          <div className="flex gap-1">
-                            <Button 
-                              variant="ghost" 
-                              size="icon" 
-                              className="h-8 w-8 text-primary hover:text-primary"
-                              onClick={() => { setEditingAuthority(authority); setShowAuthorityForm(true); }}
-                            >
-                              <Edit className="w-4 h-4" />
-                            </Button>
-                            <Button 
-                              variant="ghost" 
-                              size="icon" 
-                              className="h-8 w-8 text-destructive hover:text-destructive"
-                              onClick={() => setDeletingAuthority(authority)}
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </Button>
-                          </div>
+                          {canWrite && (
+                            <div className="flex gap-1">
+                              <Button 
+                                variant="ghost" 
+                                size="icon" 
+                                className="h-8 w-8 text-primary hover:text-primary"
+                                onClick={() => { setEditingAuthority(authority); setShowAuthorityForm(true); }}
+                              >
+                                <Edit className="w-4 h-4" />
+                              </Button>
+                              <Button 
+                                variant="ghost" 
+                                size="icon" 
+                                className="h-8 w-8 text-destructive hover:text-destructive"
+                                onClick={() => setDeletingAuthority(authority)}
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </Button>
+                            </div>
+                          )}
                         </TableCell>
                       </TableRow>
                     );
@@ -1257,10 +1268,12 @@ const SettingsSection = () => {
                     className="pl-9 w-full sm:w-64"
                   />
                 </div>
-                <Button onClick={() => setShowDocTypeForm(true)} size="sm" className="gap-2">
-                  <Plus className="w-4 h-4" />
-                  Add Type
-                </Button>
+                {canWrite && (
+                  <Button onClick={() => setShowDocTypeForm(true)} size="sm" className="gap-2">
+                    <Plus className="w-4 h-4" />
+                    Add Type
+                  </Button>
+                )}
               </div>
             </div>
             
@@ -1315,24 +1328,26 @@ const SettingsSection = () => {
                       </TableCell>
                       <TableCell className="text-muted-foreground text-sm">{type.description || "—"}</TableCell>
                       <TableCell>
-                        <div className="flex gap-1">
-                          <Button 
-                            variant="ghost" 
-                            size="icon" 
-                            className="h-8 w-8 text-primary hover:text-primary"
-                            onClick={() => { setEditingDocType(type); setShowDocTypeForm(true); }}
-                          >
-                            <Edit className="w-4 h-4" />
-                          </Button>
-                          <Button 
-                            variant="ghost" 
-                            size="icon" 
-                            className="h-8 w-8 text-destructive hover:text-destructive"
-                            onClick={() => setDeletingDocType(type)}
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </Button>
-                        </div>
+                        {canWrite && (
+                          <div className="flex gap-1">
+                            <Button 
+                              variant="ghost" 
+                              size="icon" 
+                              className="h-8 w-8 text-primary hover:text-primary"
+                              onClick={() => { setEditingDocType(type); setShowDocTypeForm(true); }}
+                            >
+                              <Edit className="w-4 h-4" />
+                            </Button>
+                            <Button 
+                              variant="ghost" 
+                              size="icon" 
+                              className="h-8 w-8 text-destructive hover:text-destructive"
+                              onClick={() => setDeletingDocType(type)}
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </Button>
+                          </div>
+                        )}
                       </TableCell>
                     </TableRow>
                   ))}
@@ -1363,10 +1378,12 @@ const SettingsSection = () => {
                     className="pl-9 w-full sm:w-64"
                   />
                 </div>
-                <Button onClick={() => setShowFilingTypeForm(true)} size="sm" className="gap-2">
-                  <Plus className="w-4 h-4" />
-                  Add Type
-                </Button>
+                {canWrite && (
+                  <Button onClick={() => setShowFilingTypeForm(true)} size="sm" className="gap-2">
+                    <Plus className="w-4 h-4" />
+                    Add Type
+                  </Button>
+                )}
               </div>
             </div>
             
@@ -1430,24 +1447,26 @@ const SettingsSection = () => {
                       <TableCell className="text-foreground capitalize">{frequencyLabels[type.default_frequency] || type.default_frequency}</TableCell>
                       <TableCell className="text-muted-foreground text-sm">{type.description || "—"}</TableCell>
                       <TableCell>
-                        <div className="flex gap-1">
-                          <Button 
-                            variant="ghost" 
-                            size="icon" 
-                            className="h-8 w-8 text-primary hover:text-primary"
-                            onClick={() => { setEditingFilingType(type); setShowFilingTypeForm(true); }}
-                          >
-                            <Edit className="w-4 h-4" />
-                          </Button>
-                          <Button 
-                            variant="ghost" 
-                            size="icon" 
-                            className="h-8 w-8 text-destructive hover:text-destructive"
-                            onClick={() => setDeletingFilingType(type)}
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </Button>
-                        </div>
+                        {canWrite && (
+                          <div className="flex gap-1">
+                            <Button 
+                              variant="ghost" 
+                              size="icon" 
+                              className="h-8 w-8 text-primary hover:text-primary"
+                              onClick={() => { setEditingFilingType(type); setShowFilingTypeForm(true); }}
+                            >
+                              <Edit className="w-4 h-4" />
+                            </Button>
+                            <Button 
+                              variant="ghost" 
+                              size="icon" 
+                              className="h-8 w-8 text-destructive hover:text-destructive"
+                              onClick={() => setDeletingFilingType(type)}
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </Button>
+                          </div>
+                        )}
                       </TableCell>
                     </TableRow>
                   ))}
@@ -1473,9 +1492,11 @@ const SettingsSection = () => {
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                   <Input placeholder="Search software..." value={softwareSearch} onChange={(e) => setSoftwareSearch(e.target.value)} className="pl-9 w-full sm:w-64" />
                 </div>
-                <Button onClick={() => setShowSoftwareForm(true)} size="sm" className="gap-2">
-                  <Plus className="w-4 h-4" />Add Software
-                </Button>
+                {canWrite && (
+                  <Button onClick={() => setShowSoftwareForm(true)} size="sm" className="gap-2">
+                    <Plus className="w-4 h-4" />Add Software
+                  </Button>
+                )}
               </div>
             </div>
             <div className="overflow-x-auto">
@@ -1497,10 +1518,12 @@ const SettingsSection = () => {
                       <TableCell><Badge variant="outline">{softwareCategoryLabels[sw.category] || sw.category}</Badge></TableCell>
                       <TableCell className="text-muted-foreground">{sw.vendor || "-"}</TableCell>
                       <TableCell>
-                        <div className="flex items-center gap-1">
-                          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => { setEditingSoftware(sw); setShowSoftwareForm(true); }}><Edit className="w-4 h-4" /></Button>
-                          <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => setDeletingSoftware(sw)}><Trash2 className="w-4 h-4" /></Button>
-                        </div>
+                        {canWrite && (
+                          <div className="flex items-center gap-1">
+                            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => { setEditingSoftware(sw); setShowSoftwareForm(true); }}><Edit className="w-4 h-4" /></Button>
+                            <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => setDeletingSoftware(sw)}><Trash2 className="w-4 h-4" /></Button>
+                          </div>
+                        )}
                       </TableCell>
                     </TableRow>
                   ))}

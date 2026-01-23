@@ -230,10 +230,12 @@ const DocumentsSection = ({ entityFilter }: DocumentsSectionProps) => {
             Manage corporate documents across entities
           </p>
         </div>
-        <Button onClick={handleAddNew} className="gap-2" disabled={!entities?.length}>
-          <Plus className="w-4 h-4" />
-          Add Document
-        </Button>
+        {canWrite && (
+          <Button onClick={handleAddNew} className="gap-2" disabled={!entities?.length}>
+            <Plus className="w-4 h-4" />
+            Add Document
+          </Button>
+        )}
       </div>
 
       <div className="glass-card rounded-xl p-6">
@@ -381,26 +383,30 @@ const DocumentsSection = ({ entityFilter }: DocumentsSectionProps) => {
                             <Eye className="w-4 h-4" />
                           </Button>
                         )}
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-8 w-8 text-primary hover:text-primary"
-                          onClick={() => {
-                            setEditingDocument(doc);
-                            setSelectedEntityId(doc.entity_id);
-                            setShowForm(true);
-                          }}
-                        >
-                          <Edit className="w-4 h-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-8 w-8 text-destructive hover:text-destructive"
-                          onClick={() => setDeletingDocument(doc)}
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </Button>
+                        {canWrite && (
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8 text-primary hover:text-primary"
+                            onClick={() => {
+                              setEditingDocument(doc);
+                              setSelectedEntityId(doc.entity_id);
+                              setShowForm(true);
+                            }}
+                          >
+                            <Edit className="w-4 h-4" />
+                          </Button>
+                        )}
+                        {canWrite && (
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8 text-destructive hover:text-destructive"
+                            onClick={() => setDeletingDocument(doc)}
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        )}
                       </div>
                     </TableCell>
                   </TableRow>
