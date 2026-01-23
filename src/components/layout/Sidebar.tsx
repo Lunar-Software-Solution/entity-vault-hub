@@ -210,7 +210,7 @@ const Sidebar = ({
         {/* Header */}
         <div className={cn("p-3 border-b border-sidebar-border", collapsed && "px-2")}>
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg overflow-hidden flex-shrink-0">
+            <div className="w-8 h-8 rounded-lg overflow-hidden flex-shrink-0 bg-white p-1">
               <img src={braxLogo} alt="Entity Hub" className="w-full h-full object-contain" />
             </div>
             {!collapsed && (
