@@ -183,9 +183,6 @@ const EntityDetail = () => {
               <Badge variant={entity.status === "Active" ? "default" : "secondary"}>
                 {entity.status}
               </Badge>
-              {entity.is_verified && (
-                <Badge variant="outline">Verified</Badge>
-              )}
             </div>
           </div>
         </div>
