@@ -1,62 +1,106 @@
 
 
-# Plan: Add All Quick Actions to Dashboard
+# Plan: Add International Banking Fields to Bank Accounts
 
 ## Overview
-Expand the Quick Actions section in the dashboard to include buttons for all major data sections in the application, making it easy for users to quickly navigate to add new items.
+Extend the bank accounts feature to support international banking details including IBAN, SWIFT/BIC codes, account holder name, and bank address. This enables proper storage of accounts like Wise that have different details for domestic vs international transfers.
 
-## Current State
-The dashboard currently has 4 quick actions:
-- Add Bank Account
-- New Contract  
-- Add Filing
-- Add Address
+## Database Migration
 
-## Proposed Quick Actions (14 total)
-Based on the sidebar navigation structure, I'll add quick actions for all manageable sections:
+Add new columns to the `bank_accounts` table:
 
-**Corporate**
-- Add Entity (Building2 icon)
-- Add Director/UBO (Users icon)
-- Add Cap Table Entry (PieChart icon)
-- Add Service Provider (Briefcase icon)
-- Add Filing (Calendar icon) - already exists
+| Column | Type | Description |
+|--------|------|-------------|
+| `iban` | TEXT | International Bank Account Number (SEPA) |
+| `swift_bic` | TEXT | SWIFT/BIC code for international transfers |
+| `account_holder_name` | TEXT | Legal name on the account |
+| `bank_address` | TEXT | Full bank branch address |
 
-**Financial**
-- Add Bank Account (Wallet icon) - already exists
-- Add Credit Card (CreditCard icon)
-- Add Tax ID (Receipt icon)
+```sql
+ALTER TABLE public.bank_accounts 
+ADD COLUMN IF NOT EXISTS iban TEXT,
+ADD COLUMN IF NOT EXISTS swift_bic TEXT,
+ADD COLUMN IF NOT EXISTS account_holder_name TEXT,
+ADD COLUMN IF NOT EXISTS bank_address TEXT;
+```
 
-**Contact**
-- Add Phone Number (Phone icon)
-- Add Email (Mail icon)
-- Add Social Media (Share2 icon)
-- Add Address (MapPin icon) - already exists
+## Code Changes
 
-**Legal & Docs**
-- Add Document (FileText icon)
-- New Contract (FileText icon) - already exists
+### 1. Update Form Schema (`src/lib/formSchemas.ts`)
+- Add `iban` field (optional string)
+- Add `swift_bic` field (optional, max 11 characters per SWIFT standard)
+- Add `account_holder_name` field (optional string)
+- Add `bank_address` field (optional string)
 
-## Technical Implementation
+### 2. Update Bank Account Form (`src/components/forms/BankAccountForm.tsx`)
+Add new form fields organized in sections:
+- **Account Holder** section: Account holder name field
+- **Account Details** section: Existing fields plus IBAN
+- **Routing Information** section: Routing number and SWIFT/BIC
+- **Bank Information** section: Bank name, website, and address
 
-### File Changes
+### 3. Update Bank Accounts Display (`src/components/sections/BankAccountsSection.tsx`)
+Extend the account card to show:
+- Account holder name (if different from account name)
+- IBAN (when present, in addition to account number)
+- SWIFT/BIC code
+- Bank address
 
-**`src/components/dashboard/DashboardSection.tsx`**
+### 4. Update Entity Detail View (`src/components/entity-detail/LinkedBankAccounts.tsx`)
+Show key international details in the compact linked accounts view.
 
-1. **Update imports** - Add missing icons:
-   - `Users`, `PieChart`, `Briefcase`, `Phone`, `Mail`, `Receipt`
+### 5. Update Mutations (`src/hooks/usePortalMutations.ts`)
+Ensure create and update mutations include the new fields.
 
-2. **Expand quick actions array** - Replace the current 4 items with all 14 quick actions, organized by category
+## Visual Layout (Updated Form)
 
-3. **Update grid layout** - Change from `grid-cols-2` to a responsive layout that accommodates more items (e.g., `grid-cols-2 md:grid-cols-3 lg:grid-cols-4`)
+```text
++--------------------------------------------------+
+| Linked Entity: [Select entity dropdown]          |
++--------------------------------------------------+
+| Account Holder Name    | Account Name (nickname) |
+| [LUNAR TECHNOLOGIES]   | [Primary EUR Account]   |
++--------------------------------------------------+
+| Bank Name              | Bank Website            |
+| [Wise]                 | [https://wise.com]      |
++--------------------------------------------------+
+| Account Number         | IBAN                    |
+| [****1234]             | [BE95 9676 8175 4358]   |
++--------------------------------------------------+
+| Routing Number         | SWIFT/BIC               |
+| [026073150]            | [TRWIBEB1XXX]           |
++--------------------------------------------------+
+| Account Type           | Currency                |
+| [Checking]             | [EUR]                   |
++--------------------------------------------------+
+| Bank Address                                     |
+| [Wise, Rue du Trône 100, 3rd floor, Brussels...] |
++--------------------------------------------------+
+```
 
-4. **Update button styling** - Ensure consistent styling across all quick action buttons
+## Files to Modify
 
-### Visual Layout
-The Quick Actions section will display in a responsive grid:
-- Mobile: 2 columns
-- Tablet: 3 columns  
-- Desktop: 4 columns
+| File | Changes |
+|------|---------|
+| `src/lib/formSchemas.ts` | Add 4 new optional fields to schema |
+| `src/components/forms/BankAccountForm.tsx` | Add form inputs for new fields |
+| `src/components/sections/BankAccountsSection.tsx` | Display new fields in card |
+| `src/components/entity-detail/LinkedBankAccounts.tsx` | Show international details |
+| `src/hooks/usePortalMutations.ts` | Include new fields in mutations |
 
-This allows all 14 quick actions to be visible without excessive scrolling while maintaining a clean, organized appearance.
+## Example Result
+
+After implementation, your Wise accounts will display like:
+
+**EUR Account Card:**
+- Account Holder: LUNAR TECHNOLOGIES OOD
+- IBAN: BE95 9676 8175 4358
+- SWIFT/BIC: TRWIBEB1XXX
+- Bank: Wise, Rue du Trône 100, 3rd floor, Brussels, 1050, Belgium
+
+**USD Account Card:**
+- Account Holder: LUNAR TECHNOLOGIES OOD
+- Account: 8313453359 | Routing: 026073150
+- SWIFT/BIC: CMFGUS33
+- Bank: Community Federal Savings Bank, 89-16 Jamaica Ave, Woodhaven, NY, 11421, United States
 
