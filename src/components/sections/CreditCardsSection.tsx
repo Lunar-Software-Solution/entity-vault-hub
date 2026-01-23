@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Plus, CreditCard, MoreVertical, Edit2, Trash2, Building2, Eye, EyeOff, ExternalLink } from "lucide-react";
+import { Plus, CreditCard, MoreVertical, Edit2, Trash2, Building2, Eye, EyeOff, ExternalLink, Copy, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useCreditCards, useEntities } from "@/hooks/usePortalData";
 import { useCreateCreditCard, useUpdateCreditCard, useDeleteCreditCard } from "@/hooks/usePortalMutations";
@@ -14,6 +14,7 @@ import CardBrandIcon from "@/components/shared/CardBrandIcon";
 import { detectCardBrand, getCardBrandInfo } from "@/lib/cardBrandUtils";
 import { format } from "date-fns";
 import { useUserRole } from "@/hooks/useUserRole";
+import { toast } from "sonner";
 import type { CreditCard as CreditCardType } from "@/hooks/usePortalData";
 import type { CreditCardFormData } from "@/lib/formSchemas";
 
@@ -30,6 +31,7 @@ const CreditCardsSection = ({ entityFilter }: CreditCardsSectionProps) => {
   const [editingCard, setEditingCard] = useState<CreditCardType | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [revealedCards, setRevealedCards] = useState<Set<string>>(new Set());
+  const [copiedAll, setCopiedAll] = useState(false);
   
   const createCard = useCreateCreditCard();
   const updateCard = useUpdateCreditCard();
@@ -96,6 +98,46 @@ const CreditCardsSection = ({ entityFilter }: CreditCardsSectionProps) => {
     window.open(url, '_blank', 'noopener,noreferrer');
   };
 
+  const formatAllCards = (cards: CreditCardType[]): string => {
+    return cards.map(card => {
+      const lines = [
+        `💳 ${card.name}`,
+      ];
+      
+      if (card.cardholder_name) {
+        lines.push(`Cardholder: ${card.cardholder_name}`);
+      }
+      lines.push(`Card Number: ${card.card_number}`);
+      
+      if (card.expiry_date) {
+        lines.push(`Expiry: ${card.expiry_date}`);
+      }
+      if ((card as any).security_code) {
+        lines.push(`CVV: ${(card as any).security_code}`);
+      }
+      lines.push(`Credit Limit: $${Number(card.credit_limit).toLocaleString()}`);
+      
+      if (card.due_date) {
+        lines.push(`Due Date: ${format(new Date(card.due_date), "MMM d, yyyy")}`);
+      }
+      if ((card as any).billing_address) {
+        lines.push(`Billing Address: ${(card as any).billing_address}`);
+      }
+      
+      return lines.join('\n');
+    }).join('\n\n---\n\n');
+  };
+
+  const copyAllCards = async () => {
+    if (filteredCards.length === 0) return;
+    
+    const text = formatAllCards(filteredCards);
+    await navigator.clipboard.writeText(text);
+    setCopiedAll(true);
+    toast.success(`Copied ${filteredCards.length} credit card(s) to clipboard`);
+    setTimeout(() => setCopiedAll(false), 2000);
+  };
+
   if (isLoading) {
     return (
       <div className="space-y-8">
@@ -132,12 +174,20 @@ const CreditCardsSection = ({ entityFilter }: CreditCardsSectionProps) => {
               : "View and manage your credit cards."}
           </p>
         </div>
-        {canWrite && (
-          <Button className="gap-2" onClick={() => setIsFormOpen(true)}>
-            <Plus className="w-4 h-4" />
-            Add Card
-          </Button>
-        )}
+        <div className="flex items-center gap-2">
+          {filteredCards.length > 0 && (
+            <Button variant="outline" className="gap-2" onClick={copyAllCards}>
+              {copiedAll ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+              Copy All
+            </Button>
+          )}
+          {canWrite && (
+            <Button className="gap-2" onClick={() => setIsFormOpen(true)}>
+              <Plus className="w-4 h-4" />
+              Add Card
+            </Button>
+          )}
+        </div>
       </div>
 
       {isEmpty ? (
