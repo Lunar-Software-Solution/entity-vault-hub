@@ -725,7 +725,69 @@ const SettingsSection = () => {
       : <ArrowDown className="w-4 h-4 ml-1" />;
   };
 
-  if (typesLoading || authoritiesLoading || filingTypesLoading) {
+  // Filter and sort Document Types
+  const filteredAndSortedDocTypes = useMemo(() => {
+    if (!documentTypes) return [];
+    
+    let filtered = documentTypes;
+    
+    // Apply search filter
+    if (docTypeSearch.trim()) {
+      const searchLower = docTypeSearch.toLowerCase();
+      filtered = documentTypes.filter((type) => 
+        type.code.toLowerCase().includes(searchLower) ||
+        type.name.toLowerCase().includes(searchLower) ||
+        type.category.toLowerCase().includes(searchLower) ||
+        (type.description || "").toLowerCase().includes(searchLower)
+      );
+    }
+    
+    // Apply sort
+    return [...filtered].sort((a, b) => {
+      const aVal = (a[docTypeSortKey] || "").toLowerCase();
+      const bVal = (b[docTypeSortKey] || "").toLowerCase();
+      
+      if (docTypeSortDirection === "asc") {
+        return aVal.localeCompare(bVal);
+      } else {
+        return bVal.localeCompare(aVal);
+      }
+    });
+  }, [documentTypes, docTypeSearch, docTypeSortKey, docTypeSortDirection]);
+
+  const handleDocTypeSort = (key: DocTypeSortKey) => {
+    if (docTypeSortKey === key) {
+      setDocTypeSortDirection(prev => prev === "asc" ? "desc" : "asc");
+    } else {
+      setDocTypeSortKey(key);
+      setDocTypeSortDirection("asc");
+    }
+  };
+
+  const getDocTypeSortIcon = (key: DocTypeSortKey) => {
+    if (docTypeSortKey !== key) return <ArrowUpDown className="w-4 h-4 ml-1 opacity-50" />;
+    return docTypeSortDirection === "asc" 
+      ? <ArrowUp className="w-4 h-4 ml-1" /> 
+      : <ArrowDown className="w-4 h-4 ml-1" />;
+  };
+
+  const handleDocTypeSubmit = (data: DocumentTypeFormData) => {
+    const payload = { 
+      ...data, 
+      description: data.description || null,
+    };
+    if (editingDocType) {
+      updateDocTypeMutation.mutate({ id: editingDocType.id, ...payload }, {
+        onSuccess: () => { setShowDocTypeForm(false); setEditingDocType(null); },
+      });
+    } else {
+      createDocTypeMutation.mutate(payload, {
+        onSuccess: () => setShowDocTypeForm(false),
+      });
+    }
+  };
+
+  if (typesLoading || authoritiesLoading || filingTypesLoading || docTypesLoading) {
     return (
       <div className="space-y-6">
         <Skeleton className="h-8 w-48" />
@@ -738,11 +800,11 @@ const SettingsSection = () => {
     <div className="space-y-6">
       <div>
         <h2 className="text-2xl font-bold text-foreground">Settings</h2>
-        <p className="text-muted-foreground">Manage lookup tables for Tax ID Types, Issuing Authorities, and Filing Types</p>
+        <p className="text-muted-foreground">Manage lookup tables for Tax ID Types, Issuing Authorities, Document Types, and Filing Types</p>
       </div>
 
       <Tabs defaultValue="tax-id-types" className="w-full">
-        <TabsList className="grid w-full max-w-lg grid-cols-3">
+        <TabsList className="grid w-full max-w-2xl grid-cols-4">
           <TabsTrigger value="tax-id-types" className="gap-2">
             <FileText className="w-4 h-4" />
             Tax ID Types
@@ -750,6 +812,10 @@ const SettingsSection = () => {
           <TabsTrigger value="issuing-authorities" className="gap-2">
             <Building2 className="w-4 h-4" />
             Authorities
+          </TabsTrigger>
+          <TabsTrigger value="document-types" className="gap-2">
+            <FolderOpen className="w-4 h-4" />
+            Doc Types
           </TabsTrigger>
           <TabsTrigger value="filing-types" className="gap-2">
             <Calendar className="w-4 h-4" />
@@ -982,6 +1048,112 @@ const SettingsSection = () => {
           </div>
         </TabsContent>
 
+        <TabsContent value="document-types" className="mt-6">
+          <div className="glass-card rounded-xl p-6">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-4">
+              <h3 className="text-lg font-semibold text-foreground">Document Types</h3>
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full sm:w-auto">
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                  <Input
+                    placeholder="Search document types..."
+                    value={docTypeSearch}
+                    onChange={(e) => setDocTypeSearch(e.target.value)}
+                    className="pl-9 w-full sm:w-64"
+                  />
+                </div>
+                <Button onClick={() => setShowDocTypeForm(true)} size="sm" className="gap-2">
+                  <Plus className="w-4 h-4" />
+                  Add Type
+                </Button>
+              </div>
+            </div>
+            
+            <div className="overflow-x-auto">
+              <Table className="table-fixed w-full">
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="w-[100px]">
+                      <button 
+                        onClick={() => handleDocTypeSort("code")} 
+                        className="flex items-center hover:text-foreground transition-colors text-foreground"
+                      >
+                        Code {getDocTypeSortIcon("code")}
+                      </button>
+                    </TableHead>
+                    <TableHead className="w-[200px]">
+                      <button 
+                        onClick={() => handleDocTypeSort("name")} 
+                        className="flex items-center hover:text-foreground transition-colors text-foreground"
+                      >
+                        Name {getDocTypeSortIcon("name")}
+                      </button>
+                    </TableHead>
+                    <TableHead className="w-[100px]">
+                      <button 
+                        onClick={() => handleDocTypeSort("category")} 
+                        className="flex items-center hover:text-foreground transition-colors text-foreground"
+                      >
+                        Category {getDocTypeSortIcon("category")}
+                      </button>
+                    </TableHead>
+                    <TableHead className="w-auto">
+                      <button 
+                        onClick={() => handleDocTypeSort("description")} 
+                        className="flex items-center hover:text-foreground transition-colors text-foreground"
+                      >
+                        Description {getDocTypeSortIcon("description")}
+                      </button>
+                    </TableHead>
+                    <TableHead className="w-[100px] text-foreground">Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {filteredAndSortedDocTypes.map((type) => (
+                    <TableRow key={type.id}>
+                      <TableCell className="font-mono font-medium text-foreground">{type.code}</TableCell>
+                      <TableCell className="text-foreground">{type.name}</TableCell>
+                      <TableCell>
+                        <Badge variant="outline" className={`text-xs ${categoryColors[type.category] || categoryColors.Other}`}>
+                          {type.category}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-muted-foreground text-sm">{type.description || "—"}</TableCell>
+                      <TableCell>
+                        <div className="flex gap-1">
+                          <Button 
+                            variant="ghost" 
+                            size="icon" 
+                            className="h-8 w-8 text-primary hover:text-primary"
+                            onClick={() => { setEditingDocType(type); setShowDocTypeForm(true); }}
+                          >
+                            <Edit className="w-4 h-4" />
+                          </Button>
+                          <Button 
+                            variant="ghost" 
+                            size="icon" 
+                            className="h-8 w-8 text-destructive hover:text-destructive"
+                            onClick={() => setDeletingDocType(type)}
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                  {!filteredAndSortedDocTypes.length && (
+                    <TableRow>
+                      <TableCell colSpan={5} className="text-center text-muted-foreground py-8">
+                        {docTypeSearch ? "No document types match your search" : "No document types defined yet"}
+                      </TableCell>
+                    </TableRow>
+                  )}
+                </TableBody>
+              </Table>
+            </div>
+          </div>
+        </TabsContent>
+
         <TabsContent value="filing-types" className="mt-6">
           <div className="glass-card rounded-xl p-6">
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-4">
@@ -1144,6 +1316,21 @@ const SettingsSection = () => {
         </DialogContent>
       </Dialog>
 
+      {/* Document Type Dialog */}
+      <Dialog open={showDocTypeForm} onOpenChange={() => { setShowDocTypeForm(false); setEditingDocType(null); }}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>{editingDocType ? "Edit Document Type" : "Add Document Type"}</DialogTitle>
+          </DialogHeader>
+          <DocumentTypeForm
+            item={editingDocType}
+            onSubmit={handleDocTypeSubmit}
+            onCancel={() => { setShowDocTypeForm(false); setEditingDocType(null); }}
+            isLoading={createDocTypeMutation.isPending || updateDocTypeMutation.isPending}
+          />
+        </DialogContent>
+      </Dialog>
+
       {/* Delete Confirmations */}
       <DeleteConfirmDialog
         open={!!deletingType}
@@ -1176,6 +1363,17 @@ const SettingsSection = () => {
         title="Delete Filing Type"
         description={`Are you sure you want to delete "${deletingFilingType?.code} - ${deletingFilingType?.name}"? This may affect existing filings using this type.`}
         isLoading={deleteFilingTypeMutation.isPending}
+      />
+
+      <DeleteConfirmDialog
+        open={!!deletingDocType}
+        onOpenChange={() => setDeletingDocType(null)}
+        onConfirm={() => {
+          if (deletingDocType) deleteDocTypeMutation.mutate(deletingDocType.id, { onSuccess: () => setDeletingDocType(null) });
+        }}
+        title="Delete Document Type"
+        description={`Are you sure you want to delete "${deletingDocType?.code} - ${deletingDocType?.name}"? This may affect existing documents using this type.`}
+        isLoading={deleteDocTypeMutation.isPending}
       />
     </div>
   );
