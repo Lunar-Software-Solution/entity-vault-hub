@@ -23,7 +23,9 @@ const Auth = () => {
   // Check multiple sources for the invite token
   // 1. Query parameter: ?invite=xxx
   // 2. Hash fragment: #invite=xxx (fallback if Brevo strips query params)
-  const getInviteToken = () => {
+  // 3. Full URL search (in case of redirect issues)
+  const getInviteToken = (): string | null => {
+    // First try query params
     const queryToken = searchParams.get("invite");
     if (queryToken) return queryToken;
     
@@ -31,8 +33,16 @@ const Auth = () => {
     const hash = window.location.hash;
     if (hash.includes("invite=")) {
       const match = hash.match(/invite=([^&]+)/);
-      return match ? match[1] : null;
+      if (match) return match[1];
     }
+    
+    // Check full URL search string directly (handles edge cases)
+    const fullSearch = window.location.search;
+    if (fullSearch.includes("invite=")) {
+      const match = fullSearch.match(/invite=([^&]+)/);
+      if (match) return match[1];
+    }
+    
     return null;
   };
   
