@@ -208,7 +208,7 @@ const AddressesSection = ({ entityFilter }: AddressesSectionProps) => {
                   <Button 
                     variant="outline" 
                     size="sm" 
-                    className="flex-1 gap-2"
+                    className="flex-1 gap-2 text-foreground border-border/60 hover:bg-primary/10 hover:text-primary hover:border-primary/50"
                     onClick={() => handleCopyAddress(address)}
                   >
                     <Copy className="w-3 h-3" />
@@ -217,7 +217,7 @@ const AddressesSection = ({ entityFilter }: AddressesSectionProps) => {
                   <Button 
                     variant="outline" 
                     size="sm" 
-                    className="flex-1 gap-2"
+                    className="flex-1 gap-2 text-foreground border-border/60 hover:bg-primary/10 hover:text-primary hover:border-primary/50"
                     onClick={() => handleViewOnMap(address)}
                   >
                     <ExternalLink className="w-3 h-3" />
