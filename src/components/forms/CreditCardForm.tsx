@@ -3,6 +3,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { creditCardSchema, CreditCardFormData } from "@/lib/formSchemas";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import type { CreditCard } from "@/hooks/usePortalData";
@@ -39,6 +40,8 @@ const CreditCardForm = ({ card, onSubmit, onCancel, isLoading }: CreditCardFormP
       due_date: card?.due_date ?? "",
       card_color: card?.card_color ?? "from-zinc-800 to-zinc-600",
       entity_id: (card as any)?.entity_id ?? "",
+      security_code: (card as any)?.security_code ?? "",
+      billing_address: (card as any)?.billing_address ?? "",
     },
   });
 
@@ -102,6 +105,14 @@ const CreditCardForm = ({ card, onSubmit, onCancel, isLoading }: CreditCardFormP
             </FormItem>
           )} />
 
+          <FormField control={form.control} name="security_code" render={({ field }) => (
+            <FormItem>
+              <FormLabel>Security Code (CVV)</FormLabel>
+              <FormControl><Input type="password" placeholder="***" maxLength={4} {...field} /></FormControl>
+              <FormMessage />
+            </FormItem>
+          )} />
+
           <FormField control={form.control} name="credit_limit" render={({ field }) => (
             <FormItem>
               <FormLabel>Credit Limit *</FormLabel>
@@ -134,6 +145,20 @@ const CreditCardForm = ({ card, onSubmit, onCancel, isLoading }: CreditCardFormP
                   ))}
                 </SelectContent>
               </Select>
+              <FormMessage />
+            </FormItem>
+          )} />
+
+          <FormField control={form.control} name="billing_address" render={({ field }) => (
+            <FormItem className="md:col-span-2">
+              <FormLabel>Billing Address</FormLabel>
+              <FormControl>
+                <Textarea 
+                  placeholder="123 Main Street, City, State, ZIP, Country" 
+                  className="min-h-[80px]"
+                  {...field} 
+                />
+              </FormControl>
               <FormMessage />
             </FormItem>
           )} />

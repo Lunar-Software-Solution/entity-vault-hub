@@ -61,6 +61,8 @@ export const creditCardSchema = z.object({
   due_date: z.string().optional().or(z.literal("")),
   card_color: z.string().default("from-zinc-800 to-zinc-600"),
   entity_id: z.string().uuid().optional().or(z.literal("")),
+  security_code: z.string().trim().max(4).optional().or(z.literal("")),
+  billing_address: z.string().trim().max(500).optional().or(z.literal("")),
 });
 
 export const addressSchema = z.object({
@@ -225,6 +227,8 @@ export type CreditCardFormData = {
   due_date?: string;
   card_color: string;
   entity_id?: string;
+  security_code?: string;
+  billing_address?: string;
 };
 
 export type AddressFormData = {

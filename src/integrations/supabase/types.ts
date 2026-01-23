@@ -522,6 +522,7 @@ export type Database = {
       }
       credit_cards: {
         Row: {
+          billing_address: string | null
           card_color: string
           card_number: string
           cardholder_name: string | null
@@ -533,9 +534,11 @@ export type Database = {
           id: string
           issuer_website: string | null
           name: string
+          security_code: string | null
           updated_at: string
         }
         Insert: {
+          billing_address?: string | null
           card_color?: string
           card_number: string
           cardholder_name?: string | null
@@ -547,9 +550,11 @@ export type Database = {
           id?: string
           issuer_website?: string | null
           name: string
+          security_code?: string | null
           updated_at?: string
         }
         Update: {
+          billing_address?: string | null
           card_color?: string
           card_number?: string
           cardholder_name?: string | null
@@ -561,6 +566,7 @@ export type Database = {
           id?: string
           issuer_website?: string | null
           name?: string
+          security_code?: string | null
           updated_at?: string
         }
         Relationships: [

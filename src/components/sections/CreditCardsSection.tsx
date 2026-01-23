@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Plus, CreditCard, MoreVertical, Edit2, Trash2, Building2 } from "lucide-react";
+import { Plus, CreditCard, MoreVertical, Edit2, Trash2, Building2, Eye, EyeOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useCreditCards, useEntities } from "@/hooks/usePortalData";
 import { useCreateCreditCard, useUpdateCreditCard, useDeleteCreditCard } from "@/hooks/usePortalMutations";
@@ -24,6 +24,7 @@ const CreditCardsSection = ({ entityFilter }: CreditCardsSectionProps) => {
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingCard, setEditingCard] = useState<CreditCardType | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [revealedCards, setRevealedCards] = useState<Set<string>>(new Set());
   
   const createCard = useCreateCreditCard();
   const updateCard = useUpdateCreditCard();
@@ -37,6 +38,8 @@ const CreditCardsSection = ({ entityFilter }: CreditCardsSectionProps) => {
       due_date: data.due_date || null,
       issuer_website: data.issuer_website || null,
       entity_id: data.entity_id || null,
+      security_code: data.security_code || null,
+      billing_address: data.billing_address || null,
     };
     
     if (editingCard) {
@@ -62,6 +65,26 @@ const CreditCardsSection = ({ entityFilter }: CreditCardsSectionProps) => {
   const handleCloseForm = () => {
     setIsFormOpen(false);
     setEditingCard(null);
+  };
+
+  const toggleReveal = (cardId: string) => {
+    setRevealedCards(prev => {
+      const next = new Set(prev);
+      if (next.has(cardId)) {
+        next.delete(cardId);
+      } else {
+        next.add(cardId);
+      }
+      return next;
+    });
+  };
+
+  const maskCardNumber = (number: string): string => {
+    // Show only last 4 digits
+    const cleanNumber = number.replace(/\s/g, '');
+    if (cleanNumber.length <= 4) return number;
+    const lastFour = cleanNumber.slice(-4);
+    return `****-****-****-${lastFour}`;
   };
 
   if (isLoading) {
@@ -120,6 +143,7 @@ const CreditCardsSection = ({ entityFilter }: CreditCardsSectionProps) => {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {filteredCards.map((card) => {
             const linkedEntity = entities?.find(e => e.id === card.entity_id);
+            const isRevealed = revealedCards.has(card.id);
             return (
               <div key={card.id} className="glass-card rounded-xl overflow-hidden">
                 {/* Card Visual */}
@@ -149,13 +173,27 @@ const CreditCardsSection = ({ entityFilter }: CreditCardsSectionProps) => {
                         </DropdownMenuContent>
                       </DropdownMenu>
                     </div>
-                    <p className="font-mono text-lg tracking-wider mb-4">{card.card_number}</p>
+                    
+                    {/* Card Number with Reveal Toggle */}
+                    <div className="flex items-center gap-2 mb-4">
+                      <p className="font-mono text-lg tracking-wider">
+                        {isRevealed ? card.card_number : maskCardNumber(card.card_number)}
+                      </p>
+                      <button 
+                        onClick={() => toggleReveal(card.id)}
+                        className="p-1 hover:bg-white/20 rounded transition-colors"
+                        title={isRevealed ? "Hide card number" : "Show card number"}
+                      >
+                        {isRevealed ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                      </button>
+                    </div>
+                    
                     <div className="flex items-center justify-between">
                       <div>
                         <p className="text-xs text-white/60">Card Holder</p>
                         <p className="font-medium">{card.cardholder_name || "CARD HOLDER"}</p>
                       </div>
-                      <div>
+                      <div className="text-right">
                         <p className="text-xs text-white/60">Expires</p>
                         <p className="font-medium">{card.expiry_date || "—"}</p>
                       </div>
@@ -186,7 +224,23 @@ const CreditCardsSection = ({ entityFilter }: CreditCardsSectionProps) => {
                         <span className="font-medium text-foreground">{format(new Date(card.due_date), "MMM d, yyyy")}</span>
                       </div>
                     )}
+                    {(card as any).security_code && (
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm text-muted-foreground">Security Code</span>
+                        <span className="font-mono text-foreground">
+                          {isRevealed ? (card as any).security_code : "***"}
+                        </span>
+                      </div>
+                    )}
                   </div>
+
+                  {/* Billing Address */}
+                  {(card as any).billing_address && (
+                    <div className="pt-3 border-t border-border/50">
+                      <p className="text-xs text-muted-foreground mb-1">Billing Address</p>
+                      <p className="text-sm text-foreground">{(card as any).billing_address}</p>
+                    </div>
+                  )}
                 </div>
               </div>
             );
