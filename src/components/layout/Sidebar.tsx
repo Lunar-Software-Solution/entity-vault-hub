@@ -12,7 +12,7 @@ import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, 
   DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger 
 } from "@/components/ui/dropdown-menu";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import GravatarAvatar from "@/components/shared/GravatarAvatar";
 import { Button } from "@/components/ui/button";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
@@ -268,11 +268,11 @@ const Sidebar = ({
                   collapsed && "justify-center"
                 )}
               >
-                <Avatar className="h-7 w-7 flex-shrink-0">
-                  <AvatarFallback className="bg-primary text-primary-foreground text-xs font-medium">
-                    {userInitials}
-                  </AvatarFallback>
-                </Avatar>
+                <GravatarAvatar
+                  email={userEmail}
+                  name={userEmail.split("@")[0]}
+                  size="sm"
+                />
                 {!collapsed && (
                   <>
                     <div className="flex-1 text-left min-w-0">
