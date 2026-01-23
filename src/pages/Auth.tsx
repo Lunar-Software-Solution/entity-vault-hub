@@ -173,7 +173,7 @@ const Auth = () => {
           {/* Logo and Title */}
           <div className="text-center space-y-4">
             <div className="w-16 h-16 mx-auto rounded-xl overflow-hidden bg-primary/10 flex items-center justify-center">
-              <img src={braxLogo} alt="BraxTech" className="w-12 h-12 object-contain" />
+              <img src={braxLogo} alt="Entity Hub" className="w-12 h-12 object-contain" />
             </div>
             <div>
               {invitation ? (
@@ -200,7 +200,7 @@ const Auth = () => {
                   <p className="text-muted-foreground mt-1">
                     {isLogin
                       ? "Sign in to access your portal"
-                      : "Sign up to get started with BraxTech"}
+                      : "Sign up to get started with Entity Hub"}
                   </p>
                 </>
               )}
@@ -284,7 +284,7 @@ const Auth = () => {
 
         {/* Footer */}
         <p className="text-center text-xs text-muted-foreground mt-6">
-          By continuing, you agree to BraxTech's Terms of Service and Privacy Policy.
+          By continuing, you agree to Entity Hub's Terms of Service and Privacy Policy.
         </p>
       </div>
     </div>
