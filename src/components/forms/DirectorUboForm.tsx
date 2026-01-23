@@ -1,6 +1,7 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -21,6 +22,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { countries } from "@/lib/countries";
+import IdDocumentUpload from "./IdDocumentUpload";
 
 const directorUboSchema = z.object({
   name: z.string().min(1, "Name is required"),
@@ -41,6 +43,8 @@ const directorUboSchema = z.object({
   id_document_type: z.string().optional(),
   id_document_number: z.string().optional(),
   id_expiry_date: z.string().optional(),
+  id_document_file_path: z.string().optional(),
+  id_document_file_name: z.string().optional(),
   is_pep: z.boolean().default(false),
   pep_details: z.string().optional(),
   is_active: z.boolean().default(true),
@@ -109,6 +113,8 @@ export const DirectorUboForm = ({
   onCancel,
   isLoading,
 }: DirectorUboFormProps) => {
+  const [directorId] = useState(() => item?.id || crypto.randomUUID());
+  
   const form = useForm<DirectorUboFormData>({
     resolver: zodResolver(directorUboSchema),
     defaultValues: {
@@ -130,6 +136,8 @@ export const DirectorUboForm = ({
       id_document_type: item?.id_document_type || "",
       id_document_number: item?.id_document_number || "",
       id_expiry_date: item?.id_expiry_date || "",
+      id_document_file_path: item?.id_document_file_path || "",
+      id_document_file_name: item?.id_document_file_name || "",
       is_pep: item?.is_pep || false,
       pep_details: item?.pep_details || "",
       is_active: item?.is_active ?? true,
@@ -452,6 +460,20 @@ export const DirectorUboForm = ({
                 <FormMessage />
               </FormItem>
             )}
+          />
+        </div>
+
+        {/* ID Document Upload */}
+        <div>
+          <FormLabel className="mb-2 block">Upload ID Document</FormLabel>
+          <IdDocumentUpload
+            directorId={directorId}
+            existingFilePath={form.getValues("id_document_file_path")}
+            existingFileName={form.getValues("id_document_file_name")}
+            onUploadComplete={(filePath, fileName) => {
+              form.setValue("id_document_file_path", filePath);
+              form.setValue("id_document_file_name", fileName);
+            }}
           />
         </div>
 

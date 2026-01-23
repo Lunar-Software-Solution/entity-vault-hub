@@ -569,6 +569,8 @@ export type Database = {
           email: string | null
           entity_id: string
           id: string
+          id_document_file_name: string | null
+          id_document_file_path: string | null
           id_document_number: string | null
           id_document_type: string | null
           id_expiry_date: string | null
@@ -597,6 +599,8 @@ export type Database = {
           email?: string | null
           entity_id: string
           id?: string
+          id_document_file_name?: string | null
+          id_document_file_path?: string | null
           id_document_number?: string | null
           id_document_type?: string | null
           id_expiry_date?: string | null
@@ -625,6 +629,8 @@ export type Database = {
           email?: string | null
           entity_id?: string
           id?: string
+          id_document_file_name?: string | null
+          id_document_file_path?: string | null
           id_document_number?: string | null
           id_document_type?: string | null
           id_expiry_date?: string | null
