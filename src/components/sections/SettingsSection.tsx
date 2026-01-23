@@ -1,10 +1,11 @@
 import { useState, useMemo } from "react";
-import { useTaxIdTypes, useIssuingAuthorities, useDocumentTypes, useFilingTypes, type TaxIdType, type IssuingAuthority, type DocumentType, type FilingType } from "@/hooks/usePortalData";
+import { useTaxIdTypes, useIssuingAuthorities, useDocumentTypes, useFilingTypes, useSoftwareCatalog, type TaxIdType, type IssuingAuthority, type DocumentType, type FilingType, type SoftwareCatalog } from "@/hooks/usePortalData";
 import { 
   useCreateTaxIdType, useUpdateTaxIdType, useDeleteTaxIdType,
   useCreateIssuingAuthority, useUpdateIssuingAuthority, useDeleteIssuingAuthority,
   useCreateDocumentType, useUpdateDocumentType, useDeleteDocumentType,
-  useCreateFilingType, useUpdateFilingType, useDeleteFilingType
+  useCreateFilingType, useUpdateFilingType, useDeleteFilingType,
+  useCreateSoftwareCatalog, useUpdateSoftwareCatalog, useDeleteSoftwareCatalog
 } from "@/hooks/usePortalMutations";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -16,7 +17,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 
 import { Badge } from "@/components/ui/badge";
 import DeleteConfirmDialog from "@/components/shared/DeleteConfirmDialog";
-import { Plus, Edit, Trash2, FileText, Building2, Search, ArrowUpDown, ArrowUp, ArrowDown, FolderOpen, Calendar } from "lucide-react";
+import { Plus, Edit, Trash2, FileText, Building2, Search, ArrowUpDown, ArrowUp, ArrowDown, FolderOpen, Calendar, Monitor } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Textarea } from "@/components/ui/textarea";
@@ -233,6 +234,7 @@ type AuthoritySortKey = "name" | "country" | "province_state" | "description";
 type TypeSortKey = "code" | "label" | "description";
 type DocTypeSortKey = "code" | "name" | "category" | "description";
 type FilingTypeSortKey = "code" | "name" | "category" | "default_frequency" | "description";
+type SoftwareSortKey = "name" | "category" | "vendor" | "website";
 type SortDirection = "asc" | "desc";
 
 // Filing Type Form
@@ -451,6 +453,132 @@ const DocumentTypeForm = ({
   );
 };
 
+// Software Catalog Form
+interface SoftwareCatalogFormData {
+  name: string;
+  category: string;
+  vendor?: string;
+  website?: string;
+  description?: string;
+}
+
+const softwareCategories = [
+  { value: "erp", label: "ERP System" },
+  { value: "accounting", label: "Accounting" },
+  { value: "payroll", label: "Payroll" },
+  { value: "business_intelligence", label: "Business Intelligence" },
+  { value: "crm", label: "CRM" },
+  { value: "project_management", label: "Project Management" },
+  { value: "communication", label: "Communication" },
+  { value: "productivity", label: "Productivity" },
+  { value: "hr", label: "HR Management" },
+  { value: "inventory", label: "Inventory Management" },
+  { value: "ecommerce", label: "E-Commerce" },
+  { value: "marketing", label: "Marketing" },
+  { value: "other", label: "Other" },
+];
+
+const softwareCategoryLabels: Record<string, string> = {
+  erp: "ERP System",
+  accounting: "Accounting",
+  payroll: "Payroll",
+  business_intelligence: "Business Intelligence",
+  crm: "CRM",
+  project_management: "Project Management",
+  communication: "Communication",
+  productivity: "Productivity",
+  hr: "HR Management",
+  inventory: "Inventory Management",
+  ecommerce: "E-Commerce",
+  marketing: "Marketing",
+  other: "Other",
+};
+
+const SoftwareCatalogForm = ({ 
+  item, 
+  onSubmit, 
+  onCancel, 
+  isLoading
+}: { 
+  item?: SoftwareCatalog | null; 
+  onSubmit: (data: SoftwareCatalogFormData) => void; 
+  onCancel: () => void; 
+  isLoading?: boolean;
+}) => {
+  const form = useForm<SoftwareCatalogFormData>({
+    defaultValues: {
+      name: item?.name ?? "",
+      category: item?.category ?? "other",
+      vendor: item?.vendor ?? "",
+      website: item?.website ?? "",
+      description: item?.description ?? "",
+    },
+  });
+
+  return (
+    <Form {...form}>
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+        <FormField control={form.control} name="name" render={({ field }) => (
+          <FormItem>
+            <FormLabel>Name *</FormLabel>
+            <FormControl><Input placeholder="e.g., QuickBooks, SAP" {...field} /></FormControl>
+            <FormMessage />
+          </FormItem>
+        )} />
+        <div className="grid grid-cols-2 gap-4">
+          <FormField control={form.control} name="category" render={({ field }) => (
+            <FormItem>
+              <FormLabel>Category *</FormLabel>
+              <Select onValueChange={field.onChange} value={field.value || "other"}>
+                <FormControl>
+                  <SelectTrigger className="bg-background">
+                    <SelectValue placeholder="Select a category" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent className="bg-background max-h-[300px]">
+                  {softwareCategories.map((cat) => (
+                    <SelectItem key={cat.value} value={cat.value}>
+                      {cat.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <FormMessage />
+            </FormItem>
+          )} />
+          <FormField control={form.control} name="vendor" render={({ field }) => (
+            <FormItem>
+              <FormLabel>Vendor</FormLabel>
+              <FormControl><Input placeholder="e.g., Microsoft, Intuit" {...field} /></FormControl>
+              <FormMessage />
+            </FormItem>
+          )} />
+        </div>
+        <FormField control={form.control} name="website" render={({ field }) => (
+          <FormItem>
+            <FormLabel>Website</FormLabel>
+            <FormControl><Input placeholder="https://example.com" {...field} /></FormControl>
+            <FormMessage />
+          </FormItem>
+        )} />
+        <FormField control={form.control} name="description" render={({ field }) => (
+          <FormItem>
+            <FormLabel>Description</FormLabel>
+            <FormControl><Textarea placeholder="Optional description..." rows={2} {...field} /></FormControl>
+            <FormMessage />
+          </FormItem>
+        )} />
+        <div className="flex justify-end gap-3 pt-4">
+          <Button type="button" variant="outline" onClick={onCancel}>Cancel</Button>
+          <Button type="submit" disabled={isLoading}>
+            {isLoading ? "Saving..." : item ? "Update" : "Add Software"}
+          </Button>
+        </div>
+      </form>
+    </Form>
+  );
+};
+
 const SettingsSection = () => {
   const [showTypeForm, setShowTypeForm] = useState(false);
   const [editingType, setEditingType] = useState<TaxIdType | null>(null);
@@ -467,6 +595,10 @@ const SettingsSection = () => {
   const [showFilingTypeForm, setShowFilingTypeForm] = useState(false);
   const [editingFilingType, setEditingFilingType] = useState<FilingType | null>(null);
   const [deletingFilingType, setDeletingFilingType] = useState<FilingType | null>(null);
+
+  const [showSoftwareForm, setShowSoftwareForm] = useState(false);
+  const [editingSoftware, setEditingSoftware] = useState<SoftwareCatalog | null>(null);
+  const [deletingSoftware, setDeletingSoftware] = useState<SoftwareCatalog | null>(null);
   
   // Search and sort state for Tax ID Types
   const [typeSearch, setTypeSearch] = useState("");
@@ -488,10 +620,16 @@ const SettingsSection = () => {
   const [filingTypeSortKey, setFilingTypeSortKey] = useState<FilingTypeSortKey>("code");
   const [filingTypeSortDirection, setFilingTypeSortDirection] = useState<SortDirection>("asc");
 
+  // Search and sort state for Software Catalog
+  const [softwareSearch, setSoftwareSearch] = useState("");
+  const [softwareSortKey, setSoftwareSortKey] = useState<SoftwareSortKey>("name");
+  const [softwareSortDirection, setSoftwareSortDirection] = useState<SortDirection>("asc");
+
   const { data: taxIdTypes, isLoading: typesLoading } = useTaxIdTypes();
   const { data: issuingAuthorities, isLoading: authoritiesLoading } = useIssuingAuthorities();
   const { data: documentTypes, isLoading: docTypesLoading } = useDocumentTypes();
   const { data: filingTypes, isLoading: filingTypesLoading } = useFilingTypes();
+  const { data: softwareCatalog, isLoading: softwareLoading } = useSoftwareCatalog();
 
   const createTypeMutation = useCreateTaxIdType();
   const updateTypeMutation = useUpdateTaxIdType();
@@ -508,6 +646,10 @@ const SettingsSection = () => {
   const createFilingTypeMutation = useCreateFilingType();
   const updateFilingTypeMutation = useUpdateFilingType();
   const deleteFilingTypeMutation = useDeleteFilingType();
+
+  const createSoftwareMutation = useCreateSoftwareCatalog();
+  const updateSoftwareMutation = useUpdateSoftwareCatalog();
+  const deleteSoftwareMutation = useDeleteSoftwareCatalog();
   // Get authority name for a tax id type
   const getAuthorityName = (authorityId: string | null | undefined) => {
     if (!authorityId) return null;
@@ -800,26 +942,35 @@ const SettingsSection = () => {
     <div className="space-y-6">
       <div>
         <h2 className="text-2xl font-bold text-foreground">Settings</h2>
-        <p className="text-muted-foreground">Manage lookup tables for Tax ID Types, Issuing Authorities, Document Types, and Filing Types</p>
+        <p className="text-muted-foreground">Manage lookup tables for Tax ID Types, Issuing Authorities, Document Types, Filing Types, and Software Catalog</p>
       </div>
 
       <Tabs defaultValue="tax-id-types" className="w-full">
-        <TabsList className="grid w-full max-w-2xl grid-cols-4">
+        <TabsList className="grid w-full max-w-3xl grid-cols-5">
           <TabsTrigger value="tax-id-types" className="gap-2">
             <FileText className="w-4 h-4" />
-            Tax ID Types
+            <span className="hidden sm:inline">Tax ID Types</span>
+            <span className="sm:hidden">Tax IDs</span>
           </TabsTrigger>
           <TabsTrigger value="issuing-authorities" className="gap-2">
             <Building2 className="w-4 h-4" />
-            Authorities
+            <span className="hidden sm:inline">Authorities</span>
+            <span className="sm:hidden">Auth</span>
           </TabsTrigger>
           <TabsTrigger value="document-types" className="gap-2">
             <FolderOpen className="w-4 h-4" />
-            Doc Types
+            <span className="hidden sm:inline">Doc Types</span>
+            <span className="sm:hidden">Docs</span>
           </TabsTrigger>
           <TabsTrigger value="filing-types" className="gap-2">
             <Calendar className="w-4 h-4" />
-            Filing Types
+            <span className="hidden sm:inline">Filing Types</span>
+            <span className="sm:hidden">Filings</span>
+          </TabsTrigger>
+          <TabsTrigger value="software-catalog" className="gap-2">
+            <Monitor className="w-4 h-4" />
+            <span className="hidden sm:inline">Software</span>
+            <span className="sm:hidden">SW</span>
           </TabsTrigger>
         </TabsList>
 
@@ -1268,6 +1419,52 @@ const SettingsSection = () => {
             </div>
           </div>
         </TabsContent>
+
+        <TabsContent value="software-catalog" className="mt-6">
+          <div className="glass-card rounded-xl p-6">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-4">
+              <h3 className="text-lg font-semibold text-foreground">Software Catalog</h3>
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full sm:w-auto">
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                  <Input placeholder="Search software..." value={softwareSearch} onChange={(e) => setSoftwareSearch(e.target.value)} className="pl-9 w-full sm:w-64" />
+                </div>
+                <Button onClick={() => setShowSoftwareForm(true)} size="sm" className="gap-2">
+                  <Plus className="w-4 h-4" />Add Software
+                </Button>
+              </div>
+            </div>
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Name</TableHead>
+                    <TableHead>Category</TableHead>
+                    <TableHead>Vendor</TableHead>
+                    <TableHead className="w-[100px]">Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {filteredAndSortedSoftware.length === 0 ? (
+                    <TableRow><TableCell colSpan={4} className="text-center text-muted-foreground py-8">No software found</TableCell></TableRow>
+                  ) : filteredAndSortedSoftware.map((sw) => (
+                    <TableRow key={sw.id}>
+                      <TableCell className="font-medium">{sw.name}</TableCell>
+                      <TableCell><Badge variant="outline">{softwareCategoryLabels[sw.category] || sw.category}</Badge></TableCell>
+                      <TableCell className="text-muted-foreground">{sw.vendor || "-"}</TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-1">
+                          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => { setEditingSoftware(sw); setShowSoftwareForm(true); }}><Edit className="w-4 h-4" /></Button>
+                          <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => setDeletingSoftware(sw)}><Trash2 className="w-4 h-4" /></Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          </div>
+        </TabsContent>
       </Tabs>
 
       {/* Tax ID Type Dialog */}
@@ -1331,6 +1528,28 @@ const SettingsSection = () => {
         </DialogContent>
       </Dialog>
 
+      {/* Software Catalog Dialog */}
+      <Dialog open={showSoftwareForm} onOpenChange={() => { setShowSoftwareForm(false); setEditingSoftware(null); }}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>{editingSoftware ? "Edit Software" : "Add Software"}</DialogTitle>
+          </DialogHeader>
+          <SoftwareCatalogForm
+            item={editingSoftware}
+            onSubmit={(data) => {
+              const payload = { ...data, vendor: data.vendor || null, website: data.website || null, description: data.description || null };
+              if (editingSoftware) {
+                updateSoftwareMutation.mutate({ id: editingSoftware.id, ...payload }, { onSuccess: () => { setShowSoftwareForm(false); setEditingSoftware(null); }});
+              } else {
+                createSoftwareMutation.mutate(payload, { onSuccess: () => setShowSoftwareForm(false) });
+              }
+            }}
+            onCancel={() => { setShowSoftwareForm(false); setEditingSoftware(null); }}
+            isLoading={createSoftwareMutation.isPending || updateSoftwareMutation.isPending}
+          />
+        </DialogContent>
+      </Dialog>
+
       {/* Delete Confirmations */}
       <DeleteConfirmDialog
         open={!!deletingType}
@@ -1374,6 +1593,17 @@ const SettingsSection = () => {
         title="Delete Document Type"
         description={`Are you sure you want to delete "${deletingDocType?.code} - ${deletingDocType?.name}"? This may affect existing documents using this type.`}
         isLoading={deleteDocTypeMutation.isPending}
+      />
+
+      <DeleteConfirmDialog
+        open={!!deletingSoftware}
+        onOpenChange={() => setDeletingSoftware(null)}
+        onConfirm={() => {
+          if (deletingSoftware) deleteSoftwareMutation.mutate(deletingSoftware.id, { onSuccess: () => setDeletingSoftware(null) });
+        }}
+        title="Delete Software"
+        description={`Are you sure you want to delete "${deletingSoftware?.name}"? Entities using this software will show custom name instead.`}
+        isLoading={deleteSoftwareMutation.isPending}
       />
     </div>
   );

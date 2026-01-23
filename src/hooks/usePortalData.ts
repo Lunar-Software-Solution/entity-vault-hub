@@ -29,6 +29,8 @@ export type AuditLog = Tables<"audit_logs">;
 export type EmailAddress = Tables<"email_addresses">;
 export type DirectorUbo = Tables<"directors_ubos">;
 export type EntityWebsite = Tables<"entity_websites">;
+export type SoftwareCatalog = Tables<"software_catalog">;
+export type EntitySoftware = Tables<"entity_software">;
 
 // Recent audit logs hook
 export const useRecentAuditLogs = (limit: number = 10) => {
@@ -557,6 +559,36 @@ export const useEntityWebsites = () => {
         .order("name");
       if (error) throw error;
       return data as EntityWebsite[];
+    },
+  });
+};
+
+// Software Catalog hook
+export const useSoftwareCatalog = () => {
+  return useQuery({
+    queryKey: ["software_catalog"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("software_catalog")
+        .select("*")
+        .order("category")
+        .order("name");
+      if (error) throw error;
+      return data as SoftwareCatalog[];
+    },
+  });
+};
+
+// Entity Software hook
+export const useEntitySoftware = () => {
+  return useQuery({
+    queryKey: ["entity_software"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("entity_software")
+        .select("*, software_catalog(*)");
+      if (error) throw error;
+      return data;
     },
   });
 };
