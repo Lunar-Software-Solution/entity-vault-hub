@@ -40,6 +40,7 @@ const BankAccountsSection = ({ entityFilter }: BankAccountsSectionProps) => {
       swift_bic: data.swift_bic || null,
       account_holder_name: data.account_holder_name || null,
       bank_address: data.bank_address || null,
+      is_primary: data.is_primary ?? false,
     };
     
     if (editingAccount) {

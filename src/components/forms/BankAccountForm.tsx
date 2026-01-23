@@ -1,11 +1,12 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { bankAccountSchema, BankAccountFormData } from "@/lib/formSchemas";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDescription } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
 import type { BankAccount } from "@/hooks/usePortalData";
 import { useEntities } from "@/hooks/usePortalData";
 
@@ -34,6 +35,7 @@ const BankAccountForm = ({ account, onSubmit, onCancel, isLoading }: BankAccount
       swift_bic: (account as any)?.swift_bic ?? "",
       account_holder_name: (account as any)?.account_holder_name ?? "",
       bank_address: (account as any)?.bank_address ?? "",
+      is_primary: (account as any)?.is_primary ?? false,
     },
   });
 
@@ -192,6 +194,24 @@ const BankAccountForm = ({ account, onSubmit, onCancel, isLoading }: BankAccount
               />
             </FormControl>
             <FormMessage />
+          </FormItem>
+        )} />
+
+        {/* Primary Account Toggle */}
+        <FormField control={form.control} name="is_primary" render={({ field }) => (
+          <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+            <div className="space-y-0.5">
+              <FormLabel className="text-base">Primary Account</FormLabel>
+              <FormDescription>
+                Set this as the primary bank account for the linked entity
+              </FormDescription>
+            </div>
+            <FormControl>
+              <Switch
+                checked={field.value}
+                onCheckedChange={field.onChange}
+              />
+            </FormControl>
           </FormItem>
         )} />
 

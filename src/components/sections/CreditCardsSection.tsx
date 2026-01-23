@@ -241,27 +241,49 @@ const CreditCardsSection = ({ entityFilter }: CreditCardsSectionProps) => {
                     </div>
                   </div>
                   
-                  <div className="space-y-3">
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm text-muted-foreground">Credit Limit</span>
-                      <span className="font-medium text-foreground">${Number(card.credit_limit).toLocaleString()}</span>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <span className="text-xs text-muted-foreground block mb-0.5">Credit Limit</span>
+                      <div className="flex items-center gap-1">
+                        <span className="font-medium text-foreground">${Number(card.credit_limit).toLocaleString()}</span>
+                        <CopyButton value={Number(card.credit_limit).toLocaleString()} label="Credit limit" />
+                      </div>
                     </div>
                     {card.due_date && (
-                      <div className="flex items-center justify-between">
-                        <span className="text-sm text-muted-foreground">Due Date</span>
-                        <span className="font-medium text-foreground">{format(new Date(card.due_date), "MMM d, yyyy")}</span>
+                      <div>
+                        <span className="text-xs text-muted-foreground block mb-0.5">Due Date</span>
+                        <div className="flex items-center gap-1">
+                          <span className="font-medium text-foreground">{format(new Date(card.due_date), "MMM d, yyyy")}</span>
+                          <CopyButton value={format(new Date(card.due_date), "MMM d, yyyy")} label="Due date" />
+                        </div>
+                      </div>
+                    )}
+                    {card.expiry_date && (
+                      <div>
+                        <span className="text-xs text-muted-foreground block mb-0.5">Expiry Date</span>
+                        <div className="flex items-center gap-1">
+                          <span className="font-mono text-foreground">{card.expiry_date}</span>
+                          <CopyButton value={card.expiry_date} label="Expiry date" />
+                        </div>
                       </div>
                     )}
                     {(card as any).security_code && (
-                      <div className="flex items-center justify-between">
-                        <span className="text-sm text-muted-foreground">Security Code</span>
+                      <div>
+                        <span className="text-xs text-muted-foreground block mb-0.5">Security Code</span>
                         <div className="flex items-center gap-1">
                           <span className="font-mono text-foreground">
                             {isRevealed ? (card as any).security_code : "***"}
                           </span>
-                          {isRevealed && (
-                            <CopyButton value={(card as any).security_code} label="Security code" />
-                          )}
+                          <CopyButton value={(card as any).security_code} label="Security code" />
+                        </div>
+                      </div>
+                    )}
+                    {card.cardholder_name && (
+                      <div>
+                        <span className="text-xs text-muted-foreground block mb-0.5">Cardholder</span>
+                        <div className="flex items-center gap-1">
+                          <span className="text-sm text-foreground">{card.cardholder_name}</span>
+                          <CopyButton value={card.cardholder_name} label="Cardholder name" />
                         </div>
                       </div>
                     )}
