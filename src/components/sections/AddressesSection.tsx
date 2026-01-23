@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Plus, MapPin, Home, Building2, Package, Edit2, Trash2 } from "lucide-react";
+import { Plus, MapPin, Home, Building2, Package, Edit2, Trash2, Copy, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAddresses, useEntities } from "@/hooks/usePortalData";
 import { useCreateAddress, useUpdateAddress, useDeleteAddress } from "@/hooks/usePortalMutations";
@@ -7,6 +7,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import AddressForm from "@/components/forms/AddressForm";
 import DeleteConfirmDialog from "@/components/shared/DeleteConfirmDialog";
+import { toast } from "sonner";
 import type { Address } from "@/hooks/usePortalData";
 import type { AddressFormData } from "@/lib/formSchemas";
 
@@ -70,6 +71,27 @@ const AddressesSection = ({ entityFilter }: AddressesSectionProps) => {
   const handleCloseForm = () => {
     setIsFormOpen(false);
     setEditingAddress(null);
+  };
+
+  const handleCopyAddress = (address: Address) => {
+    const fullAddress = [
+      address.street,
+      `${address.city}${address.state ? `, ${address.state}` : ""} ${address.zip || ""}`.trim(),
+      address.country
+    ].filter(Boolean).join("\n");
+    
+    navigator.clipboard.writeText(fullAddress).then(() => {
+      toast.success("Address copied to clipboard");
+    }).catch(() => {
+      toast.error("Failed to copy address");
+    });
+  };
+
+  const handleViewOnMap = (address: Address) => {
+    const query = encodeURIComponent(
+      `${address.street}, ${address.city}${address.state ? `, ${address.state}` : ""} ${address.zip || ""}, ${address.country}`
+    );
+    window.open(`https://www.google.com/maps/search/?api=1&query=${query}`, "_blank");
   };
 
   if (isLoading) {
@@ -183,8 +205,24 @@ const AddressesSection = ({ entityFilter }: AddressesSectionProps) => {
                 </div>
 
                 <div className="mt-4 flex gap-2">
-                  <Button variant="outline" size="sm" className="flex-1">Copy Address</Button>
-                  <Button variant="outline" size="sm" className="flex-1">View on Map</Button>
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className="flex-1 gap-2"
+                    onClick={() => handleCopyAddress(address)}
+                  >
+                    <Copy className="w-3 h-3" />
+                    Copy Address
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className="flex-1 gap-2"
+                    onClick={() => handleViewOnMap(address)}
+                  >
+                    <ExternalLink className="w-3 h-3" />
+                    View on Map
+                  </Button>
                 </div>
               </div>
             );
