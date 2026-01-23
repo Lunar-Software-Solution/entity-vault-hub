@@ -1085,6 +1085,62 @@ export type Database = {
           },
         ]
       }
+      entity_websites: {
+        Row: {
+          created_at: string
+          domain_expiry_date: string | null
+          entity_id: string
+          id: string
+          is_active: boolean | null
+          is_primary: boolean | null
+          name: string
+          notes: string | null
+          platform: string | null
+          ssl_expiry_date: string | null
+          type: string
+          updated_at: string
+          url: string
+        }
+        Insert: {
+          created_at?: string
+          domain_expiry_date?: string | null
+          entity_id: string
+          id?: string
+          is_active?: boolean | null
+          is_primary?: boolean | null
+          name: string
+          notes?: string | null
+          platform?: string | null
+          ssl_expiry_date?: string | null
+          type?: string
+          updated_at?: string
+          url: string
+        }
+        Update: {
+          created_at?: string
+          domain_expiry_date?: string | null
+          entity_id?: string
+          id?: string
+          is_active?: boolean | null
+          is_primary?: boolean | null
+          name?: string
+          notes?: string | null
+          platform?: string | null
+          ssl_expiry_date?: string | null
+          type?: string
+          updated_at?: string
+          url?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "entity_websites_entity_id_fkey"
+            columns: ["entity_id"]
+            isOneToOne: false
+            referencedRelation: "entities"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       equity_transactions: {
         Row: {
           board_approval_date: string | null

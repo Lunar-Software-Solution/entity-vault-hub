@@ -28,6 +28,7 @@ export type FilingDocument = Tables<"filing_documents">;
 export type AuditLog = Tables<"audit_logs">;
 export type EmailAddress = Tables<"email_addresses">;
 export type DirectorUbo = Tables<"directors_ubos">;
+export type EntityWebsite = Tables<"entity_websites">;
 
 // Recent audit logs hook
 export const useRecentAuditLogs = (limit: number = 10) => {
@@ -543,4 +544,19 @@ export const useDashboardStats = () => {
     totalServiceProviders,
     activeServiceProviders,
   };
+};
+
+// Entity Websites hook
+export const useEntityWebsites = () => {
+  return useQuery({
+    queryKey: ["entity_websites"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("entity_websites")
+        .select("*")
+        .order("name");
+      if (error) throw error;
+      return data as EntityWebsite[];
+    },
+  });
 };
