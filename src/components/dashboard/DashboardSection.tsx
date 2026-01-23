@@ -4,19 +4,11 @@ import { useDashboardStats, useUpcomingFilings, useOpenTasks, useRecentAuditLogs
 import { Skeleton } from "@/components/ui/skeleton";
 import { format, formatDistanceToNow } from "date-fns";
 import { Badge } from "@/components/ui/badge";
+import { getCompactChangeSummary } from "@/lib/auditLogUtils";
 
 interface DashboardSectionProps {
   onNavigate?: (section: string) => void;
 }
-
-// Helper to format table names nicely
-const formatTableName = (tableName: string): string => {
-  return tableName
-    .replace(/_/g, " ")
-    .replace(/\b\w/g, l => l.toUpperCase())
-    .replace("Entity ", "")
-    .replace(" Ubos", "/UBOs");
-};
 
 // Helper to get action icon
 const getActionIcon = (action: string) => {
@@ -189,6 +181,12 @@ const DashboardSection = ({ onNavigate }: DashboardSectionProps) => {
             <div className="space-y-3">
               {auditLogs.map((log) => {
                 const ActionIcon = getActionIcon(log.action);
+                const summary = getCompactChangeSummary(
+                  log.action,
+                  log.table_name,
+                  log.old_values,
+                  log.new_values
+                );
                 return (
                   <div key={log.id} className="flex items-start gap-3 py-2 border-b border-border last:border-0">
                     <div className={`p-1.5 rounded-full flex-shrink-0 ${
@@ -201,10 +199,10 @@ const DashboardSection = ({ onNavigate }: DashboardSectionProps) => {
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-medium text-foreground truncate">
-                        {log.action === "INSERT" ? "Created" : log.action === "UPDATE" ? "Updated" : "Deleted"} {formatTableName(log.table_name || "record")}
+                        {summary.title}
                       </p>
                       <p className="text-xs text-muted-foreground truncate">
-                        by {log.user_email?.split("@")[0] || "System"}
+                        {summary.detail ? `${summary.detail} • ` : ""}by {log.user_email?.split("@")[0] || "System"}
                       </p>
                     </div>
                     <span className="text-xs text-muted-foreground flex-shrink-0">

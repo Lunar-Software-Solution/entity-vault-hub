@@ -15,7 +15,8 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSepara
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { format } from "date-fns";
-import { Plus, Search, Users, Shield, Clock, UserPlus, Mail, MoreHorizontal, Pencil, Trash2, RefreshCw, UserCheck, UserX } from "lucide-react";
+import { Plus, Search, Users, Shield, Clock, UserPlus, Mail, MoreHorizontal, Pencil, Trash2, RefreshCw, UserCheck, UserX, ChevronDown, ChevronRight } from "lucide-react";
+import { getChangeSummary, getChangedFields, formatTableName } from "@/lib/auditLogUtils";
 import GravatarAvatar from "@/components/shared/GravatarAvatar";
 import DeleteConfirmDialog from "@/components/shared/DeleteConfirmDialog";
 
@@ -841,36 +842,74 @@ const UserManagementSection = () => {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead className="text-foreground">Action</TableHead>
+                    <TableHead className="text-foreground w-[100px]">Action</TableHead>
+                    <TableHead className="text-foreground">Description</TableHead>
                     <TableHead className="text-foreground">User</TableHead>
-                    <TableHead className="text-foreground">Table</TableHead>
                     <TableHead className="text-foreground">Timestamp</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {filteredLogs.map((log) => (
-                    <TableRow key={log.id}>
-                      <TableCell>
-                        <Badge variant="outline">{log.action}</Badge>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-2">
-                          <GravatarAvatar
-                            email={log.user_email}
-                            name={log.user_email || "User"}
-                            size="sm"
-                          />
-                          <span className="text-muted-foreground">
-                            {log.user_email || log.user_id.slice(0, 8) + "..."}
-                          </span>
-                        </div>
-                      </TableCell>
-                      <TableCell className="text-muted-foreground">{log.table_name || "—"}</TableCell>
-                      <TableCell className="text-muted-foreground">
-                        {format(new Date(log.created_at), "MMM d, yyyy HH:mm:ss")}
-                      </TableCell>
-                    </TableRow>
-                  ))}
+                  {filteredLogs.map((log) => {
+                    const summary = getChangeSummary(log.action, log.table_name, log.old_values, log.new_values);
+                    const changes = log.action === 'UPDATE' ? getChangedFields(log.old_values, log.new_values) : [];
+                    
+                    return (
+                      <TableRow key={log.id}>
+                        <TableCell>
+                          <Badge 
+                            variant="outline" 
+                            className={
+                              log.action === "INSERT" ? "border-green-500/50 text-green-500" :
+                              log.action === "UPDATE" ? "border-blue-500/50 text-blue-500" :
+                              log.action === "DELETE" ? "border-red-500/50 text-red-500" :
+                              ""
+                            }
+                          >
+                            {log.action}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          <div className="space-y-1">
+                            <p className="text-sm font-medium text-foreground">{summary}</p>
+                            {changes.length > 0 && (
+                              <div className="text-xs text-muted-foreground space-y-0.5">
+                                {changes.slice(0, 3).map((change, idx) => (
+                                  <div key={idx} className="flex items-center gap-1">
+                                    <span className="text-muted-foreground/70">{change.fieldLabel}:</span>
+                                    {change.oldValue && (
+                                      <span className="line-through text-red-400/70">{change.oldValue}</span>
+                                    )}
+                                    {change.oldValue && change.newValue && <span>→</span>}
+                                    {change.newValue && (
+                                      <span className="text-green-400/70">{change.newValue}</span>
+                                    )}
+                                  </div>
+                                ))}
+                                {changes.length > 3 && (
+                                  <span className="text-muted-foreground/50">+{changes.length - 3} more changes</span>
+                                )}
+                              </div>
+                            )}
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-2">
+                            <GravatarAvatar
+                              email={log.user_email}
+                              name={log.user_email || "User"}
+                              size="sm"
+                            />
+                            <span className="text-muted-foreground text-sm">
+                              {log.user_email?.split("@")[0] || log.user_id.slice(0, 8) + "..."}
+                            </span>
+                          </div>
+                        </TableCell>
+                        <TableCell className="text-muted-foreground text-sm">
+                          {format(new Date(log.created_at), "MMM d, yyyy HH:mm")}
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
                   {!filteredLogs.length && (
                     <TableRow>
                       <TableCell colSpan={4} className="text-center text-muted-foreground py-8">
