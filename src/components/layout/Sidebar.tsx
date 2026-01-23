@@ -100,7 +100,7 @@ const Sidebar = ({
   onCollapsedChange,
 }: SidebarProps) => {
   const { user, signOut } = useAuth();
-  const [openGroups, setOpenGroups] = useState<string[]>(["main", "corporate", "financial", "contact", "legal", "admin"]);
+  const [openGroups, setOpenGroups] = useState<string[]>(["main"]);
   const [profileOpen, setProfileOpen] = useState(false);
 
   const handleLogout = async () => {
@@ -254,7 +254,7 @@ const Sidebar = ({
         </div>
 
         {/* Navigation */}
-        <nav className="flex-1 overflow-y-auto px-2 py-2 space-y-3">
+        <nav className="flex-1 px-2 py-2 space-y-3">
           {menuGroups.map(renderGroup)}
         </nav>
 
@@ -307,13 +307,6 @@ const Sidebar = ({
                 Profile
               </DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem
-                onClick={handleLogout}
-                className="cursor-pointer text-destructive focus:text-destructive focus:bg-destructive/10"
-              >
-                <LogOut className="w-4 h-4 mr-2" />
-                Log out
-              </DropdownMenuItem>
               <DropdownMenuItem
                 onClick={handleLogout}
                 className="cursor-pointer text-destructive focus:text-destructive focus:bg-destructive/10"
