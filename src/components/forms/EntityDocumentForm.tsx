@@ -1,7 +1,7 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { entityDocumentSchema, type EntityDocumentFormData } from "@/lib/formSchemas";
-import { useDocumentTypes, type EntityDocument } from "@/hooks/usePortalData";
+import { useDocumentTypes, useIssuingAuthorities, type EntityDocument } from "@/hooks/usePortalData";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -9,7 +9,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import DocumentFileUpload from "@/components/documents/DocumentFileUpload";
 import DocumentSummary from "@/components/documents/DocumentSummary";
-import { useState } from "react";
+import { useState, useMemo } from "react";
 
 interface EntityDocumentFormProps {
   entityId: string;
@@ -29,6 +29,7 @@ const categoryColors: Record<string, string> = {
 
 const EntityDocumentForm = ({ entityId, document, onSubmit, onCancel, isLoading }: EntityDocumentFormProps) => {
   const { data: documentTypes } = useDocumentTypes();
+  const { data: issuingAuthorities } = useIssuingAuthorities();
   const [documentId] = useState(() => document?.id || crypto.randomUUID());
   const [aiSummary, setAiSummary] = useState<string | null>((document as any)?.ai_summary ?? null);
   const [summaryGeneratedAt, setSummaryGeneratedAt] = useState<string | null>(
@@ -69,6 +70,17 @@ const EntityDocumentForm = ({ entityId, document, onSubmit, onCancel, isLoading 
     acc[category].push(type);
     return acc;
   }, {} as Record<string, typeof documentTypes>) || {};
+
+  // Group issuing authorities by country
+  const groupedAuthorities = useMemo(() => {
+    if (!issuingAuthorities) return {};
+    return issuingAuthorities.reduce((acc, auth) => {
+      const country = auth.country || "Other";
+      if (!acc[country]) acc[country] = [];
+      acc[country].push(auth);
+      return acc;
+    }, {} as Record<string, typeof issuingAuthorities>);
+  }, [issuingAuthorities]);
 
   return (
     <Form {...form}>
@@ -172,9 +184,30 @@ const EntityDocumentForm = ({ entityId, document, onSubmit, onCancel, isLoading 
           render={({ field }) => (
             <FormItem>
               <FormLabel>Issuing Authority</FormLabel>
-              <FormControl>
-                <Input placeholder="e.g., Delaware Secretary of State" {...field} />
-              </FormControl>
+              <Select onValueChange={field.onChange} value={field.value || ""}>
+                <FormControl>
+                  <SelectTrigger className="bg-background">
+                    <SelectValue placeholder="Select issuing authority" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent className="bg-background max-h-[300px]">
+                  <SelectItem value="__none__">No authority selected</SelectItem>
+                  {Object.entries(groupedAuthorities)
+                    .sort(([a], [b]) => a.localeCompare(b))
+                    .map(([country, authorities]) => (
+                      <div key={country}>
+                        <div className="px-2 py-1 text-xs font-semibold text-muted-foreground bg-muted/50">
+                          {country}
+                        </div>
+                        {authorities?.map((auth) => (
+                          <SelectItem key={auth.id} value={auth.name}>
+                            {auth.name}
+                          </SelectItem>
+                        ))}
+                      </div>
+                    ))}
+                </SelectContent>
+              </Select>
               <FormMessage />
             </FormItem>
           )}
