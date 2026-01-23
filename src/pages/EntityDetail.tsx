@@ -189,177 +189,172 @@ const EntityDetail = () => {
         Back to Portal
       </Button>
 
-      {/* Entity Header */}
-      <div className="glass-card rounded-xl p-8 mb-8">
-        <div className="flex items-start gap-6">
-          <CompanyLogo 
-            name={entity.name} 
-            size="lg"
-            className="w-20 h-20 rounded-2xl"
-          />
-          <div className="flex-1">
-            <h1 className="text-3xl font-bold text-foreground">{entity.name}</h1>
-            <p className="text-muted-foreground text-lg">{entity.type}</p>
-            <div className="mt-3 flex items-center gap-2 flex-wrap">
-              <Badge variant={entity.status === "Active" ? "default" : "secondary"}>
-                {entity.status}
-              </Badge>
+      {/* Entity Header - Compact Design */}
+      <div className="glass-card rounded-xl p-6 mb-6">
+        {/* Top Row: Logo, Name, Status, Actions */}
+        <div className="flex items-center justify-between gap-4 mb-4">
+          <div className="flex items-center gap-4">
+            <CompanyLogo 
+              name={entity.name} 
+              size="md"
+              className="w-12 h-12 rounded-xl"
+            />
+            <div>
+              <div className="flex items-center gap-3">
+                <h1 className="text-2xl font-bold text-foreground">{entity.name}</h1>
+                <Badge variant={entity.status === "Active" ? "default" : "secondary"} className="text-xs">
+                  {entity.status}
+                </Badge>
+              </div>
+              <div className="flex items-center gap-4 text-sm text-muted-foreground mt-0.5">
+                <span>{entity.type}</span>
+                {entity.founded_date && (
+                  <>
+                    <span className="text-muted-foreground/50">•</span>
+                    <span className="flex items-center gap-1">
+                      <Calendar className="w-3 h-3" />
+                      Founded {format(new Date(entity.founded_date), "MMM yyyy")}
+                    </span>
+                  </>
+                )}
+                {entity.jurisdiction && (
+                  <>
+                    <span className="text-muted-foreground/50">•</span>
+                    <span className="flex items-center gap-1">
+                      <MapPin className="w-3 h-3" />
+                      {entity.jurisdiction}
+                    </span>
+                  </>
+                )}
+              </div>
             </div>
           </div>
           {canWrite && (
             <div className="flex gap-2">
-              <Button variant="outline" size="sm" onClick={() => setIsEditDialogOpen(true)} className="gap-2">
-                <Pencil className="w-4 h-4" />
+              <Button variant="outline" size="sm" onClick={() => setIsEditDialogOpen(true)} className="gap-1.5 h-8">
+                <Pencil className="w-3.5 h-3.5" />
                 Edit
               </Button>
-              <Button variant="outline" size="sm" onClick={() => setIsDeleteDialogOpen(true)} className="gap-2 text-destructive hover:text-destructive">
-                <Trash2 className="w-4 h-4" />
+              <Button variant="outline" size="sm" onClick={() => setIsDeleteDialogOpen(true)} className="gap-1.5 h-8 text-destructive hover:text-destructive border-destructive/30 hover:border-destructive/50 hover:bg-destructive/10">
+                <Trash2 className="w-3.5 h-3.5" />
                 Delete
               </Button>
             </div>
           )}
         </div>
 
-        {/* Entity Info Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
-          <div className="space-y-2">
-            <div className="flex items-center gap-2 text-muted-foreground">
-              <Calendar className="w-4 h-4" />
-              <span className="text-sm">Founded</span>
+        {/* Primary Info Grid - Compact 3-column layout */}
+        {(linkedAddresses.some(a => a.is_primary) || 
+          linkedPhoneNumbers.some(p => p.is_primary) || 
+          linkedTaxIds.some(t => t.is_primary) || 
+          linkedEmails.some(e => e.is_primary) ||
+          linkedBankAccounts.some(b => b.is_primary) ||
+          linkedDirectorsUbos.some(d => d.is_primary) ||
+          linkedSocialMedia.length > 0) && (
+          <>
+            <div className="border-t border-border/50 my-4" />
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4">
+              {/* Primary Email */}
+              {linkedEmails.filter(e => e.is_primary).slice(0, 1).map(email => (
+                <div key={email.id} className="min-w-0">
+                  <p className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground mb-1 flex items-center gap-1">
+                    <Mail className="w-3 h-3" /> Email
+                  </p>
+                  <p className="text-sm text-foreground truncate">{email.email}</p>
+                  <p className="text-xs text-muted-foreground truncate">{email.label}</p>
+                </div>
+              ))}
+
+              {/* Primary Phones */}
+              {linkedPhoneNumbers.filter(p => p.is_primary).slice(0, 2).map(phone => (
+                <div key={phone.id} className="min-w-0">
+                  <p className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground mb-1 flex items-center gap-1">
+                    <Phone className="w-3 h-3" /> Phone
+                  </p>
+                  <p className="text-sm text-foreground font-mono truncate">
+                    {phone.country_code} {phone.phone_number}
+                  </p>
+                  <p className="text-xs text-muted-foreground truncate">{phone.label}</p>
+                </div>
+              ))}
+
+              {/* Primary Address */}
+              {linkedAddresses.filter(a => a.is_primary).slice(0, 1).map(address => (
+                <div key={address.id} className="min-w-0">
+                  <p className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground mb-1 flex items-center gap-1">
+                    <MapPin className="w-3 h-3" /> Address
+                  </p>
+                  <p className="text-sm text-foreground truncate">{address.street}</p>
+                  <p className="text-xs text-muted-foreground truncate">{address.city}, {address.state} {address.zip}</p>
+                </div>
+              ))}
+
+              {/* Primary Tax ID */}
+              {linkedTaxIds.filter(t => t.is_primary).slice(0, 1).map(taxId => (
+                <div key={taxId.id} className="min-w-0">
+                  <p className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground mb-1 flex items-center gap-1">
+                    <Receipt className="w-3 h-3" /> Tax ID
+                  </p>
+                  <p className="text-sm text-foreground font-mono truncate">{taxId.tax_id_number}</p>
+                  <p className="text-xs text-muted-foreground truncate">{taxId.type} — {taxId.country}</p>
+                </div>
+              ))}
+
+              {/* Primary Bank */}
+              {linkedBankAccounts.filter(b => b.is_primary).slice(0, 1).map(account => (
+                <div key={account.id} className="min-w-0">
+                  <p className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground mb-1 flex items-center gap-1">
+                    <Wallet className="w-3 h-3" /> Bank
+                  </p>
+                  <p className="text-sm text-foreground truncate">{account.bank}</p>
+                  <p className="text-xs text-muted-foreground font-mono">••••{account.account_number.slice(-4)}</p>
+                </div>
+              ))}
+
+              {/* Primary Contact */}
+              {linkedDirectorsUbos.filter(d => d.is_primary).slice(0, 1).map(director => (
+                <div key={director.id} className="min-w-0">
+                  <p className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground mb-1 flex items-center gap-1">
+                    <Users className="w-3 h-3" /> Contact
+                  </p>
+                  <p className="text-sm text-foreground truncate">{director.name}</p>
+                  <p className="text-xs text-muted-foreground truncate">{director.title || director.role_type}</p>
+                </div>
+              ))}
+
+              {/* Social Media - Inline badges */}
+              {linkedSocialMedia.length > 0 && (
+                <div className="min-w-0 col-span-2 md:col-span-1 xl:col-span-2">
+                  <p className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground mb-1 flex items-center gap-1">
+                    <Share2 className="w-3 h-3" /> Social
+                  </p>
+                  <div className="flex flex-wrap gap-1.5">
+                    {linkedSocialMedia.slice(0, 5).map(social => (
+                      <a
+                        key={social.id}
+                        href={social.profile_url || '#'}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium text-white transition-opacity hover:opacity-80`}
+                        style={{ backgroundColor: social.color?.replace('bg-', '') || '#3f3f46' }}
+                      >
+                        {social.avatar_url && (
+                          <img src={social.avatar_url} alt="" className="w-3 h-3 rounded-full" />
+                        )}
+                        <span>{social.platform}</span>
+                        {social.is_verified && <span>✓</span>}
+                      </a>
+                    ))}
+                    {linkedSocialMedia.length > 5 && (
+                      <span className="text-[10px] text-muted-foreground self-center">+{linkedSocialMedia.length - 5}</span>
+                    )}
+                  </div>
+                </div>
+              )}
             </div>
-            <p className="text-foreground font-medium">
-              {entity.founded_date 
-                ? format(new Date(entity.founded_date), "MMM d, yyyy")
-                : "Not specified"}
-            </p>
-          </div>
-          
-          <div className="space-y-2">
-            <div className="flex items-center gap-2 text-muted-foreground">
-              <MapPin className="w-4 h-4" />
-              <span className="text-sm">Jurisdiction</span>
-            </div>
-            <p className="text-foreground font-medium">{entity.jurisdiction || "Not specified"}</p>
-          </div>
-        </div>
+          </>
+        )}
       </div>
-
-      {/* Primary Items & Social Media */}
-      {(linkedAddresses.some(a => a.is_primary) || 
-        linkedPhoneNumbers.some(p => p.is_primary) || 
-        linkedTaxIds.some(t => t.is_primary) || 
-        linkedEmails.some(e => e.is_primary) ||
-        linkedBankAccounts.some(b => b.is_primary) ||
-        linkedDirectorsUbos.some(d => d.is_primary) ||
-        linkedSocialMedia.length > 0) && (
-        <div className="glass-card rounded-xl p-6 mb-8">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {/* Primary Email */}
-            {linkedEmails.filter(e => e.is_primary).map(email => (
-              <div key={email.id} className="space-y-1">
-                <div className="flex items-center gap-2 text-muted-foreground">
-                  <Mail className="w-4 h-4" />
-                  <span className="text-xs font-medium uppercase tracking-wider">Primary Email</span>
-                </div>
-                <p className="text-sm text-foreground">{email.email}</p>
-                <p className="text-xs text-muted-foreground">{email.label}</p>
-              </div>
-            ))}
-
-            {/* Primary Phone */}
-            {linkedPhoneNumbers.filter(p => p.is_primary).map(phone => (
-              <div key={phone.id} className="space-y-1">
-                <div className="flex items-center gap-2 text-muted-foreground">
-                  <Phone className="w-4 h-4" />
-                  <span className="text-xs font-medium uppercase tracking-wider">Primary Phone</span>
-                </div>
-                <p className="text-sm text-foreground font-mono">
-                  {phone.country_code} {phone.phone_number}
-                </p>
-                <p className="text-xs text-muted-foreground">{phone.label}</p>
-              </div>
-            ))}
-
-            {/* Primary Address */}
-            {linkedAddresses.filter(a => a.is_primary).map(address => (
-              <div key={address.id} className="space-y-1">
-                <div className="flex items-center gap-2 text-muted-foreground">
-                  <MapPin className="w-4 h-4" />
-                  <span className="text-xs font-medium uppercase tracking-wider">Primary Address</span>
-                </div>
-                <p className="text-sm text-foreground">{address.street}</p>
-                <p className="text-sm text-foreground">{address.city}, {address.state} {address.zip}</p>
-                <p className="text-sm text-muted-foreground">{address.country}</p>
-              </div>
-            ))}
-
-            {/* Primary Tax ID */}
-            {linkedTaxIds.filter(t => t.is_primary).map(taxId => (
-              <div key={taxId.id} className="space-y-1">
-                <div className="flex items-center gap-2 text-muted-foreground">
-                  <Receipt className="w-4 h-4" />
-                  <span className="text-xs font-medium uppercase tracking-wider">Primary Tax ID</span>
-                </div>
-                <p className="text-sm text-foreground font-mono">{taxId.tax_id_number}</p>
-                <p className="text-xs text-muted-foreground">{taxId.type} — {taxId.country}</p>
-              </div>
-            ))}
-
-            {/* Primary Bank Account */}
-            {linkedBankAccounts.filter(b => b.is_primary).map(account => (
-              <div key={account.id} className="space-y-1">
-                <div className="flex items-center gap-2 text-muted-foreground">
-                  <Wallet className="w-4 h-4" />
-                  <span className="text-xs font-medium uppercase tracking-wider">Primary Bank</span>
-                </div>
-                <p className="text-sm text-foreground">{account.bank}</p>
-                <p className="text-sm text-foreground font-mono">••••{account.account_number.slice(-4)}</p>
-              </div>
-            ))}
-
-            {/* Primary Director/Contact */}
-            {linkedDirectorsUbos.filter(d => d.is_primary).map(director => (
-              <div key={director.id} className="space-y-1">
-                <div className="flex items-center gap-2 text-muted-foreground">
-                  <Users className="w-4 h-4" />
-                  <span className="text-xs font-medium uppercase tracking-wider">Primary Contact</span>
-                </div>
-                <p className="text-sm text-foreground">{director.name}</p>
-                <p className="text-xs text-muted-foreground">{director.title || director.role_type}</p>
-              </div>
-            ))}
-
-            {/* Social Media */}
-            {linkedSocialMedia.length > 0 && (
-              <div className="space-y-2">
-                <div className="flex items-center gap-2 text-muted-foreground">
-                  <Share2 className="w-4 h-4" />
-                  <span className="text-xs font-medium uppercase tracking-wider">Social Media</span>
-                </div>
-                <div className="flex flex-wrap gap-2">
-                  {linkedSocialMedia.map(social => (
-                    <a
-                      key={social.id}
-                      href={social.profile_url || '#'}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium text-white transition-opacity hover:opacity-80 ${social.color || 'bg-zinc-800'}`}
-                    >
-                      {social.avatar_url ? (
-                        <img src={social.avatar_url} alt="" className="w-4 h-4 rounded-full" />
-                      ) : null}
-                      <span>{social.platform}</span>
-                      {social.is_verified && (
-                        <span className="text-[10px]">✓</span>
-                      )}
-                    </a>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-      )}
 
       {/* Stats Summary - Row 1: Core Data */}
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-4">
