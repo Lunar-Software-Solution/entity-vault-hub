@@ -5,7 +5,6 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Switch } from "@/components/ui/switch";
 import type { Entity } from "@/hooks/usePortalData";
 
 interface EntityFormProps {
@@ -28,7 +27,6 @@ const EntityForm = ({ entity, onSubmit, onCancel, isLoading }: EntityFormProps) 
       jurisdiction: entity?.jurisdiction ?? "",
       founded_date: entity?.founded_date ?? "",
       fiscal_year_end: (entity as any)?.fiscal_year_end ?? "12-31",
-      is_verified: entity?.is_verified ?? false,
     },
   });
 
@@ -126,12 +124,6 @@ const EntityForm = ({ entity, onSubmit, onCancel, isLoading }: EntityFormProps) 
             </FormItem>
           )} />
 
-          <FormField control={form.control} name="is_verified" render={({ field }) => (
-            <FormItem className="flex items-center justify-between rounded-lg border p-3">
-              <FormLabel className="cursor-pointer">Verified Entity</FormLabel>
-              <FormControl><Switch checked={field.value} onCheckedChange={field.onChange} /></FormControl>
-            </FormItem>
-          )} />
         </div>
 
         <div className="flex justify-end gap-3 pt-4">
