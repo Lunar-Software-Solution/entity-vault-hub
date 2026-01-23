@@ -126,12 +126,9 @@ const PhoneNumbersSection = ({ entityFilter }: PhoneNumbersSectionProps) => {
                         <Star className="w-4 h-4 text-amber-500 fill-amber-500" />
                       )}
                     </div>
-                    <button
-                      onClick={() => handleEdit(phone)}
-                      className="text-lg font-mono text-foreground hover:text-primary hover:underline cursor-pointer transition-colors text-left"
-                    >
+                    <p className="text-lg font-mono text-foreground">
                       {phone.country_code} {phone.phone_number}
-                    </button>
+                    </p>
                   </div>
                 </div>
                 <DropdownMenu>
