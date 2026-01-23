@@ -77,8 +77,8 @@ const Sidebar = ({ activeSection, onSectionChange }: SidebarProps) => {
             <img src={braxLogo} alt="BraxTech" className="w-full h-full object-contain" />
           </div>
           <div>
-            <h1 className="font-semibold text-sidebar-foreground">MyPortal</h1>
-            <p className="text-xs text-muted-foreground">Management Hub</p>
+            <h1 className="font-semibold text-sidebar-foreground">Entity Hub</h1>
+            <p className="text-xs text-muted-foreground">Management Portal</p>
           </div>
         </div>
       </div>
