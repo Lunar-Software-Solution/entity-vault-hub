@@ -1,4 +1,4 @@
-import { Wallet, CreditCard, Share2, FileText, MapPin, Building2, Calendar, CheckSquare, Users, PieChart, Briefcase, Phone, Mail, Receipt } from "lucide-react";
+import { Wallet, CreditCard, Share2, FileText, MapPin, Building2, Calendar, CheckSquare, Phone, Receipt, Briefcase, FolderOpen } from "lucide-react";
 import StatCard from "./StatCard";
 import { useDashboardStats, useBankAccounts, useContracts, useUpcomingFilings, useOpenTasks } from "@/hooks/usePortalData";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -41,8 +41,8 @@ const DashboardSection = ({ onNavigate }: DashboardSectionProps) => {
           <Skeleton className="h-8 w-64 mb-2" />
           <Skeleton className="h-4 w-96" />
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {[1, 2, 3, 4, 5, 6].map((i) => (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map((i) => (
             <Skeleton key={i} className="h-32 w-full rounded-xl" />
           ))}
         </div>
@@ -57,53 +57,12 @@ const DashboardSection = ({ onNavigate }: DashboardSectionProps) => {
         <p className="text-muted-foreground">Welcome back! Here's a summary of your portfolio.</p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+        {/* Corporate */}
         <StatCard
-          title="Bank Accounts"
-          value={stats.bankAccountCount.toString()}
-          subtitle="Connected accounts"
-          icon={Wallet}
-          variant="primary"
-          onClick={() => onNavigate?.("bank-accounts")}
-        />
-        <StatCard
-          title="Credit Cards"
-          value={stats.creditCardCount.toString()}
-          subtitle={`$${stats.totalCreditLimit.toLocaleString()} total limit`}
-          icon={CreditCard}
-          variant="warning"
-          onClick={() => onNavigate?.("credit-cards")}
-        />
-        <StatCard
-          title="Social Accounts"
-          value={stats.socialAccountCount.toString()}
-          subtitle="Connected platforms"
-          icon={Share2}
-          variant="default"
-          onClick={() => onNavigate?.("social-media")}
-        />
-        <StatCard
-          title="Active Contracts"
-          value={stats.activeContracts.toString()}
-          subtitle={stats.expiringContracts > 0 ? `${stats.expiringContracts} expiring soon` : "All contracts current"}
-          icon={FileText}
-          variant="success"
-          onClick={() => onNavigate?.("contracts")}
-        />
-        <StatCard
-          title="Registered Addresses"
-          value={stats.addressCount.toString()}
-          subtitle="Saved locations"
-          icon={MapPin}
-          variant="default"
-          onClick={() => onNavigate?.("addresses")}
-        />
-        <StatCard
-          title="Entity Status"
-          value={stats.entityStatus}
-          subtitle={stats.entityFoundedDate 
-            ? `Since ${format(new Date(stats.entityFoundedDate), "MMM yyyy")}` 
-            : "Register your entity"}
+          title="Entities"
+          value={stats.entityCount.toString()}
+          subtitle={stats.entityStatus === "Active" ? "Active entity" : "Register your entity"}
           icon={Building2}
           variant={stats.entityStatus === "Active" ? "success" : "default"}
           onClick={() => onNavigate?.("entity")}
@@ -124,62 +83,104 @@ const DashboardSection = ({ onNavigate }: DashboardSectionProps) => {
           variant={urgentTasks > 0 ? "warning" : "success"}
           onClick={() => onNavigate?.("filings")}
         />
+        <StatCard
+          title="Service Providers"
+          value={stats.totalServiceProviders.toString()}
+          subtitle={`${stats.activeServiceProviders} active`}
+          icon={Briefcase}
+          variant="default"
+          onClick={() => onNavigate?.("service-providers")}
+        />
+
+        {/* Financial */}
+        <StatCard
+          title="Bank Accounts"
+          value={stats.bankAccountCount.toString()}
+          subtitle="Connected accounts"
+          icon={Wallet}
+          variant="primary"
+          onClick={() => onNavigate?.("bank-accounts")}
+        />
+        <StatCard
+          title="Credit Cards"
+          value={stats.creditCardCount.toString()}
+          subtitle={`$${stats.totalCreditLimit.toLocaleString()} total limit`}
+          icon={CreditCard}
+          variant="warning"
+          onClick={() => onNavigate?.("credit-cards")}
+        />
+        <StatCard
+          title="Tax IDs"
+          value={stats.taxIdCount.toString()}
+          subtitle="Registered tax identifiers"
+          icon={Receipt}
+          variant="default"
+          onClick={() => onNavigate?.("tax-ids")}
+        />
+
+        {/* Contact */}
+        <StatCard
+          title="Phone Numbers"
+          value={stats.phoneNumberCount.toString()}
+          subtitle="Registered numbers"
+          icon={Phone}
+          variant="default"
+          onClick={() => onNavigate?.("phone-numbers")}
+        />
+        <StatCard
+          title="Social Accounts"
+          value={stats.socialAccountCount.toString()}
+          subtitle="Connected platforms"
+          icon={Share2}
+          variant="default"
+          onClick={() => onNavigate?.("social-media")}
+        />
+        <StatCard
+          title="Addresses"
+          value={stats.addressCount.toString()}
+          subtitle="Saved locations"
+          icon={MapPin}
+          variant="default"
+          onClick={() => onNavigate?.("addresses")}
+        />
+
+        {/* Legal & Docs */}
+        <StatCard
+          title="Documents"
+          value={stats.documentCount.toString()}
+          subtitle="Stored documents"
+          icon={FolderOpen}
+          variant="default"
+          onClick={() => onNavigate?.("documents")}
+        />
+        <StatCard
+          title="Active Contracts"
+          value={stats.activeContracts.toString()}
+          subtitle={stats.expiringContracts > 0 ? `${stats.expiringContracts} expiring soon` : "All contracts current"}
+          icon={FileText}
+          variant="success"
+          onClick={() => onNavigate?.("contracts")}
+        />
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="glass-card rounded-xl p-6">
-          <h3 className="text-lg font-semibold text-foreground mb-4">Recent Activity</h3>
-          {recentActivity.length > 0 ? (
-            <div className="space-y-4">
-              {recentActivity.map((activity, index) => (
-                <div key={index} className="flex items-center justify-between py-3 border-b border-border last:border-0">
-                  <div>
-                    <p className="text-sm font-medium text-foreground">{activity.action}</p>
-                    <p className="text-xs text-muted-foreground">{activity.item}</p>
-                  </div>
-                  <span className="text-xs text-muted-foreground">{activity.time}</span>
+      {/* Recent Activity */}
+      <div className="glass-card rounded-xl p-6">
+        <h3 className="text-lg font-semibold text-foreground mb-4">Recent Activity</h3>
+        {recentActivity.length > 0 ? (
+          <div className="space-y-4">
+            {recentActivity.map((activity, index) => (
+              <div key={index} className="flex items-center justify-between py-3 border-b border-border last:border-0">
+                <div>
+                  <p className="text-sm font-medium text-foreground">{activity.action}</p>
+                  <p className="text-xs text-muted-foreground">{activity.item}</p>
                 </div>
-              ))}
-            </div>
-          ) : (
-            <p className="text-muted-foreground text-sm">No recent activity. Start by adding some data!</p>
-          )}
-        </div>
-
-        <div className="glass-card rounded-xl p-6">
-          <h3 className="text-lg font-semibold text-foreground mb-4">Quick Actions</h3>
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
-            {[
-              // Corporate
-              { label: "Add Entity", icon: Building2, section: "entity" },
-              { label: "Add Director/UBO", icon: Users, section: "directors-ubo" },
-              { label: "Add Cap Table", icon: PieChart, section: "cap-table" },
-              { label: "Add Provider", icon: Briefcase, section: "service-providers" },
-              { label: "Add Filing", icon: Calendar, section: "filings" },
-              // Financial
-              { label: "Add Bank Account", icon: Wallet, section: "bank-accounts" },
-              { label: "Add Credit Card", icon: CreditCard, section: "credit-cards" },
-              { label: "Add Tax ID", icon: Receipt, section: "tax-ids" },
-              // Contact
-              { label: "Add Phone", icon: Phone, section: "phone-numbers" },
-              { label: "Add Email", icon: Mail, section: "email" },
-              { label: "Add Social Media", icon: Share2, section: "social-media" },
-              { label: "Add Address", icon: MapPin, section: "addresses" },
-              // Legal & Docs
-              { label: "Add Document", icon: FileText, section: "documents" },
-              { label: "New Contract", icon: FileText, section: "contracts" },
-            ].map((action, index) => (
-              <button
-                key={index}
-                onClick={() => onNavigate?.(action.section)}
-                className="flex items-center gap-3 p-3 rounded-lg bg-muted text-foreground hover:bg-primary/10 hover:text-primary transition-all duration-200 text-sm font-medium cursor-pointer"
-              >
-                <action.icon className="w-4 h-4 flex-shrink-0" />
-                <span className="truncate">{action.label}</span>
-              </button>
+                <span className="text-xs text-muted-foreground">{activity.time}</span>
+              </div>
             ))}
           </div>
-        </div>
+        ) : (
+          <p className="text-muted-foreground text-sm">No recent activity. Start by adding some data!</p>
+        )}
       </div>
     </div>
   );

@@ -460,10 +460,36 @@ export const useDashboardStats = () => {
   const { data: upcomingFilings } = useUpcomingFilings();
   const { data: openTasks } = useOpenTasks();
   const { data: overdueTasks } = useOverdueTasks();
+  const { data: phoneNumbers } = usePhoneNumbers();
+  const { data: taxIds } = useTaxIds();
+  const { data: documents } = useEntityDocuments();
+  const { data: lawFirms } = useLawFirms();
+  const { data: accountantFirms } = useAccountantFirms();
+  const { data: advisors } = useAdvisors();
+  const { data: auditors } = useAuditors();
+  const { data: consultants } = useConsultants();
+  const { data: registrationAgents } = useRegistrationAgents();
 
   const totalCreditLimit = creditCards?.reduce((sum, card) => sum + Number(card.credit_limit), 0) ?? 0;
   const activeContracts = contracts?.filter(c => c.status === "active").length ?? 0;
   const expiringContracts = contracts?.filter(c => c.status === "expiring-soon").length ?? 0;
+  
+  // Calculate service provider totals
+  const totalServiceProviders = 
+    (lawFirms?.length ?? 0) + 
+    (accountantFirms?.length ?? 0) + 
+    (advisors?.length ?? 0) + 
+    (auditors?.length ?? 0) + 
+    (consultants?.length ?? 0) + 
+    (registrationAgents?.length ?? 0);
+    
+  const activeServiceProviders = 
+    (lawFirms?.filter(f => f.is_active).length ?? 0) + 
+    (accountantFirms?.filter(f => f.is_active).length ?? 0) + 
+    (advisors?.filter(f => f.is_active).length ?? 0) + 
+    (auditors?.filter(f => f.is_active).length ?? 0) + 
+    (consultants?.filter(f => f.is_active).length ?? 0) + 
+    (registrationAgents?.filter(f => f.is_active).length ?? 0);
 
   return {
     totalCreditLimit,
@@ -475,8 +501,14 @@ export const useDashboardStats = () => {
     addressCount: addresses?.length ?? 0,
     entityStatus: entities?.[0]?.status ?? "No Entity",
     entityFoundedDate: entities?.[0]?.founded_date,
+    entityCount: entities?.length ?? 0,
     upcomingFilingsCount: upcomingFilings?.length ?? 0,
     openTasksCount: openTasks?.length ?? 0,
     overdueTasksCount: overdueTasks?.length ?? 0,
+    phoneNumberCount: phoneNumbers?.length ?? 0,
+    taxIdCount: taxIds?.length ?? 0,
+    documentCount: documents?.length ?? 0,
+    totalServiceProviders,
+    activeServiceProviders,
   };
 };
