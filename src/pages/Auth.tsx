@@ -167,7 +167,35 @@ const Auth = () => {
     }
   }, [user, invitation]);
 
-  // Loading state
+  // Complete login after 2FA verification
+  const completeLoginAfter2FA = async () => {
+    if (!pending2FAUser) return;
+    
+    // Re-sign in after 2FA verification
+    const { error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
+    
+    if (error) {
+      toast({
+        variant: "destructive",
+        title: "Login failed",
+        description: error.message,
+      });
+      setNeeds2FA(false);
+      setPending2FAUser(null);
+    }
+  };
+
+  // Auto-complete login when 2FA is verified
+  useEffect(() => {
+    if (pending2FAUser && !needs2FA && !user) {
+      completeLoginAfter2FA();
+    }
+  }, [needs2FA, pending2FAUser, user]);
+
+  // Loading state - must come AFTER all hooks
   if (authLoading || inviteLoading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
@@ -308,34 +336,6 @@ const Auth = () => {
       setLoading(false);
     }
   };
-  
-  // Complete login after 2FA verification
-  const completeLoginAfter2FA = async () => {
-    if (!pending2FAUser) return;
-    
-    // Re-sign in after 2FA verification
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
-    
-    if (error) {
-      toast({
-        variant: "destructive",
-        title: "Login failed",
-        description: error.message,
-      });
-      setNeeds2FA(false);
-      setPending2FAUser(null);
-    }
-  };
-  
-  // Auto-complete login when 2FA is verified
-  useEffect(() => {
-    if (pending2FAUser && !needs2FA && !user) {
-      completeLoginAfter2FA();
-    }
-  }, [needs2FA, pending2FAUser]);
 
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-4">
