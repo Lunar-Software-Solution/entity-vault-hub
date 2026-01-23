@@ -117,7 +117,6 @@ const EntitySection = () => {
               className="glass-card rounded-xl p-4 flex items-center gap-4 cursor-pointer hover:bg-muted/50 transition-colors group"
             >
               <CompanyLogo 
-                domain={entity.website} 
                 name={entity.name} 
                 size="md"
               />
@@ -132,11 +131,6 @@ const EntitySection = () => {
                   }`}>
                     {entity.status}
                   </span>
-                  {entity.is_verified && (
-                    <span className="px-2 py-0.5 rounded-full bg-primary/10 text-primary text-xs font-medium">
-                      Verified
-                    </span>
-                  )}
                 </div>
                 <div className="flex items-center gap-4 text-sm text-muted-foreground">
                   <span>{entity.type}</span>
@@ -144,12 +138,6 @@ const EntitySection = () => {
                     <span className="flex items-center gap-1">
                       <MapPin className="w-3 h-3" />
                       {entity.jurisdiction}
-                    </span>
-                  )}
-                  {entity.email && (
-                    <span className="flex items-center gap-1 truncate">
-                      <Mail className="w-3 h-3" />
-                      {entity.email}
                     </span>
                   )}
                 </div>
