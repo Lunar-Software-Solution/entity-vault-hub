@@ -22,7 +22,7 @@ import {
   useSocialMediaAccounts,
   useEmailAddresses
 } from "@/hooks/usePortalData";
-import { useUpdateEntity } from "@/hooks/usePortalMutations";
+import { useUpdateEntity, useDeleteEntity } from "@/hooks/usePortalMutations";
 import { useUserRole } from "@/hooks/useUserRole";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -51,10 +51,12 @@ import {
   CheckSquare,
   Share2,
   Users,
-  Pencil
+  Pencil,
+  Trash2
 } from "lucide-react";
 import { format } from "date-fns";
 import CompanyLogo from "@/components/shared/CompanyLogo";
+import DeleteConfirmDialog from "@/components/shared/DeleteConfirmDialog";
 import EntityForm from "@/components/forms/EntityForm";
 import LinkedBankAccounts from "@/components/entity-detail/LinkedBankAccounts";
 import LinkedCreditCards from "@/components/entity-detail/LinkedCreditCards";
@@ -95,8 +97,10 @@ const EntityDetail = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const { canWrite } = useUserRole();
   const updateEntity = useUpdateEntity();
+  const deleteEntity = useDeleteEntity();
   
   const { data: entities, isLoading: entitiesLoading } = useEntities();
   const { data: bankAccounts, isLoading: bankLoading } = useBankAccounts();
@@ -181,7 +185,6 @@ const EntityDetail = () => {
       <div className="glass-card rounded-xl p-8 mb-8">
         <div className="flex items-start gap-6">
           <CompanyLogo 
-            domain={entity.website} 
             name={entity.name} 
             size="lg"
             className="w-20 h-20 rounded-2xl"
@@ -196,10 +199,16 @@ const EntityDetail = () => {
             </div>
           </div>
           {canWrite && (
-            <Button variant="outline" size="sm" onClick={() => setIsEditDialogOpen(true)} className="gap-2">
-              <Pencil className="w-4 h-4" />
-              Edit
-            </Button>
+            <div className="flex gap-2">
+              <Button variant="outline" size="sm" onClick={() => setIsEditDialogOpen(true)} className="gap-2">
+                <Pencil className="w-4 h-4" />
+                Edit
+              </Button>
+              <Button variant="outline" size="sm" onClick={() => setIsDeleteDialogOpen(true)} className="gap-2 text-destructive hover:text-destructive">
+                <Trash2 className="w-4 h-4" />
+                Delete
+              </Button>
+            </div>
           )}
         </div>
 
@@ -483,6 +492,23 @@ const EntityDetail = () => {
           />
         </DialogContent>
       </Dialog>
+
+      {/* Delete Entity Dialog */}
+      <DeleteConfirmDialog
+        open={isDeleteDialogOpen}
+        onOpenChange={setIsDeleteDialogOpen}
+        onConfirm={() => {
+          deleteEntity.mutate(entity.id, {
+            onSuccess: () => {
+              setIsDeleteDialogOpen(false);
+              navigate("/");
+            },
+          });
+        }}
+        title="Delete Entity"
+        description={`Are you sure you want to delete "${entity.name}"? This will permanently delete this entity and all associated data (bank accounts, contracts, documents, etc.). This action cannot be undone.`}
+        isLoading={deleteEntity.isPending}
+      />
     </div>
   );
 };

@@ -41,7 +41,7 @@ const GlobalSearch = ({ onNavigate }: GlobalSearchProps) => {
       if (
         e.name.toLowerCase().includes(lowerQuery) ||
         e.type.toLowerCase().includes(lowerQuery) ||
-        e.email?.toLowerCase().includes(lowerQuery)
+        e.jurisdiction?.toLowerCase().includes(lowerQuery)
       ) {
         matched.push({
           id: e.id,
