@@ -20,7 +20,8 @@ const Auth = () => {
   const [searchParams] = useSearchParams();
   const inviteToken = searchParams.get("invite");
   
-  const [isLogin, setIsLogin] = useState(true);
+  // Only show signup option when there's a valid invitation
+  const [isLogin, setIsLogin] = useState(!inviteToken);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -208,12 +209,10 @@ const Auth = () => {
               ) : (
                 <>
                   <h1 className="text-2xl font-bold text-foreground">
-                    {isLogin ? "Welcome back" : "Create an account"}
+                    Welcome back
                   </h1>
                   <p className="text-muted-foreground mt-1">
-                    {isLogin
-                      ? "Sign in to access your portal"
-                      : "Sign up to get started with Entity Hub"}
+                    Sign in to access your portal
                   </p>
                 </>
               )}
@@ -271,28 +270,23 @@ const Auth = () => {
                   ? "Please wait..." 
                   : invitation 
                     ? (isLogin ? "Sign In & Accept" : "Create Account & Accept")
-                    : (isLogin ? "Sign In" : "Create Account")
+                    : "Sign In"
                 }
               </Button>
             </form>
           )}
 
-          {/* Toggle - show if no invite error */}
-          {!inviteError && (
+          {/* Toggle - only show for invitations */}
+          {!inviteError && invitation && (
             <div className="text-center">
               <button
                 type="button"
                 onClick={() => setIsLogin(!isLogin)}
                 className="text-sm text-muted-foreground hover:text-primary transition-colors"
               >
-                {invitation
-                  ? (isLogin
-                      ? "New here? Create an account"
-                      : "Already have an account? Sign in")
-                  : (isLogin
-                      ? "Don't have an account? Sign up"
-                      : "Already have an account? Sign in")
-                }
+                {isLogin
+                  ? "New here? Create an account"
+                  : "Already have an account? Sign in"}
               </button>
             </div>
           )}
