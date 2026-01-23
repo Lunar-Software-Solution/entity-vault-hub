@@ -18,7 +18,24 @@ interface Invitation {
 
 const Auth = () => {
   const [searchParams] = useSearchParams();
-  const inviteToken = searchParams.get("invite");
+  
+  // Check multiple sources for the invite token
+  // 1. Query parameter: ?invite=xxx
+  // 2. Hash fragment: #invite=xxx (fallback if Brevo strips query params)
+  const getInviteToken = () => {
+    const queryToken = searchParams.get("invite");
+    if (queryToken) return queryToken;
+    
+    // Check hash fragment as fallback
+    const hash = window.location.hash;
+    if (hash.includes("invite=")) {
+      const match = hash.match(/invite=([^&]+)/);
+      return match ? match[1] : null;
+    }
+    return null;
+  };
+  
+  const inviteToken = getInviteToken();
   
   // Only show signup option when there's a valid invitation
   const [isLogin, setIsLogin] = useState(!inviteToken);
@@ -35,6 +52,10 @@ const Auth = () => {
 
   // Load invitation details if token is present
   useEffect(() => {
+    // Debug: log the current URL and token
+    console.log("Auth page loaded with URL:", window.location.href);
+    console.log("Invite token from searchParams:", inviteToken);
+    
     if (inviteToken) {
       loadInvitation(inviteToken);
     }
@@ -44,6 +65,8 @@ const Auth = () => {
     setInviteLoading(true);
     setInviteError(null);
     
+    console.log("Looking up invitation with token:", token);
+    
     try {
       const { data, error } = await supabase
         .from("team_invitations")
@@ -51,7 +74,10 @@ const Auth = () => {
         .eq("token", token)
         .single();
 
+      console.log("Invitation lookup result:", { data, error });
+
       if (error || !data) {
+        console.error("Invitation not found:", error);
         setInviteError("Invalid or expired invitation link.");
         return;
       }
@@ -70,6 +96,7 @@ const Auth = () => {
       setEmail(data.email);
       setIsLogin(false); // Default to signup for new invitations
     } catch (err) {
+      console.error("Error loading invitation:", err);
       setInviteError("Failed to load invitation.");
     } finally {
       setInviteLoading(false);
