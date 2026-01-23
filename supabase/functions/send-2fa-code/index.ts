@@ -39,12 +39,11 @@ const handler = async (req: Request): Promise<Response> => {
     const code = generateCode();
     const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
 
-    // Delete any existing unused codes for this user
+    // Delete ALL existing codes for this user (used or unused) to ensure only the latest is valid
     await supabase
       .from("email_2fa_codes")
       .delete()
-      .eq("user_id", userId)
-      .eq("used", false);
+      .eq("user_id", userId);
 
     // Insert new code
     const { error: insertError } = await supabase
