@@ -243,6 +243,84 @@ const EntityDetail = () => {
 
       </div>
 
+      {/* Primary Items & Social Media */}
+      {(linkedAddresses.some(a => a.is_primary) || 
+        linkedPhoneNumbers.some(p => p.is_primary) || 
+        linkedTaxIds.some(t => t.is_primary) || 
+        linkedSocialMedia.length > 0) && (
+        <div className="glass-card rounded-xl p-6 mb-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {/* Primary Address */}
+            {linkedAddresses.filter(a => a.is_primary).map(address => (
+              <div key={address.id} className="space-y-1">
+                <div className="flex items-center gap-2 text-muted-foreground">
+                  <MapPin className="w-4 h-4" />
+                  <span className="text-xs font-medium uppercase tracking-wider">Primary Address</span>
+                </div>
+                <p className="text-sm text-foreground">{address.street}</p>
+                <p className="text-sm text-foreground">{address.city}, {address.state} {address.zip}</p>
+                <p className="text-sm text-muted-foreground">{address.country}</p>
+              </div>
+            ))}
+
+            {/* Primary Phone */}
+            {linkedPhoneNumbers.filter(p => p.is_primary).map(phone => (
+              <div key={phone.id} className="space-y-1">
+                <div className="flex items-center gap-2 text-muted-foreground">
+                  <Phone className="w-4 h-4" />
+                  <span className="text-xs font-medium uppercase tracking-wider">Primary Phone</span>
+                </div>
+                <p className="text-sm text-foreground font-mono">
+                  {phone.country_code} {phone.phone_number}
+                </p>
+                <p className="text-xs text-muted-foreground">{phone.label}</p>
+              </div>
+            ))}
+
+            {/* Primary Tax ID */}
+            {linkedTaxIds.filter(t => t.is_primary).map(taxId => (
+              <div key={taxId.id} className="space-y-1">
+                <div className="flex items-center gap-2 text-muted-foreground">
+                  <Receipt className="w-4 h-4" />
+                  <span className="text-xs font-medium uppercase tracking-wider">Primary Tax ID</span>
+                </div>
+                <p className="text-sm text-foreground font-mono">{taxId.tax_id_number}</p>
+                <p className="text-xs text-muted-foreground">{taxId.type} — {taxId.country}</p>
+              </div>
+            ))}
+
+            {/* Social Media */}
+            {linkedSocialMedia.length > 0 && (
+              <div className="space-y-2">
+                <div className="flex items-center gap-2 text-muted-foreground">
+                  <Share2 className="w-4 h-4" />
+                  <span className="text-xs font-medium uppercase tracking-wider">Social Media</span>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {linkedSocialMedia.map(social => (
+                    <a
+                      key={social.id}
+                      href={social.profile_url || '#'}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium text-white transition-opacity hover:opacity-80 ${social.color || 'bg-zinc-800'}`}
+                    >
+                      {social.avatar_url ? (
+                        <img src={social.avatar_url} alt="" className="w-4 h-4 rounded-full" />
+                      ) : null}
+                      <span>{social.platform}</span>
+                      {social.is_verified && (
+                        <span className="text-[10px]">✓</span>
+                      )}
+                    </a>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
       {/* Stats Summary - Row 1: Core Data */}
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-4">
         <div className="glass-card rounded-xl p-4 text-center">
