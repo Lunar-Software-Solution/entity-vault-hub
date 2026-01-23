@@ -26,6 +26,8 @@ export type EntityFiling = Tables<"entity_filings">;
 export type FilingTask = Tables<"filing_tasks">;
 export type FilingDocument = Tables<"filing_documents">;
 export type AuditLog = Tables<"audit_logs">;
+export type EmailAddress = Tables<"email_addresses">;
+export type DirectorUbo = Tables<"directors_ubos">;
 
 // Recent audit logs hook
 export const useRecentAuditLogs = (limit: number = 10) => {
@@ -136,6 +138,20 @@ export const usePhoneNumbers = () => {
         .order("is_primary", { ascending: false });
       if (error) throw error;
       return data as PhoneNumber[];
+    },
+  });
+};
+
+export const useEmailAddresses = () => {
+  return useQuery({
+    queryKey: ["email_addresses"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("email_addresses")
+        .select("*")
+        .order("is_primary", { ascending: false });
+      if (error) throw error;
+      return data as EmailAddress[];
     },
   });
 };
