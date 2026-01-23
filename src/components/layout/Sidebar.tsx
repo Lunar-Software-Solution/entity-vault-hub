@@ -1,83 +1,103 @@
-import { 
-  LayoutDashboard, 
-  Building2, 
-  CreditCard, 
-  Wallet,
-  Share2,
-  MapPin,
-  FileText,
-  Settings,
-  LogOut,
-  User,
-  ChevronUp,
-  Phone,
-  Receipt,
-  Calendar,
-  Briefcase,
-  Mail,
-  Users,
-  PieChart
-} from "lucide-react";
+import { LayoutDashboard, Building2, CreditCard, Wallet, Share2, MapPin, FileText, Settings, LogOut, User, ChevronUp, Phone, Receipt, Calendar, Briefcase, Mail, Users, PieChart } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
 import braxLogo from "@/assets/braxtech-logo.png";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-
 interface SidebarProps {
   activeSection: string;
   onSectionChange: (section: string) => void;
 }
-
-const menuItems = [
-  { id: "dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { id: "entity", label: "Entities", icon: Building2 },
-  { id: "directors-ubo", label: "Directors & UBOs", icon: Users },
-  { id: "cap-table", label: "Cap Table", icon: PieChart },
-  { id: "service-providers", label: "Service Providers", icon: Briefcase },
-  { id: "filings", label: "Filings", icon: Calendar },
-  { id: "bank-accounts", label: "Bank Accounts", icon: Wallet },
-  { id: "credit-cards", label: "Credit Cards", icon: CreditCard },
-  { id: "phone-numbers", label: "Phone Numbers", icon: Phone },
-  { id: "tax-ids", label: "Tax IDs", icon: Receipt },
-  { id: "emails", label: "Emails", icon: Mail },
-  { id: "social-media", label: "Social Media", icon: Share2 },
-  { id: "addresses", label: "Addresses", icon: MapPin },
-  { id: "documents", label: "Documents", icon: FileText },
-  { id: "contracts", label: "Contracts", icon: FileText },
-  { id: "users", label: "Users", icon: Users },
-  { id: "settings", label: "Settings", icon: Settings },
-];
-
-const Sidebar = ({ activeSection, onSectionChange }: SidebarProps) => {
-  const { user, signOut } = useAuth();
-
+const menuItems = [{
+  id: "dashboard",
+  label: "Dashboard",
+  icon: LayoutDashboard
+}, {
+  id: "entity",
+  label: "Entities",
+  icon: Building2
+}, {
+  id: "directors-ubo",
+  label: "Directors & UBOs",
+  icon: Users
+}, {
+  id: "cap-table",
+  label: "Cap Table",
+  icon: PieChart
+}, {
+  id: "service-providers",
+  label: "Service Providers",
+  icon: Briefcase
+}, {
+  id: "filings",
+  label: "Filings",
+  icon: Calendar
+}, {
+  id: "bank-accounts",
+  label: "Bank Accounts",
+  icon: Wallet
+}, {
+  id: "credit-cards",
+  label: "Credit Cards",
+  icon: CreditCard
+}, {
+  id: "phone-numbers",
+  label: "Phone Numbers",
+  icon: Phone
+}, {
+  id: "tax-ids",
+  label: "Tax IDs",
+  icon: Receipt
+}, {
+  id: "emails",
+  label: "Emails",
+  icon: Mail
+}, {
+  id: "social-media",
+  label: "Social Media",
+  icon: Share2
+}, {
+  id: "addresses",
+  label: "Addresses",
+  icon: MapPin
+}, {
+  id: "documents",
+  label: "Documents",
+  icon: FileText
+}, {
+  id: "contracts",
+  label: "Contracts",
+  icon: FileText
+}, {
+  id: "users",
+  label: "Users",
+  icon: Users
+}, {
+  id: "settings",
+  label: "Settings",
+  icon: Settings
+}];
+const Sidebar = ({
+  activeSection,
+  onSectionChange
+}: SidebarProps) => {
+  const {
+    user,
+    signOut
+  } = useAuth();
   const handleLogout = async () => {
     await signOut();
   };
-
   const userEmail = user?.email || "user@example.com";
-  const userInitials = userEmail
-    .split("@")[0]
-    .slice(0, 2)
-    .toUpperCase();
-
-  return (
-    <aside className="fixed left-0 top-0 h-screen w-64 bg-sidebar border-r border-sidebar-border flex flex-col">
+  const userInitials = userEmail.split("@")[0].slice(0, 2).toUpperCase();
+  return <aside className="fixed left-0 top-0 h-screen w-64 bg-sidebar border-r border-sidebar-border flex flex-col">
       <div className="p-6">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-xl overflow-hidden">
             <img src={braxLogo} alt="BraxTech" className="w-full h-full object-contain" />
           </div>
           <div>
-            <h1 className="font-semibold text-sidebar-foreground">Entity Hub</h1>
+            <h1 className="font-semibold text-sidebar-foreground">Brax Entity Hub</h1>
             <p className="text-xs text-muted-foreground">Management Portal</p>
           </div>
         </div>
@@ -85,22 +105,12 @@ const Sidebar = ({ activeSection, onSectionChange }: SidebarProps) => {
 
       <nav className="flex-1 px-3 py-4">
         <ul className="space-y-1">
-          {menuItems.map((item) => (
-            <li key={item.id}>
-              <button
-                onClick={() => onSectionChange(item.id)}
-                className={cn(
-                  "w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-all duration-200",
-                  activeSection === item.id
-                    ? "bg-sidebar-accent text-sidebar-primary"
-                    : "text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/50"
-                )}
-              >
+          {menuItems.map(item => <li key={item.id}>
+              <button onClick={() => onSectionChange(item.id)} className={cn("w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-all duration-200", activeSection === item.id ? "bg-sidebar-accent text-sidebar-primary" : "text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/50")}>
                 <item.icon className="w-5 h-5" />
                 {item.label}
               </button>
-            </li>
-          ))}
+            </li>)}
         </ul>
       </nav>
 
@@ -124,11 +134,7 @@ const Sidebar = ({ activeSection, onSectionChange }: SidebarProps) => {
               <ChevronUp className="w-4 h-4 text-muted-foreground" />
             </button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent 
-            side="top" 
-            align="start" 
-            className="w-56 bg-popover border border-border shadow-lg"
-          >
+          <DropdownMenuContent side="top" align="start" className="w-56 bg-popover border border-border shadow-lg">
             <DropdownMenuLabel className="font-normal">
               <div className="flex flex-col space-y-1">
                 <p className="text-sm font-medium leading-none">Account</p>
@@ -147,18 +153,13 @@ const Sidebar = ({ activeSection, onSectionChange }: SidebarProps) => {
               Settings
             </DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem 
-              onClick={handleLogout}
-              className="cursor-pointer text-destructive focus:text-destructive focus:bg-destructive/10"
-            >
+            <DropdownMenuItem onClick={handleLogout} className="cursor-pointer text-destructive focus:text-destructive focus:bg-destructive/10">
               <LogOut className="w-4 h-4 mr-2" />
               Log out
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
-    </aside>
-  );
+    </aside>;
 };
-
 export default Sidebar;
