@@ -45,6 +45,10 @@ export const bankAccountSchema = z.object({
   type: z.string().min(1, "Account type is required"),
   currency: z.string().min(1, "Currency is required"),
   entity_id: z.string().uuid().optional().or(z.literal("")),
+  iban: z.string().trim().max(34).optional().or(z.literal("")),
+  swift_bic: z.string().trim().max(11).optional().or(z.literal("")),
+  account_holder_name: z.string().trim().max(200).optional().or(z.literal("")),
+  bank_address: z.string().trim().max(500).optional().or(z.literal("")),
 });
 
 export const creditCardSchema = z.object({
@@ -205,6 +209,10 @@ export type BankAccountFormData = {
   type: string;
   currency: string;
   entity_id?: string;
+  iban?: string;
+  swift_bic?: string;
+  account_holder_name?: string;
+  bank_address?: string;
 };
 
 export type CreditCardFormData = {

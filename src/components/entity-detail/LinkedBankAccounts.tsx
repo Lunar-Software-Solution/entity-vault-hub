@@ -46,10 +46,25 @@ const LinkedBankAccounts = ({ accounts }: LinkedBankAccountsProps) => {
                       {account.type}
                     </span>
                   </div>
-                  <div className="mt-2 flex items-center gap-4 text-sm">
+                  {(account as any).account_holder_name && (
+                    <p className="text-xs text-muted-foreground mt-1">
+                      {(account as any).account_holder_name}
+                    </p>
+                  )}
+                  <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm">
                     <span className="font-mono text-muted-foreground">
                       ••••{account.account_number.slice(-4)}
                     </span>
+                    {(account as any).iban && (
+                      <span className="font-mono text-muted-foreground text-xs">
+                        IBAN: {(account as any).iban}
+                      </span>
+                    )}
+                    {(account as any).swift_bic && (
+                      <span className="font-mono text-muted-foreground text-xs">
+                        SWIFT: {(account as any).swift_bic}
+                      </span>
+                    )}
                     <span className="text-muted-foreground">{account.currency}</span>
                   </div>
                 </div>
