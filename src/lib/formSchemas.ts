@@ -31,12 +31,8 @@ export const entitySchema = z.object({
   name: z.string().trim().min(1, "Name is required").max(200, "Name must be less than 200 characters"),
   type: z.string().min(1, "Type is required"),
   status: z.string().min(1, "Status is required"),
-  email: z.string().trim().email("Invalid email").optional().or(z.literal("")),
-  phone: z.string().trim().max(30, "Phone must be less than 30 characters").optional().or(z.literal("")),
-  website: z.string().trim().url("Invalid URL").optional().or(z.literal("")),
   jurisdiction: z.string().trim().max(100).optional().or(z.literal("")),
   founded_date: z.string().optional().or(z.literal("")),
-  fiscal_year_end: z.string().trim().max(5).regex(/^(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$/, "Must be MM-DD format").optional().or(z.literal("")),
 });
 
 export const bankAccountSchema = z.object({
