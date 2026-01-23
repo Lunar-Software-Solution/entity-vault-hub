@@ -20,10 +20,12 @@ import UserManagementSection from "@/components/sections/UserManagementSection";
 import CapTableSection from "@/components/sections/CapTableSection";
 import DirectorsUboSection from "@/components/sections/DirectorsUboSection";
 import AIChatAssistant from "@/components/ai/AIChatAssistant";
+import { cn } from "@/lib/utils";
 
 const Index = () => {
   const [activeSection, setActiveSection] = useState("dashboard");
   const [selectedEntityId, setSelectedEntityId] = useState<string | null>(null);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
   // Sections that support entity filtering
   const filterableSections = ["bank-accounts", "credit-cards", "addresses", "contracts", "phone-numbers", "tax-ids", "documents", "filings", "social-media", "directors-ubo"];
@@ -72,8 +74,16 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-background dark">
-      <Sidebar activeSection={activeSection} onSectionChange={setActiveSection} />
-      <main className="ml-64 min-h-screen">
+      <Sidebar 
+        activeSection={activeSection} 
+        onSectionChange={setActiveSection}
+        collapsed={sidebarCollapsed}
+        onCollapsedChange={setSidebarCollapsed}
+      />
+      <main className={cn(
+        "min-h-screen transition-all duration-300",
+        sidebarCollapsed ? "ml-14" : "ml-56"
+      )}>
         <div className="p-8">
           {/* Top bar with search and optional filter */}
           <div className="flex items-center gap-4 mb-6 pb-4 border-b border-border">
