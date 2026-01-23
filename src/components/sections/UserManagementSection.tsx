@@ -653,11 +653,11 @@ const UserManagementSection = () => {
                     <TableCell>
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="icon" className="h-8 w-8">
+                          <Button variant="ghost" size="icon" className="h-8 w-8 text-foreground hover:bg-muted">
                             <MoreHorizontal className="h-4 w-4" />
                           </Button>
                         </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" className="bg-background">
+                        <DropdownMenuContent align="end" className="bg-popover border-border">
                           <DropdownMenuItem
                             onClick={() => {
                               setSelectedUser(profile);
@@ -775,11 +775,11 @@ const UserManagementSection = () => {
                         <TableCell>
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>
-                              <Button variant="ghost" size="icon" className="h-8 w-8">
+                              <Button variant="ghost" size="icon" className="h-8 w-8 text-foreground hover:bg-muted">
                                 <MoreHorizontal className="h-4 w-4" />
                               </Button>
                             </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end" className="bg-background">
+                            <DropdownMenuContent align="end" className="bg-popover border-border">
                               {invitation.status === "pending" && (
                                 <DropdownMenuItem
                                   onClick={() => resendInvitation.mutate(invitation)}
