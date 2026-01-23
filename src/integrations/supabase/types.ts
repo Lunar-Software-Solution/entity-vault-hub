@@ -829,48 +829,39 @@ export type Database = {
       entities: {
         Row: {
           created_at: string
-          email: string | null
           fiscal_year_end: string | null
           founded_date: string | null
           id: string
           is_verified: boolean
           jurisdiction: string | null
           name: string
-          phone: string | null
           status: string
           type: string
           updated_at: string
-          website: string | null
         }
         Insert: {
           created_at?: string
-          email?: string | null
           fiscal_year_end?: string | null
           founded_date?: string | null
           id?: string
           is_verified?: boolean
           jurisdiction?: string | null
           name: string
-          phone?: string | null
           status?: string
           type?: string
           updated_at?: string
-          website?: string | null
         }
         Update: {
           created_at?: string
-          email?: string | null
           fiscal_year_end?: string | null
           founded_date?: string | null
           id?: string
           is_verified?: boolean
           jurisdiction?: string | null
           name?: string
-          phone?: string | null
           status?: string
           type?: string
           updated_at?: string
-          website?: string | null
         }
         Relationships: []
       }
