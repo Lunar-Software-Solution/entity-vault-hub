@@ -57,10 +57,10 @@ const handler = async (req: Request): Promise<Response> => {
       });
     }
 
-    // Mark code as used
+    // Delete the code after successful verification (one-time use)
     await supabase
       .from("email_2fa_codes")
-      .update({ used: true })
+      .delete()
       .eq("id", codeRecord.id);
 
     console.log("2FA code verified successfully for user:", userId);
