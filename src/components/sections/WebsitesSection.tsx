@@ -130,10 +130,12 @@ const WebsitesSection = ({ entityFilter }: WebsitesSectionProps) => {
           <h2 className="text-2xl font-bold text-foreground mb-2">Websites</h2>
           <p className="text-muted-foreground">Manage websites and domains across all entities.</p>
         </div>
-        <Button className="gap-2" onClick={() => setIsFormOpen(true)}>
-          <Plus className="w-4 h-4" />
-          Add Website
-        </Button>
+        {canWrite && (
+          <Button className="gap-2" onClick={() => setIsFormOpen(true)}>
+            <Plus className="w-4 h-4" />
+            Add Website
+          </Button>
+        )}
       </div>
 
       {filteredWebsites.length === 0 ? (
@@ -141,10 +143,12 @@ const WebsitesSection = ({ entityFilter }: WebsitesSectionProps) => {
           <p className="text-muted-foreground mb-4">
             {entityFilter ? "No websites linked to this entity." : "No websites added yet."}
           </p>
-          <Button className="gap-2" onClick={() => setIsFormOpen(true)}>
-            <Plus className="w-4 h-4" />
-            Add Your First Website
-          </Button>
+          {canWrite && (
+            <Button className="gap-2" onClick={() => setIsFormOpen(true)}>
+              <Plus className="w-4 h-4" />
+              Add Your First Website
+            </Button>
+          )}
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -168,24 +172,26 @@ const WebsitesSection = ({ entityFilter }: WebsitesSectionProps) => {
                       <p className="text-sm text-muted-foreground truncate">{website.url}</p>
                     </div>
                   </div>
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="icon" className="h-8 w-8">
-                        <MoreVertical className="w-4 h-4" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" className="bg-popover border border-border">
-                      <DropdownMenuItem onClick={() => handleEdit(website)}>
-                        <Edit2 className="w-4 h-4 mr-2" /> Edit
-                      </DropdownMenuItem>
-                      <DropdownMenuItem 
-                        onClick={() => setDeletingId(website.id)}
-                        className="text-destructive focus:text-destructive"
-                      >
-                        <Trash2 className="w-4 h-4 mr-2" /> Delete
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
+                  {canWrite && (
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="icon" className="h-8 w-8">
+                          <MoreVertical className="w-4 h-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end" className="bg-popover border border-border">
+                        <DropdownMenuItem onClick={() => handleEdit(website)}>
+                          <Edit2 className="w-4 h-4 mr-2" /> Edit
+                        </DropdownMenuItem>
+                        <DropdownMenuItem 
+                          onClick={() => setDeletingId(website.id)}
+                          className="text-destructive focus:text-destructive"
+                        >
+                          <Trash2 className="w-4 h-4 mr-2" /> Delete
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  )}
                 </div>
 
                 <div className="space-y-3">

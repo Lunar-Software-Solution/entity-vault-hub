@@ -29,11 +29,13 @@ import AdvisorForm from "@/components/forms/AdvisorForm";
 import ConsultantForm from "@/components/forms/ConsultantForm";
 import RegistrationAgentForm from "@/components/forms/RegistrationAgentForm";
 import { Plus, Edit, Trash2, Search, Scale, Calculator, ClipboardCheck, Lightbulb, Briefcase, UserCheck, ExternalLink } from "lucide-react";
+import { useUserRole } from "@/hooks/useUserRole";
 
 type ProviderType = "law_firms" | "accountants" | "auditors" | "advisors" | "consultants" | "registration_agents";
 
 const ServiceProvidersSection = () => {
   const navigate = useNavigate();
+  const { canWrite } = useUserRole();
   const [activeTab, setActiveTab] = useState<ProviderType>("law_firms");
   const [searchQuery, setSearchQuery] = useState("");
   const [entityFilter, setEntityFilter] = useState<string>("all");
@@ -335,10 +337,12 @@ const ServiceProvidersSection = () => {
                 <SelectItem value="inactive">Inactive</SelectItem>
               </SelectContent>
             </Select>
-            <Button onClick={() => setShowForm(true)} className="gap-2 ml-auto">
-              <Plus className="w-4 h-4" />
-              Add Provider
-            </Button>
+            {canWrite && (
+              <Button onClick={() => setShowForm(true)} className="gap-2 ml-auto">
+                <Plus className="w-4 h-4" />
+                Add Provider
+              </Button>
+            )}
           </div>
 
           {/* Table */}
@@ -385,24 +389,26 @@ const ServiceProvidersSection = () => {
                     </TableCell>
                     <TableCell className="text-muted-foreground">{item.email || "—"}</TableCell>
                     <TableCell>
-                      <div className="flex gap-1">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-8 w-8 text-primary hover:text-primary"
-                          onClick={() => handleEdit(item)}
-                        >
-                          <Edit className="w-4 h-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-8 w-8 text-destructive hover:text-destructive"
-                          onClick={() => setDeletingItem(item)}
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </Button>
-                      </div>
+                      {canWrite && (
+                        <div className="flex gap-1">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8 text-primary hover:text-primary"
+                            onClick={() => handleEdit(item)}
+                          >
+                            <Edit className="w-4 h-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8 text-destructive hover:text-destructive"
+                            onClick={() => setDeletingItem(item)}
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        </div>
+                      )}
                     </TableCell>
                   </TableRow>
                 ))}

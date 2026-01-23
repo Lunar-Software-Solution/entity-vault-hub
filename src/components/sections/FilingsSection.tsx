@@ -76,6 +76,7 @@ const FilingsSection = ({ entityFilter }: FilingsSectionProps) => {
   const { data: tasks, isLoading: tasksLoading } = useFilingTasks();
   const { data: filingTypes, isLoading: typesLoading } = useFilingTypes();
   const { data: entities, isLoading: entitiesLoading } = useEntities();
+  const { canWrite } = useUserRole();
 
   const createFiling = useCreateEntityFiling();
   const updateFiling = useUpdateEntityFiling();
@@ -223,16 +224,18 @@ const FilingsSection = ({ entityFilter }: FilingsSectionProps) => {
           <h2 className="text-2xl font-bold text-foreground">Filings & Tasks</h2>
           <p className="text-muted-foreground">Manage regulatory filings and deadlines</p>
         </div>
-        <div className="flex items-center gap-2">
-          <Button variant="outline" onClick={() => setShowTaskForm(true)}>
-            <CheckSquare className="w-4 h-4 mr-2" />
-            Add Task
-          </Button>
-          <Button onClick={() => setShowFilingForm(true)}>
-            <Plus className="w-4 h-4 mr-2" />
-            Add Filing
-          </Button>
-        </div>
+        {canWrite && (
+          <div className="flex items-center gap-2">
+            <Button variant="outline" onClick={() => setShowTaskForm(true)}>
+              <CheckSquare className="w-4 h-4 mr-2" />
+              Add Task
+            </Button>
+            <Button onClick={() => setShowFilingForm(true)}>
+              <Plus className="w-4 h-4 mr-2" />
+              Add Filing
+            </Button>
+          </div>
+        )}
       </div>
 
       {/* Stats */}
@@ -375,7 +378,7 @@ const FilingsSection = ({ entityFilter }: FilingsSectionProps) => {
                         </TableCell>
                         <TableCell className="text-right">
                           <div className="flex items-center justify-end gap-1">
-                            {filing.status !== "filed" && (
+                            {canWrite && filing.status !== "filed" && (
                               <Button 
                                 variant="ghost" 
                                 size="sm"
@@ -384,21 +387,25 @@ const FilingsSection = ({ entityFilter }: FilingsSectionProps) => {
                                 Mark Filed
                               </Button>
                             )}
-                            <Button 
-                              variant="ghost" 
-                              size="sm"
-                              onClick={() => handleFilingClick(filing)}
-                            >
-                              Edit
-                            </Button>
-                            <Button 
-                              variant="ghost" 
-                              size="sm"
-                              className="text-destructive hover:text-destructive"
-                              onClick={() => setDeletingFiling(filing)}
-                            >
-                              Delete
-                            </Button>
+                            {canWrite && (
+                              <Button 
+                                variant="ghost" 
+                                size="sm"
+                                onClick={() => handleFilingClick(filing)}
+                              >
+                                Edit
+                              </Button>
+                            )}
+                            {canWrite && (
+                              <Button 
+                                variant="ghost" 
+                                size="sm"
+                                className="text-destructive hover:text-destructive"
+                                onClick={() => setDeletingFiling(filing)}
+                              >
+                                Delete
+                              </Button>
+                            )}
                           </div>
                         </TableCell>
                       </TableRow>
@@ -460,7 +467,7 @@ const FilingsSection = ({ entityFilter }: FilingsSectionProps) => {
                       <TableCell>{task.assigned_to || "-"}</TableCell>
                       <TableCell className="text-right">
                         <div className="flex items-center justify-end gap-1">
-                          {task.status !== "completed" && task.status !== "cancelled" && (
+                          {canWrite && task.status !== "completed" && task.status !== "cancelled" && (
                             <Button 
                               variant="ghost" 
                               size="sm"
@@ -469,24 +476,28 @@ const FilingsSection = ({ entityFilter }: FilingsSectionProps) => {
                               Complete
                             </Button>
                           )}
-                          <Button 
-                            variant="ghost" 
-                            size="sm"
-                            onClick={() => {
-                              setEditingTask(task);
-                              setShowTaskForm(true);
-                            }}
-                          >
-                            Edit
-                          </Button>
-                          <Button 
-                            variant="ghost" 
-                            size="sm"
-                            className="text-destructive hover:text-destructive"
-                            onClick={() => setDeletingTask(task)}
-                          >
-                            Delete
-                          </Button>
+                          {canWrite && (
+                            <Button 
+                              variant="ghost" 
+                              size="sm"
+                              onClick={() => {
+                                setEditingTask(task);
+                                setShowTaskForm(true);
+                              }}
+                            >
+                              Edit
+                            </Button>
+                          )}
+                          {canWrite && (
+                            <Button 
+                              variant="ghost" 
+                              size="sm"
+                              className="text-destructive hover:text-destructive"
+                              onClick={() => setDeletingTask(task)}
+                            >
+                              Delete
+                            </Button>
+                          )}
                         </div>
                       </TableCell>
                     </TableRow>
