@@ -18,7 +18,8 @@ import {
   useEntityDocuments,
   useFilingsForEntity,
   useTasksForEntity,
-  useSocialMediaAccounts
+  useSocialMediaAccounts,
+  useEmailAddresses
 } from "@/hooks/usePortalData";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -105,6 +106,7 @@ const EntityDetail = () => {
   const { data: tasks, isLoading: tasksLoading } = useTasksForEntity(id || "");
   const { data: socialMediaAccounts, isLoading: socialLoading } = useSocialMediaAccounts();
   const { data: directorsUbos, isLoading: directorsLoading } = useDirectorsUbosForEntity(id || "");
+  const { data: emailAddresses, isLoading: emailsLoading } = useEmailAddresses();
 
   const entity = entities?.find(e => e.id === id);
   const linkedBankAccounts = bankAccounts?.filter(b => b.entity_id === id) ?? [];
@@ -122,10 +124,11 @@ const EntityDetail = () => {
   const linkedDocuments = entityDocuments?.filter(d => d.entity_id === id) ?? [];
   const linkedSocialMedia = socialMediaAccounts?.filter(s => s.entity_id === id) ?? [];
   const linkedDirectorsUbos = directorsUbos ?? [];
+  const linkedEmails = emailAddresses?.filter(e => e.entity_id === id) ?? [];
 
   const isLoading = entitiesLoading || bankLoading || cardsLoading || addressesLoading || 
     contractsLoading || phonesLoading || taxIdsLoading || accountantsLoading || 
-    lawFirmsLoading || agentsLoading || advisorsLoading || consultantsLoading || auditorsLoading || docsLoading || filingsLoading || tasksLoading || socialLoading || directorsLoading;
+    lawFirmsLoading || agentsLoading || advisorsLoading || consultantsLoading || auditorsLoading || docsLoading || filingsLoading || tasksLoading || socialLoading || directorsLoading || emailsLoading;
 
   if (isLoading) {
     return (
@@ -231,19 +234,21 @@ const EntityDetail = () => {
       {(linkedAddresses.some(a => a.is_primary) || 
         linkedPhoneNumbers.some(p => p.is_primary) || 
         linkedTaxIds.some(t => t.is_primary) || 
+        linkedEmails.some(e => e.is_primary) ||
+        linkedBankAccounts.some(b => b.is_primary) ||
+        linkedDirectorsUbos.some(d => d.is_primary) ||
         linkedSocialMedia.length > 0) && (
         <div className="glass-card rounded-xl p-6 mb-8">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {/* Primary Address */}
-            {linkedAddresses.filter(a => a.is_primary).map(address => (
-              <div key={address.id} className="space-y-1">
+            {/* Primary Email */}
+            {linkedEmails.filter(e => e.is_primary).map(email => (
+              <div key={email.id} className="space-y-1">
                 <div className="flex items-center gap-2 text-muted-foreground">
-                  <MapPin className="w-4 h-4" />
-                  <span className="text-xs font-medium uppercase tracking-wider">Primary Address</span>
+                  <Mail className="w-4 h-4" />
+                  <span className="text-xs font-medium uppercase tracking-wider">Primary Email</span>
                 </div>
-                <p className="text-sm text-foreground">{address.street}</p>
-                <p className="text-sm text-foreground">{address.city}, {address.state} {address.zip}</p>
-                <p className="text-sm text-muted-foreground">{address.country}</p>
+                <p className="text-sm text-foreground">{email.email}</p>
+                <p className="text-xs text-muted-foreground">{email.label}</p>
               </div>
             ))}
 
@@ -261,6 +266,19 @@ const EntityDetail = () => {
               </div>
             ))}
 
+            {/* Primary Address */}
+            {linkedAddresses.filter(a => a.is_primary).map(address => (
+              <div key={address.id} className="space-y-1">
+                <div className="flex items-center gap-2 text-muted-foreground">
+                  <MapPin className="w-4 h-4" />
+                  <span className="text-xs font-medium uppercase tracking-wider">Primary Address</span>
+                </div>
+                <p className="text-sm text-foreground">{address.street}</p>
+                <p className="text-sm text-foreground">{address.city}, {address.state} {address.zip}</p>
+                <p className="text-sm text-muted-foreground">{address.country}</p>
+              </div>
+            ))}
+
             {/* Primary Tax ID */}
             {linkedTaxIds.filter(t => t.is_primary).map(taxId => (
               <div key={taxId.id} className="space-y-1">
@@ -270,6 +288,30 @@ const EntityDetail = () => {
                 </div>
                 <p className="text-sm text-foreground font-mono">{taxId.tax_id_number}</p>
                 <p className="text-xs text-muted-foreground">{taxId.type} — {taxId.country}</p>
+              </div>
+            ))}
+
+            {/* Primary Bank Account */}
+            {linkedBankAccounts.filter(b => b.is_primary).map(account => (
+              <div key={account.id} className="space-y-1">
+                <div className="flex items-center gap-2 text-muted-foreground">
+                  <Wallet className="w-4 h-4" />
+                  <span className="text-xs font-medium uppercase tracking-wider">Primary Bank</span>
+                </div>
+                <p className="text-sm text-foreground">{account.bank}</p>
+                <p className="text-sm text-foreground font-mono">••••{account.account_number.slice(-4)}</p>
+              </div>
+            ))}
+
+            {/* Primary Director/Contact */}
+            {linkedDirectorsUbos.filter(d => d.is_primary).map(director => (
+              <div key={director.id} className="space-y-1">
+                <div className="flex items-center gap-2 text-muted-foreground">
+                  <Users className="w-4 h-4" />
+                  <span className="text-xs font-medium uppercase tracking-wider">Primary Contact</span>
+                </div>
+                <p className="text-sm text-foreground">{director.name}</p>
+                <p className="text-xs text-muted-foreground">{director.title || director.role_type}</p>
               </div>
             ))}
 
