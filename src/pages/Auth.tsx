@@ -309,10 +309,11 @@ const Auth = () => {
             description: error.message,
           });
         } else if (data.user) {
-          // Sign out immediately and require 2FA
-          await supabase.auth.signOut();
+          // Set 2FA state BEFORE signing out to prevent race condition
           setPending2FAUser({ id: data.user.id, email: data.user.email || email });
           setNeeds2FA(true);
+          // Sign out to require 2FA verification
+          await supabase.auth.signOut();
           await send2FACode(data.user.id, data.user.email || email);
         }
       } else {
