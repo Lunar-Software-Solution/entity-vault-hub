@@ -43,6 +43,7 @@ import DeleteConfirmDialog from "@/components/shared/DeleteConfirmDialog";
 import EntityFilingForm from "@/components/forms/EntityFilingForm";
 import FilingTaskForm from "@/components/forms/FilingTaskForm";
 import FilingsCalendar from "@/components/filings/FilingsCalendar";
+import { useUserRole } from "@/hooks/useUserRole";
 import { format } from "date-fns";
 import { 
   getFilingDisplayStatus, 

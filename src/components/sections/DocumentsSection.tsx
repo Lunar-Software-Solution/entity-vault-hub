@@ -11,6 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import DeleteConfirmDialog from "@/components/shared/DeleteConfirmDialog";
 import EntityDocumentForm from "@/components/forms/EntityDocumentForm";
 import PdfViewerDialog from "@/components/contracts/PdfViewerDialog";
+import { useUserRole } from "@/hooks/useUserRole";
 import type { EntityDocumentFormData } from "@/lib/formSchemas";
 import { Plus, Edit, Trash2, Search, Eye, FileText, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
 import { format } from "date-fns";
@@ -51,6 +52,7 @@ const DocumentsSection = ({ entityFilter }: DocumentsSectionProps) => {
   const { data: documents, isLoading: docsLoading } = useEntityDocuments();
   const { data: documentTypes, isLoading: typesLoading } = useDocumentTypes();
   const { data: entities, isLoading: entitiesLoading } = useEntities();
+  const { canWrite } = useUserRole();
 
   const createMutation = useCreateEntityDocument();
   const updateMutation = useUpdateEntityDocument();

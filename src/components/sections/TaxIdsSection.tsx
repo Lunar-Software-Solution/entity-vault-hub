@@ -10,6 +10,7 @@ import DeleteConfirmDialog from "@/components/shared/DeleteConfirmDialog";
 import TaxIdForm from "@/components/forms/TaxIdForm";
 import { FileText, Plus, MoreHorizontal, Edit, Trash2, Star, Building2, Globe, Calendar } from "lucide-react";
 import { format } from "date-fns";
+import { useUserRole } from "@/hooks/useUserRole";
 import type { TaxIdFormData } from "@/lib/formSchemas";
 
 interface TaxIdsSectionProps {
@@ -23,6 +24,7 @@ const TaxIdsSection = ({ entityFilter }: TaxIdsSectionProps) => {
 
   const { data: taxIds, isLoading: taxIdsLoading } = useTaxIds();
   const { data: entities, isLoading: entitiesLoading } = useEntities();
+  const { canWrite } = useUserRole();
   
   const createMutation = useCreateTaxId();
   const updateMutation = useUpdateTaxId();
@@ -98,20 +100,24 @@ const TaxIdsSection = ({ entityFilter }: TaxIdsSectionProps) => {
           <h2 className="text-2xl font-bold text-foreground">Tax IDs</h2>
           <p className="text-muted-foreground">Manage tax identifiers for your entities</p>
         </div>
-        <Button onClick={() => setShowForm(true)} className="gap-2">
-          <Plus className="w-4 h-4" />
-          Add Tax ID
-        </Button>
+        {canWrite && (
+          <Button onClick={() => setShowForm(true)} className="gap-2">
+            <Plus className="w-4 h-4" />
+            Add Tax ID
+          </Button>
+        )}
       </div>
 
       {!filteredTaxIds?.length ? (
         <div className="glass-card rounded-xl p-12 text-center">
           <FileText className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
           <p className="text-muted-foreground mb-4">No tax IDs added yet</p>
-          <Button onClick={() => setShowForm(true)} variant="outline" className="gap-2">
-            <Plus className="w-4 h-4" />
-            Add Your First Tax ID
-          </Button>
+          {canWrite && (
+            <Button onClick={() => setShowForm(true)} variant="outline" className="gap-2">
+              <Plus className="w-4 h-4" />
+              Add Your First Tax ID
+            </Button>
+          )}
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -134,26 +140,28 @@ const TaxIdsSection = ({ entityFilter }: TaxIdsSectionProps) => {
                     </p>
                   </div>
                 </div>
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="icon" className="h-8 w-8">
-                      <MoreHorizontal className="w-4 h-4" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    <DropdownMenuItem onClick={() => handleEdit(taxId)}>
-                      <Edit className="w-4 h-4 mr-2" />
-                      Edit
-                    </DropdownMenuItem>
-                    <DropdownMenuItem 
-                      onClick={() => setDeletingTaxId(taxId)}
-                      className="text-destructive focus:text-destructive"
-                    >
-                      <Trash2 className="w-4 h-4 mr-2" />
-                      Delete
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
+                {canWrite && (
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" size="icon" className="h-8 w-8">
+                        <MoreHorizontal className="w-4 h-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuItem onClick={() => handleEdit(taxId)}>
+                        <Edit className="w-4 h-4 mr-2" />
+                        Edit
+                      </DropdownMenuItem>
+                      <DropdownMenuItem 
+                        onClick={() => setDeletingTaxId(taxId)}
+                        className="text-destructive focus:text-destructive"
+                      >
+                        <Trash2 className="w-4 h-4 mr-2" />
+                        Delete
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                )}
               </div>
 
               <div className="space-y-2 text-sm">

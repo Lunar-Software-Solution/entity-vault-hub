@@ -9,6 +9,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { Badge } from "@/components/ui/badge";
 import EntitySoftwareForm from "@/components/forms/EntitySoftwareForm";
 import DeleteConfirmDialog from "@/components/shared/DeleteConfirmDialog";
+import { useUserRole } from "@/hooks/useUserRole";
 import type { EntitySoftwareFormData } from "@/lib/formSchemas";
 import { format, differenceInDays, parseISO } from "date-fns";
 
@@ -20,6 +21,7 @@ const SoftwareSection = ({ entityFilter }: SoftwareSectionProps) => {
   const { data: entitySoftware, isLoading } = useEntitySoftware();
   const { data: entities } = useEntities();
   const { data: softwareCatalog } = useSoftwareCatalog();
+  const { canWrite } = useUserRole();
   
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingSoftware, setEditingSoftware] = useState<any | null>(null);
