@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Plus, CreditCard, MoreVertical, Edit2, Trash2, Building2, Eye, EyeOff } from "lucide-react";
+import { Plus, CreditCard, MoreVertical, Edit2, Trash2, Building2, Eye, EyeOff, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useCreditCards, useEntities } from "@/hooks/usePortalData";
 import { useCreateCreditCard, useUpdateCreditCard, useDeleteCreditCard } from "@/hooks/usePortalMutations";
@@ -9,6 +9,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import CreditCardForm from "@/components/forms/CreditCardForm";
 import DeleteConfirmDialog from "@/components/shared/DeleteConfirmDialog";
 import CompanyLogo from "@/components/shared/CompanyLogo";
+import CopyButton from "@/components/shared/CopyButton";
 import { format } from "date-fns";
 import type { CreditCard as CreditCardType } from "@/hooks/usePortalData";
 import type { CreditCardFormData } from "@/lib/formSchemas";
@@ -87,6 +88,10 @@ const CreditCardsSection = ({ entityFilter }: CreditCardsSectionProps) => {
     return `****-****-****-${lastFour}`;
   };
 
+  const openIssuerWebsite = (url: string) => {
+    window.open(url, '_blank', 'noopener,noreferrer');
+  };
+
   if (isLoading) {
     return (
       <div className="space-y-8">
@@ -144,6 +149,7 @@ const CreditCardsSection = ({ entityFilter }: CreditCardsSectionProps) => {
           {filteredCards.map((card) => {
             const linkedEntity = entities?.find(e => e.id === card.entity_id);
             const isRevealed = revealedCards.has(card.id);
+            const issuerWebsite = (card as any).issuer_website;
             return (
               <div key={card.id} className="glass-card rounded-xl overflow-hidden">
                 {/* Card Visual */}
@@ -152,7 +158,7 @@ const CreditCardsSection = ({ entityFilter }: CreditCardsSectionProps) => {
                   <div className="relative">
                     <div className="flex items-center justify-between mb-8">
                       <CompanyLogo 
-                        domain={(card as any).issuer_website} 
+                        domain={issuerWebsite} 
                         name={card.name} 
                         size="sm"
                         className="bg-white/20 rounded-lg"
@@ -174,7 +180,7 @@ const CreditCardsSection = ({ entityFilter }: CreditCardsSectionProps) => {
                       </DropdownMenu>
                     </div>
                     
-                    {/* Card Number with Reveal Toggle */}
+                    {/* Card Number with Reveal Toggle and Copy */}
                     <div className="flex items-center gap-2 mb-4">
                       <p className="font-mono text-lg tracking-wider">
                         {isRevealed ? card.card_number : maskCardNumber(card.card_number)}
@@ -186,6 +192,11 @@ const CreditCardsSection = ({ entityFilter }: CreditCardsSectionProps) => {
                       >
                         {isRevealed ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                       </button>
+                      <CopyButton 
+                        value={card.card_number.replace(/[\s-]/g, '')} 
+                        label="Card number" 
+                        className="text-white hover:bg-white/20"
+                      />
                     </div>
                     
                     <div className="flex items-center justify-between">
@@ -205,12 +216,24 @@ const CreditCardsSection = ({ entityFilter }: CreditCardsSectionProps) => {
                 <div className="p-6 space-y-4">
                   <div className="flex items-center justify-between">
                     <h3 className="font-semibold text-foreground">{card.name}</h3>
-                    {linkedEntity && (
-                      <div className="flex items-center gap-1 px-2 py-1 rounded-full bg-primary/10">
-                        <Building2 className="w-3 h-3 text-primary" />
-                        <span className="text-xs text-primary">{linkedEntity.name}</span>
-                      </div>
-                    )}
+                    <div className="flex items-center gap-2">
+                      {linkedEntity && (
+                        <div className="flex items-center gap-1 px-2 py-1 rounded-full bg-primary/10">
+                          <Building2 className="w-3 h-3 text-primary" />
+                          <span className="text-xs text-primary">{linkedEntity.name}</span>
+                        </div>
+                      )}
+                      {issuerWebsite && (
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          className="gap-1 h-7 px-2"
+                          onClick={() => openIssuerWebsite(issuerWebsite)}
+                        >
+                          <ExternalLink className="w-3 h-3" />
+                        </Button>
+                      )}
+                    </div>
                   </div>
                   
                   <div className="space-y-3">
@@ -227,9 +250,14 @@ const CreditCardsSection = ({ entityFilter }: CreditCardsSectionProps) => {
                     {(card as any).security_code && (
                       <div className="flex items-center justify-between">
                         <span className="text-sm text-muted-foreground">Security Code</span>
-                        <span className="font-mono text-foreground">
-                          {isRevealed ? (card as any).security_code : "***"}
-                        </span>
+                        <div className="flex items-center gap-1">
+                          <span className="font-mono text-foreground">
+                            {isRevealed ? (card as any).security_code : "***"}
+                          </span>
+                          {isRevealed && (
+                            <CopyButton value={(card as any).security_code} label="Security code" />
+                          )}
+                        </div>
                       </div>
                     )}
                   </div>
@@ -237,8 +265,13 @@ const CreditCardsSection = ({ entityFilter }: CreditCardsSectionProps) => {
                   {/* Billing Address */}
                   {(card as any).billing_address && (
                     <div className="pt-3 border-t border-border/50">
-                      <p className="text-xs text-muted-foreground mb-1">Billing Address</p>
-                      <p className="text-sm text-foreground">{(card as any).billing_address}</p>
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1">
+                          <p className="text-xs text-muted-foreground mb-1">Billing Address</p>
+                          <p className="text-sm text-foreground">{(card as any).billing_address}</p>
+                        </div>
+                        <CopyButton value={(card as any).billing_address} label="Billing address" />
+                      </div>
                     </div>
                   )}
                 </div>

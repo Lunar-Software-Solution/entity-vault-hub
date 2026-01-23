@@ -108,7 +108,18 @@ const BankAccountForm = ({ account, onSubmit, onCancel, isLoading }: BankAccount
           <FormField control={form.control} name="iban" render={({ field }) => (
             <FormItem>
               <FormLabel>IBAN</FormLabel>
-              <FormControl><Input placeholder="BE95 9676 8175 4358" {...field} /></FormControl>
+              <FormControl>
+                <Input 
+                  placeholder="BE95 9676 8175 4358" 
+                  {...field}
+                  onChange={(e) => {
+                    // Auto-format IBAN with spaces every 4 characters
+                    const raw = e.target.value.replace(/\s/g, '').toUpperCase();
+                    const formatted = raw.replace(/(.{4})/g, '$1 ').trim();
+                    field.onChange(formatted);
+                  }}
+                />
+              </FormControl>
               <FormMessage />
             </FormItem>
           )} />
