@@ -1,7 +1,7 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -22,7 +22,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { countries } from "@/lib/countries";
-import IdDocumentUpload from "./IdDocumentUpload";
+import MultipleIdDocuments, { type IdDocument } from "./MultipleIdDocuments";
+import { supabase } from "@/integrations/supabase/client";
 
 const directorUboSchema = z.object({
   name: z.string().min(1, "Name is required"),
@@ -40,18 +41,15 @@ const directorUboSchema = z.object({
   email: z.string().email().optional().or(z.literal("")),
   phone: z.string().optional(),
   passport_number: z.string().optional(),
-  id_document_type: z.string().optional(),
-  id_document_number: z.string().optional(),
-  id_expiry_date: z.string().optional(),
-  id_document_file_path: z.string().optional(),
-  id_document_file_name: z.string().optional(),
   is_pep: z.boolean().default(false),
   pep_details: z.string().optional(),
   is_active: z.boolean().default(true),
   notes: z.string().optional(),
 });
 
-export type DirectorUboFormData = z.infer<typeof directorUboSchema>;
+export type DirectorUboFormData = z.infer<typeof directorUboSchema> & {
+  id_documents?: IdDocument[];
+};
 
 const ROLE_TYPES = [
   { value: "director", label: "Director" },
@@ -84,19 +82,6 @@ const CONTROL_TYPES = [
   { value: "other", label: "Other Control" },
 ];
 
-const ID_DOCUMENT_TYPES = [
-  { value: "passport", label: "Passport" },
-  { value: "national_id", label: "National ID Card" },
-  { value: "drivers_license", label: "Driver's License" },
-  { value: "residence_permit", label: "Residence Permit" },
-  { value: "visa", label: "Visa" },
-  { value: "military_id", label: "Military ID" },
-  { value: "government_id", label: "Government ID" },
-  { value: "state_id", label: "State ID" },
-  { value: "social_security", label: "Social Security Card" },
-  { value: "tax_id_card", label: "Tax ID Card" },
-  { value: "other", label: "Other" },
-];
 
 interface DirectorUboFormProps {
   item?: any;
@@ -113,7 +98,34 @@ export const DirectorUboForm = ({
   onCancel,
   isLoading,
 }: DirectorUboFormProps) => {
-  const [directorId] = useState(() => item?.id || crypto.randomUUID());
+  const [idDocuments, setIdDocuments] = useState<IdDocument[]>(
+    item?.id_documents || []
+  );
+
+  // Fetch existing ID documents when editing
+  useEffect(() => {
+    if (item?.id) {
+      supabase
+        .from("director_id_documents")
+        .select("*")
+        .eq("director_id", item.id)
+        .then(({ data }) => {
+          if (data) {
+            setIdDocuments(
+              data.map((d) => ({
+                id: d.id,
+                document_type: d.document_type || "",
+                document_number: d.document_number || "",
+                expiry_date: d.expiry_date || "",
+                file_path: d.file_path || "",
+                file_name: d.file_name || "",
+                notes: d.notes || "",
+              }))
+            );
+          }
+        });
+    }
+  }, [item?.id]);
   
   const form = useForm<DirectorUboFormData>({
     resolver: zodResolver(directorUboSchema),
@@ -133,11 +145,6 @@ export const DirectorUboForm = ({
       email: item?.email || "",
       phone: item?.phone || "",
       passport_number: item?.passport_number || "",
-      id_document_type: item?.id_document_type || "",
-      id_document_number: item?.id_document_number || "",
-      id_expiry_date: item?.id_expiry_date || "",
-      id_document_file_path: item?.id_document_file_path || "",
-      id_document_file_name: item?.id_document_file_name || "",
       is_pep: item?.is_pep || false,
       pep_details: item?.pep_details || "",
       is_active: item?.is_active ?? true,
@@ -149,9 +156,13 @@ export const DirectorUboForm = ({
   const isPep = form.watch("is_pep");
   const showOwnershipFields = roleType === "ubo" || roleType === "both";
 
+  const handleFormSubmit = (data: z.infer<typeof directorUboSchema>) => {
+    onSubmit({ ...data, id_documents: idDocuments });
+  };
+
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+      <form onSubmit={form.handleSubmit(handleFormSubmit)} className="space-y-6">
         {/* Basic Info */}
         <div className="grid grid-cols-2 gap-4">
           <FormField
@@ -407,75 +418,12 @@ export const DirectorUboForm = ({
           </div>
         )}
 
-        {/* ID Documents */}
-        <div className="grid grid-cols-3 gap-4">
-          <FormField
-            control={form.control}
-            name="id_document_type"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>ID Document Type</FormLabel>
-                <Select onValueChange={field.onChange} defaultValue={field.value}>
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select type" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    {ID_DOCUMENT_TYPES.map((type) => (
-                      <SelectItem key={type.value} value={type.value}>
-                        {type.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="id_document_number"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Document Number</FormLabel>
-                <FormControl>
-                  <Input placeholder="ABC123456" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="id_expiry_date"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Document Expiry</FormLabel>
-                <FormControl>
-                  <Input type="date" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        </div>
-
-        {/* ID Document Upload */}
-        <div>
-          <FormLabel className="mb-2 block">Upload ID Document</FormLabel>
-          <IdDocumentUpload
-            directorId={directorId}
-            existingFilePath={form.getValues("id_document_file_path")}
-            existingFileName={form.getValues("id_document_file_name")}
-            onUploadComplete={(filePath, fileName) => {
-              form.setValue("id_document_file_path", filePath);
-              form.setValue("id_document_file_name", fileName);
-            }}
-          />
-        </div>
+        {/* Multiple ID Documents */}
+        <MultipleIdDocuments
+          directorId={item?.id || "new"}
+          documents={idDocuments}
+          onChange={setIdDocuments}
+        />
 
         <div className="grid grid-cols-2 gap-4">
           <FormField
