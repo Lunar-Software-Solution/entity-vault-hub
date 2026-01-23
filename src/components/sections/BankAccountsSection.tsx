@@ -34,6 +34,10 @@ const BankAccountsSection = ({ entityFilter }: BankAccountsSectionProps) => {
       routing_number: data.routing_number || null,
       bank_website: data.bank_website || null,
       entity_id: data.entity_id || null,
+      iban: data.iban || null,
+      swift_bic: data.swift_bic || null,
+      account_holder_name: data.account_holder_name || null,
+      bank_address: data.bank_address || null,
     };
     
     if (editingAccount) {
@@ -154,15 +158,35 @@ const BankAccountsSection = ({ entityFilter }: BankAccountsSectionProps) => {
                   </DropdownMenu>
                 </div>
 
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-6">
+                {/* Account Holder */}
+                {(account as any).account_holder_name && (
+                  <div className="mt-4 px-3 py-2 bg-muted/50 rounded-lg">
+                    <p className="text-xs text-muted-foreground mb-0.5">Account Holder</p>
+                    <p className="text-sm font-medium text-foreground">{(account as any).account_holder_name}</p>
+                  </div>
+                )}
+
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4">
                   <div>
                     <p className="text-xs text-muted-foreground mb-1">Account Number</p>
                     <p className="font-mono text-foreground">{account.account_number}</p>
                   </div>
+                  {(account as any).iban && (
+                    <div>
+                      <p className="text-xs text-muted-foreground mb-1">IBAN</p>
+                      <p className="font-mono text-foreground text-sm">{(account as any).iban}</p>
+                    </div>
+                  )}
                   <div>
                     <p className="text-xs text-muted-foreground mb-1">Routing Number</p>
                     <p className="font-mono text-foreground">{account.routing_number || "—"}</p>
                   </div>
+                  {(account as any).swift_bic && (
+                    <div>
+                      <p className="text-xs text-muted-foreground mb-1">SWIFT/BIC</p>
+                      <p className="font-mono text-foreground">{(account as any).swift_bic}</p>
+                    </div>
+                  )}
                   <div>
                     <p className="text-xs text-muted-foreground mb-1">Type</p>
                     <span className="px-2 py-0.5 rounded-full bg-muted text-muted-foreground text-xs">{account.type}</span>
@@ -172,6 +196,14 @@ const BankAccountsSection = ({ entityFilter }: BankAccountsSectionProps) => {
                     <span className="px-2 py-0.5 rounded-full bg-muted text-muted-foreground text-xs">{account.currency}</span>
                   </div>
                 </div>
+
+                {/* Bank Address */}
+                {(account as any).bank_address && (
+                  <div className="mt-4 px-3 py-2 bg-muted/30 rounded-lg border border-border/50">
+                    <p className="text-xs text-muted-foreground mb-0.5">Bank Address</p>
+                    <p className="text-sm text-foreground">{(account as any).bank_address}</p>
+                  </div>
+                )}
               </div>
             );
           })}

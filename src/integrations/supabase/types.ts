@@ -327,44 +327,56 @@ export type Database = {
       }
       bank_accounts: {
         Row: {
+          account_holder_name: string | null
           account_number: string
           bank: string
+          bank_address: string | null
           bank_website: string | null
           created_at: string
           currency: string
           entity_id: string | null
+          iban: string | null
           id: string
           is_primary: boolean | null
           name: string
           routing_number: string | null
+          swift_bic: string | null
           type: string
           updated_at: string
         }
         Insert: {
+          account_holder_name?: string | null
           account_number: string
           bank: string
+          bank_address?: string | null
           bank_website?: string | null
           created_at?: string
           currency?: string
           entity_id?: string | null
+          iban?: string | null
           id?: string
           is_primary?: boolean | null
           name: string
           routing_number?: string | null
+          swift_bic?: string | null
           type?: string
           updated_at?: string
         }
         Update: {
+          account_holder_name?: string | null
           account_number?: string
           bank?: string
+          bank_address?: string | null
           bank_website?: string | null
           created_at?: string
           currency?: string
           entity_id?: string | null
+          iban?: string | null
           id?: string
           is_primary?: boolean | null
           name?: string
           routing_number?: string | null
+          swift_bic?: string | null
           type?: string
           updated_at?: string
         }
