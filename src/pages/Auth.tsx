@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Navigate, useSearchParams } from "react-router-dom";
+import { Navigate, useSearchParams, useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -30,6 +30,7 @@ const Auth = () => {
   
   const { user, signIn, signUp, loading: authLoading } = useAuth();
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   // Load invitation details if token is present
   useEffect(() => {
@@ -212,7 +213,10 @@ const Auth = () => {
             <div className="text-center">
               <Button
                 variant="outline"
-                onClick={() => window.location.href = "/auth"}
+                onClick={() => {
+                  setInviteError(null);
+                  navigate("/auth", { replace: true });
+                }}
               >
                 Go to Login
               </Button>
