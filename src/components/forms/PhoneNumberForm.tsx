@@ -96,10 +96,25 @@ const countryCodes = [
   { code: "+84", country: "Vietnam", label: "Vietnam (+84)" },
 ];
 
+// Helper to find country by code (returns first match, typically for editing existing records)
+const findCountryByCode = (code: string) => {
+  return countryCodes.find(c => c.code === code)?.country || "United States";
+};
+
+// Helper to find code by country name
+const findCodeByCountry = (country: string) => {
+  return countryCodes.find(c => c.country === country)?.code || "+1";
+};
+
 const PhoneNumberForm = ({ phoneNumber, defaultEntityId, onSubmit, onCancel, isLoading }: PhoneNumberFormProps) => {
   const { data: entities } = useEntities();
   
-  const form = useForm<PhoneNumberFormData>({
+  // Convert the stored country_code to a country name for the form's internal state
+  const initialCountry = phoneNumber?.country_code 
+    ? findCountryByCode(phoneNumber.country_code)
+    : "United States";
+  
+  const form = useForm<PhoneNumberFormData & { selected_country: string }>({
     resolver: zodResolver(phoneNumberSchema),
     defaultValues: {
       entity_id: phoneNumber?.entity_id ?? defaultEntityId ?? "",
@@ -110,6 +125,11 @@ const PhoneNumberForm = ({ phoneNumber, defaultEntityId, onSubmit, onCancel, isL
       is_primary: phoneNumber?.is_primary ?? false,
     },
   });
+
+  const handleCountryChange = (countryName: string) => {
+    const code = findCodeByCountry(countryName);
+    form.setValue("country_code", code);
+  };
 
   return (
     <Form {...form}>
@@ -139,7 +159,12 @@ const PhoneNumberForm = ({ phoneNumber, defaultEntityId, onSubmit, onCancel, isL
           <FormField control={form.control} name="country_code" render={({ field }) => (
             <FormItem>
               <FormLabel>Country Code *</FormLabel>
-              <Select onValueChange={field.onChange} defaultValue={field.value}>
+              <Select 
+                onValueChange={(countryName) => {
+                  handleCountryChange(countryName);
+                }} 
+                defaultValue={initialCountry}
+              >
                 <FormControl>
                   <SelectTrigger>
                     <SelectValue placeholder="Select country" />
@@ -147,7 +172,7 @@ const PhoneNumberForm = ({ phoneNumber, defaultEntityId, onSubmit, onCancel, isL
                 </FormControl>
                 <SelectContent>
                   {countryCodes.map((country) => (
-                    <SelectItem key={country.country} value={country.code}>
+                    <SelectItem key={country.country} value={country.country}>
                       {country.label}
                     </SelectItem>
                   ))}
