@@ -19,28 +19,24 @@ export const useUserRole = () => {
     enabled: !!user?.id,
   });
 
-  type AppRole = "admin" | "moderator" | "member" | "viewer";
+  type AppRole = "admin" | "viewer";
   
   const hasRole = (role: AppRole) => roles?.includes(role) ?? false;
   
   const isAdmin = hasRole("admin");
-  const isModerator = hasRole("moderator");
-  const isMember = hasRole("member");
   const isViewer = hasRole("viewer");
   
-  // Check if user can write (not a viewer-only user)
-  const canWrite = !isLoading && (isAdmin || isModerator || isMember || !isViewer);
+  // Check if user can write (only admins can write)
+  const canWrite = !isLoading && isAdmin;
   
-  // Get highest role
-  const primaryRole = isAdmin ? "admin" : isModerator ? "moderator" : isMember ? "member" : isViewer ? "viewer" : "member";
+  // Get primary role
+  const primaryRole = isAdmin ? "admin" : "viewer";
 
   return {
     roles: roles ?? [],
     isLoading,
     hasRole,
     isAdmin,
-    isModerator,
-    isMember,
     isViewer,
     canWrite,
     primaryRole,

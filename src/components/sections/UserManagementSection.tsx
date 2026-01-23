@@ -131,7 +131,7 @@ const InviteForm = ({
   const form = useForm<InviteFormData>({
     defaultValues: {
       email: "",
-      role: "member",
+      role: "viewer",
     },
   });
 
@@ -158,8 +158,6 @@ const InviteForm = ({
               </FormControl>
               <SelectContent className="bg-background">
                 <SelectItem value="viewer">Viewer</SelectItem>
-                <SelectItem value="member">Member</SelectItem>
-                <SelectItem value="moderator">Moderator</SelectItem>
                 <SelectItem value="admin">Admin</SelectItem>
               </SelectContent>
             </Select>
@@ -196,19 +194,15 @@ const UserManagementSection = () => {
   const getUserRole = (userId: string) => {
     const userRoles = roles?.filter(r => r.user_id === userId) || [];
     if (userRoles.some(r => r.role === "admin")) return "admin";
-    if (userRoles.some(r => r.role === "moderator")) return "moderator";
-    if (userRoles.some(r => r.role === "member")) return "member";
     if (userRoles.some(r => r.role === "viewer")) return "viewer";
-    return "member"; // default
+    return "viewer"; // default
   };
 
   const getRoleBadgeVariant = (role: string) => {
     switch (role) {
       case "admin": return "destructive";
-      case "moderator": return "default";
-      case "member": return "secondary";
       case "viewer": return "outline";
-      default: return "secondary";
+      default: return "outline";
     }
   };
 
@@ -240,7 +234,7 @@ const UserManagementSection = () => {
 
       const { error } = await supabase.from("team_invitations").insert({
         email: data.email,
-        role: data.role as "admin" | "member" | "moderator" | "viewer",
+        role: data.role as "admin" | "viewer",
         invited_by: user?.id || "",
         token,
         expires_at: expiresAt.toISOString(),
