@@ -1,8 +1,10 @@
 import { useState } from "react";
-import { Plus, Calendar, Edit2, Trash2, Check, DollarSign, Clock } from "lucide-react";
+import { Plus, Calendar, Edit2, Trash2, Check, DollarSign, Clock, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { EntityFiling, useFilingsForEntity, useFilingTypes } from "@/hooks/usePortalData";
 import { useCreateEntityFiling, useUpdateEntityFiling, useDeleteEntityFiling, useMarkFilingFiled } from "@/hooks/usePortalMutations";
 import EntityFilingForm from "@/components/forms/EntityFilingForm";
@@ -16,6 +18,8 @@ import {
   formatDueDate,
   getStatusLabel
 } from "@/lib/filingUtils";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 interface LinkedFilingsProps {
   entityId: string;
@@ -25,8 +29,11 @@ const LinkedFilings = ({ entityId }: LinkedFilingsProps) => {
   const [showForm, setShowForm] = useState(false);
   const [editing, setEditing] = useState<EntityFiling | null>(null);
   const [deleting, setDeleting] = useState<EntityFiling | null>(null);
+  const [generatingFor, setGeneratingFor] = useState<EntityFiling | null>(null);
+  const [taskCount, setTaskCount] = useState("12");
+  const [isGenerating, setIsGenerating] = useState(false);
 
-  const { data: filings, isLoading } = useFilingsForEntity(entityId);
+  const { data: filings, isLoading, refetch } = useFilingsForEntity(entityId);
   const { data: filingTypes } = useFilingTypes();
 
   const createFiling = useCreateEntityFiling();
@@ -37,6 +44,37 @@ const LinkedFilings = ({ entityId }: LinkedFilingsProps) => {
   const getFilingType = (typeId: string | null) => {
     if (!typeId) return null;
     return filingTypes?.find(t => t.id === typeId);
+  };
+
+  const handleGenerateTasks = async () => {
+    if (!generatingFor) return;
+    
+    const count = parseInt(taskCount, 10);
+    if (isNaN(count) || count < 1 || count > 24) {
+      toast.error("Please enter a number between 1 and 24");
+      return;
+    }
+
+    setIsGenerating(true);
+    try {
+      const response = await supabase.functions.invoke("generate-recurring-tasks", {
+        body: { filingId: generatingFor.id, count },
+      });
+
+      if (response.error) {
+        throw new Error(response.error.message || "Failed to generate tasks");
+      }
+
+      toast.success(response.data.message || `Created ${response.data.tasksCreated} tasks`);
+      setGeneratingFor(null);
+      setTaskCount("12");
+      refetch();
+    } catch (error) {
+      console.error("Error generating tasks:", error);
+      toast.error(error instanceof Error ? error.message : "Failed to generate tasks");
+    } finally {
+      setIsGenerating(false);
+    }
   };
 
   const handleSubmit = async (data: any) => {
@@ -120,6 +158,17 @@ const LinkedFilings = ({ entityId }: LinkedFilingsProps) => {
                     </div>
                   </div>
                   <div className="flex items-center gap-1">
+                    {filing.frequency !== "one-time" && (
+                      <Button 
+                        variant="ghost" 
+                        size="icon"
+                        className="h-7 w-7"
+                        onClick={() => setGeneratingFor(filing)}
+                        title="Generate recurring tasks"
+                      >
+                        <RefreshCw className="w-3 h-3" />
+                      </Button>
+                    )}
                     {filing.status !== "filed" && (
                       <Button 
                         variant="ghost" 
@@ -207,6 +256,53 @@ const LinkedFilings = ({ entityId }: LinkedFilingsProps) => {
         title="Delete Filing"
         description={`Are you sure you want to delete "${deleting?.title}"?`}
       />
+
+      {/* Generate Tasks Dialog */}
+      <Dialog open={!!generatingFor} onOpenChange={(open) => {
+        if (!open) {
+          setGeneratingFor(null);
+          setTaskCount("12");
+        }
+      }}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Generate Recurring Tasks</DialogTitle>
+            <DialogDescription>
+              Create upcoming tasks for "{generatingFor?.title}"
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-4">
+            <Label htmlFor="taskCount">How many tasks to create?</Label>
+            <Input
+              id="taskCount"
+              type="number"
+              min="1"
+              max="24"
+              value={taskCount}
+              onChange={(e) => setTaskCount(e.target.value)}
+              placeholder="12"
+              className="mt-2"
+            />
+            <p className="text-xs text-muted-foreground mt-2">
+              Enter a number between 1 and 24. Tasks will be created based on the filing's frequency ({generatingFor?.frequency}).
+            </p>
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setGeneratingFor(null);
+                setTaskCount("12");
+              }}
+            >
+              Cancel
+            </Button>
+            <Button onClick={handleGenerateTasks} disabled={isGenerating}>
+              {isGenerating ? "Generating..." : "Generate Tasks"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

@@ -29,114 +29,51 @@ interface FilingType {
   name: string;
 }
 
-// Calculate all due dates for a fiscal year based on frequency
-function calculateFiscalYearDueDates(
-  fiscalYearEnd: string,
+// Calculate next N due dates based on frequency starting from a base date
+function calculateNextDueDates(
   frequency: string,
   dueDay: number,
-  currentYear: number
+  count: number,
+  startFromDate: Date
 ): Date[] {
   const dueDates: Date[] = [];
+  let currentDate = new Date(startFromDate);
   
-  // Parse fiscal year end (MM-DD format)
-  const [fyMonth, fyDay] = fiscalYearEnd.split("-").map(Number);
-  
-  // Calculate fiscal year start and end dates
-  const fyEndDate = new Date(currentYear, fyMonth - 1, fyDay);
-  const fyStartDate = new Date(currentYear - 1, fyMonth - 1, fyDay + 1);
-  
-  // If we're past the fiscal year end, move to next fiscal year
-  const today = new Date();
-  if (today > fyEndDate) {
-    fyStartDate.setFullYear(fyStartDate.getFullYear() + 1);
-    fyEndDate.setFullYear(fyEndDate.getFullYear() + 1);
+  // Get the months increment based on frequency
+  let monthsIncrement = 1;
+  switch (frequency) {
+    case "monthly":
+      monthsIncrement = 1;
+      break;
+    case "quarterly":
+      monthsIncrement = 3;
+      break;
+    case "semi-annual":
+      monthsIncrement = 6;
+      break;
+    case "annual":
+      monthsIncrement = 12;
+      break;
+    default:
+      return dueDates; // one-time filings don't have recurring tasks
   }
   
-  switch (frequency) {
-    case "monthly": {
-      // Generate 12 monthly due dates
-      for (let month = 0; month < 12; month++) {
-        const startMonth = fyStartDate.getMonth();
-        const startYear = fyStartDate.getFullYear();
-        let targetMonth = startMonth + month;
-        let targetYear = startYear;
-        
-        if (targetMonth > 11) {
-          targetMonth -= 12;
-          targetYear += 1;
-        }
-        
-        // Handle months with fewer days
-        const lastDayOfMonth = new Date(targetYear, targetMonth + 1, 0).getDate();
-        const actualDay = Math.min(dueDay, lastDayOfMonth);
-        
-        const dueDate = new Date(targetYear, targetMonth, actualDay);
-        
-        // Only include dates within the fiscal year
-        if (dueDate >= fyStartDate && dueDate <= fyEndDate) {
-          dueDates.push(dueDate);
-        }
-      }
-      break;
+  for (let i = 0; i < count; i++) {
+    // Calculate target month
+    let targetMonth = currentDate.getMonth() + (i * monthsIncrement);
+    let targetYear = currentDate.getFullYear();
+    
+    while (targetMonth > 11) {
+      targetMonth -= 12;
+      targetYear += 1;
     }
     
-    case "quarterly": {
-      // Generate 4 quarterly due dates
-      for (let quarter = 0; quarter < 4; quarter++) {
-        const startMonth = fyStartDate.getMonth();
-        const startYear = fyStartDate.getFullYear();
-        let targetMonth = startMonth + (quarter * 3);
-        let targetYear = startYear;
-        
-        while (targetMonth > 11) {
-          targetMonth -= 12;
-          targetYear += 1;
-        }
-        
-        const lastDayOfMonth = new Date(targetYear, targetMonth + 1, 0).getDate();
-        const actualDay = Math.min(dueDay, lastDayOfMonth);
-        
-        const dueDate = new Date(targetYear, targetMonth, actualDay);
-        
-        if (dueDate >= fyStartDate && dueDate <= fyEndDate) {
-          dueDates.push(dueDate);
-        }
-      }
-      break;
-    }
+    // Handle months with fewer days
+    const lastDayOfMonth = new Date(targetYear, targetMonth + 1, 0).getDate();
+    const actualDay = Math.min(dueDay, lastDayOfMonth);
     
-    case "semi-annual": {
-      // Generate 2 semi-annual due dates
-      for (let half = 0; half < 2; half++) {
-        const startMonth = fyStartDate.getMonth();
-        const startYear = fyStartDate.getFullYear();
-        let targetMonth = startMonth + (half * 6);
-        let targetYear = startYear;
-        
-        while (targetMonth > 11) {
-          targetMonth -= 12;
-          targetYear += 1;
-        }
-        
-        const lastDayOfMonth = new Date(targetYear, targetMonth + 1, 0).getDate();
-        const actualDay = Math.min(dueDay, lastDayOfMonth);
-        
-        const dueDate = new Date(targetYear, targetMonth, actualDay);
-        
-        if (dueDate >= fyStartDate && dueDate <= fyEndDate) {
-          dueDates.push(dueDate);
-        }
-      }
-      break;
-    }
-    
-    case "annual": {
-      // Single annual due date
-      const lastDayOfMonth = new Date(fyEndDate.getFullYear(), fyEndDate.getMonth() + 1, 0).getDate();
-      const actualDay = Math.min(dueDay, lastDayOfMonth);
-      dueDates.push(new Date(fyEndDate.getFullYear(), fyEndDate.getMonth(), actualDay));
-      break;
-    }
+    const dueDate = new Date(targetYear, targetMonth, actualDay);
+    dueDates.push(dueDate);
   }
   
   return dueDates;
@@ -156,136 +93,155 @@ serve(async (req) => {
   }
 
   try {
-    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
-    const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-    
-    const supabase = createClient(supabaseUrl, supabaseServiceKey);
-
-    // Get all entities with their fiscal year end
-    const { data: entities, error: entitiesError } = await supabase
-      .from("entities")
-      .select("id, name, fiscal_year_end");
-
-    if (entitiesError) {
-      throw new Error(`Failed to fetch entities: ${entitiesError.message}`);
-    }
-
-    const entityMap = new Map<string, Entity>((entities || []).map(e => [e.id, e]));
-
-    // Get all recurring filings (not one-time)
-    const { data: filings, error: filingsError } = await supabase
-      .from("entity_filings")
-      .select("*")
-      .neq("frequency", "one-time");
-
-    if (filingsError) {
-      throw new Error(`Failed to fetch filings: ${filingsError.message}`);
-    }
-
-    if (!filings || filings.length === 0) {
+    // Verify authentication
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader) {
       return new Response(
-        JSON.stringify({ message: "No recurring filings found", tasksCreated: 0 }),
-        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        JSON.stringify({ error: "Unauthorized - No authorization header" }),
+        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    // Get filing types for names
-    const filingTypeIds = [...new Set(filings.map(f => f.filing_type_id).filter(Boolean))];
-    let filingTypes: FilingType[] = [];
-    if (filingTypeIds.length > 0) {
-      const { data: types } = await supabase
+    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+    const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
+
+    // Create client with user's token to verify authentication
+    const supabaseAuth = createClient(supabaseUrl, supabaseAnonKey, {
+      global: { headers: { Authorization: authHeader } }
+    });
+
+    const { data: { user }, error: authError } = await supabaseAuth.auth.getUser();
+    if (authError || !user) {
+      return new Response(
+        JSON.stringify({ error: "Unauthorized - Invalid token" }),
+        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    const { filingId, count } = await req.json();
+
+    if (!filingId) {
+      return new Response(
+        JSON.stringify({ error: "filingId is required" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    const taskCount = Math.min(Math.max(1, count || 1), 24); // Limit between 1 and 24
+
+    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+
+    // Get the specific filing
+    const { data: filing, error: filingError } = await supabase
+      .from("entity_filings")
+      .select("*")
+      .eq("id", filingId)
+      .single();
+
+    if (filingError || !filing) {
+      return new Response(
+        JSON.stringify({ error: "Filing not found" }),
+        { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    if (filing.frequency === "one-time") {
+      return new Response(
+        JSON.stringify({ error: "Cannot generate recurring tasks for one-time filings" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // Get entity name
+    const { data: entity } = await supabase
+      .from("entities")
+      .select("id, name")
+      .eq("id", filing.entity_id)
+      .single();
+
+    // Get filing type name
+    let filingTypeName = "Filing";
+    if (filing.filing_type_id) {
+      const { data: filingType } = await supabase
         .from("filing_types")
         .select("id, name")
-        .in("id", filingTypeIds);
-      filingTypes = types || [];
+        .eq("id", filing.filing_type_id)
+        .single();
+      if (filingType) filingTypeName = filingType.name;
     }
-    const filingTypeMap = new Map(filingTypes.map(t => [t.id, t.name]));
 
     // Get existing tasks to avoid duplicates
     const { data: existingTasks } = await supabase
       .from("filing_tasks")
-      .select("filing_id, due_date, is_auto_generated")
+      .select("due_date")
+      .eq("filing_id", filingId)
       .eq("is_auto_generated", true)
-      .neq("status", "completed");
+      .neq("status", "completed")
+      .neq("status", "cancelled");
 
-    const existingTaskKeys = new Set(
-      (existingTasks || []).map(t => `${t.filing_id}-${t.due_date}`)
+    const existingDates = new Set(
+      (existingTasks || []).map(t => t.due_date)
     );
 
+    // Calculate due dates
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-    const currentYear = today.getFullYear();
+    const dueDay = filing.due_day || new Date(filing.due_date).getDate();
+    
+    // Start from next month if we're past the due day this month
+    const startDate = new Date(today);
+    if (today.getDate() > dueDay) {
+      startDate.setMonth(startDate.getMonth() + 1);
+    }
+    startDate.setDate(1); // Reset to first of month for calculation
+
+    const dueDates = calculateNextDueDates(
+      filing.frequency,
+      dueDay,
+      taskCount,
+      startDate
+    );
 
     let tasksCreated = 0;
-    const errors: string[] = [];
+    const entityName = entity?.name || "Entity";
 
-    for (const filing of filings as Filing[]) {
-      try {
-        const entity = entityMap.get(filing.entity_id);
-        if (!entity) continue;
+    for (const dueDate of dueDates) {
+      const dueDateStr = dueDate.toISOString().split("T")[0];
 
-        const fiscalYearEnd = entity.fiscal_year_end || "12-31";
-        const dueDay = filing.due_day || new Date(filing.due_date).getDate();
-        
-        // Calculate all due dates for the fiscal year
-        const dueDates = calculateFiscalYearDueDates(
-          fiscalYearEnd,
-          filing.frequency,
-          dueDay,
-          currentYear
-        );
+      // Skip if task already exists for this date
+      if (existingDates.has(dueDateStr)) continue;
 
-        const entityName = entity.name;
-        const filingTypeName = filing.filing_type_id 
-          ? filingTypeMap.get(filing.filing_type_id) || "Filing"
-          : "Filing";
+      const daysUntilDue = Math.ceil((dueDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+      const priority = calculatePriority(daysUntilDue);
 
-        for (const dueDate of dueDates) {
-          // Skip past dates
-          if (dueDate < today) continue;
+      // Format month name for task title
+      const monthName = dueDate.toLocaleDateString("en-US", { month: "long", year: "numeric" });
 
-          const dueDateStr = dueDate.toISOString().split("T")[0];
-          const taskKey = `${filing.id}-${dueDateStr}`;
+      const { error: insertError } = await supabase
+        .from("filing_tasks")
+        .insert({
+          entity_id: filing.entity_id,
+          filing_id: filing.id,
+          title: `${filingTypeName} - ${monthName} (${entityName})`,
+          description: `Auto-generated task for: ${filing.title}`,
+          due_date: dueDateStr,
+          priority,
+          status: "pending",
+          is_auto_generated: true,
+        });
 
-          // Skip if task already exists
-          if (existingTaskKeys.has(taskKey)) continue;
-
-          const daysUntilDue = Math.ceil((dueDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
-          const priority = calculatePriority(daysUntilDue);
-
-          // Format month name for task title
-          const monthName = dueDate.toLocaleDateString("en-US", { month: "long", year: "numeric" });
-
-          const { error: insertError } = await supabase
-            .from("filing_tasks")
-            .insert({
-              entity_id: filing.entity_id,
-              filing_id: filing.id,
-              title: `${filingTypeName} - ${monthName} (${entityName})`,
-              description: `Auto-generated task for: ${filing.title}`,
-              due_date: dueDateStr,
-              priority,
-              status: "pending",
-              is_auto_generated: true,
-            });
-
-          if (insertError) {
-            errors.push(`Failed to create task for filing ${filing.id} on ${dueDateStr}: ${insertError.message}`);
-          } else {
-            tasksCreated++;
-            existingTaskKeys.add(taskKey); // Prevent duplicates within same run
-          }
-        }
-      } catch (err) {
-        errors.push(`Error processing filing ${filing.id}: ${err.message}`);
+      if (!insertError) {
+        tasksCreated++;
+        existingDates.add(dueDateStr); // Prevent duplicates within same run
       }
     }
 
     return new Response(
       JSON.stringify({ 
-        message: `Processed ${filings.length} filings`, 
-        tasksCreated,
-        errors: errors.length > 0 ? errors : undefined
+        success: true,
+        message: `Created ${tasksCreated} tasks for ${filing.title}`,
+        tasksCreated
       }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
