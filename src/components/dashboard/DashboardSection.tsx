@@ -1,6 +1,6 @@
-import { Wallet, CreditCard, Share2, FileText, MapPin, Building2, Calendar, CheckSquare, Phone, Receipt, Briefcase, FolderOpen, Users, PieChart, Mail, Plus, Edit, Trash2, Activity } from "lucide-react";
+import { Wallet, CreditCard, Share2, FileText, MapPin, Building2, Calendar, CheckSquare, Phone, Receipt, Briefcase, FolderOpen, Plus, Edit, Trash2, Activity } from "lucide-react";
 import StatCard from "./StatCard";
-import { useDashboardStats, useUpcomingFilings, useOpenTasks, useRecentAuditLogs } from "@/hooks/usePortalData";
+import { useDashboardStats, useUpcomingFilings, useOpenTasks, useRecentAuditLogs, useContracts, useEntityDocuments } from "@/hooks/usePortalData";
 import { Skeleton } from "@/components/ui/skeleton";
 import { format, formatDistanceToNow } from "date-fns";
 import { Badge } from "@/components/ui/badge";
@@ -28,12 +28,12 @@ const getActionIcon = (action: string) => {
   }
 };
 
-// Helper to get action color
-const getActionVariant = (action: string): "default" | "secondary" | "destructive" | "outline" => {
-  switch (action) {
-    case "INSERT": return "default";
-    case "UPDATE": return "secondary";
-    case "DELETE": return "destructive";
+// Helper to get status color for contracts
+const getStatusVariant = (status: string): "default" | "secondary" | "destructive" | "outline" => {
+  switch (status) {
+    case "active": return "default";
+    case "expiring-soon": return "secondary";
+    case "expired": return "destructive";
     default: return "outline";
   }
 };
@@ -43,8 +43,10 @@ const DashboardSection = ({ onNavigate }: DashboardSectionProps) => {
   const { data: upcomingFilings, isLoading: loadingFilings } = useUpcomingFilings();
   const { data: openTasks, isLoading: loadingTasks } = useOpenTasks();
   const { data: auditLogs, isLoading: loadingAudit } = useRecentAuditLogs(6);
+  const { data: contracts, isLoading: loadingContracts } = useContracts();
+  const { data: documents, isLoading: loadingDocuments } = useEntityDocuments();
 
-  const isLoading = loadingFilings || loadingTasks || loadingAudit;
+  const isLoading = loadingFilings || loadingTasks || loadingAudit || loadingContracts || loadingDocuments;
   
   const overdueFilings = upcomingFilings?.filter(f => f.status === "overdue" || new Date(f.due_date) < new Date()).length || 0;
   const urgentTasks = openTasks?.filter(t => t.priority === "urgent" || t.priority === "high").length || 0;
@@ -250,35 +252,58 @@ const DashboardSection = ({ onNavigate }: DashboardSectionProps) => {
           )}
         </div>
 
-        {/* Quick Actions */}
+        {/* Recent Contracts & Documents */}
         <div className="glass-card rounded-xl p-6">
-          <h3 className="text-lg font-semibold text-foreground mb-4">Quick Actions</h3>
-          <div className="grid grid-cols-2 gap-3">
-            {[
-              { label: "Add Entity", icon: Building2, section: "entity" },
-              { label: "Add Director", icon: Users, section: "directors-ubo" },
-              { label: "Add Cap Table", icon: PieChart, section: "cap-table" },
-              { label: "Add Provider", icon: Briefcase, section: "service-providers" },
-              { label: "Add Filing", icon: Calendar, section: "filings" },
-              { label: "Add Bank", icon: Wallet, section: "bank-accounts" },
-              { label: "Add Card", icon: CreditCard, section: "credit-cards" },
-              { label: "Add Tax ID", icon: Receipt, section: "tax-ids" },
-              { label: "Add Phone", icon: Phone, section: "phone-numbers" },
-              { label: "Add Email", icon: Mail, section: "email" },
-              { label: "Add Social", icon: Share2, section: "social-media" },
-              { label: "Add Address", icon: MapPin, section: "addresses" },
-              { label: "Add Document", icon: FolderOpen, section: "documents" },
-              { label: "Add Contract", icon: FileText, section: "contracts" },
-            ].map((action, index) => (
+          <h3 className="text-lg font-semibold text-foreground mb-4">Recent Files</h3>
+          <div className="space-y-2">
+            {/* Recent Contracts */}
+            {contracts && contracts.slice(0, 3).map((contract) => (
               <button
-                key={index}
-                onClick={() => onNavigate?.(action.section)}
-                className="flex items-center gap-2 p-2 rounded-lg bg-muted text-foreground hover:bg-primary/10 hover:text-primary transition-all duration-200 text-xs font-medium cursor-pointer"
+                key={contract.id}
+                onClick={() => onNavigate?.("contracts")}
+                className="w-full flex items-center gap-3 p-2 rounded-lg hover:bg-muted transition-colors text-left"
               >
-                <action.icon className="w-4 h-4 flex-shrink-0" />
-                <span className="truncate">{action.label}</span>
+                <div className="p-1.5 rounded-full bg-blue-500/10 text-blue-500 flex-shrink-0">
+                  <FileText className="w-3 h-3" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium text-foreground truncate">{contract.title}</p>
+                  <p className="text-xs text-muted-foreground">Contract • {contract.type}</p>
+                </div>
+                <Badge variant={getStatusVariant(contract.status)} className="flex-shrink-0 text-xs">
+                  {contract.status}
+                </Badge>
               </button>
             ))}
+            
+            {/* Recent Documents */}
+            {documents && documents.slice(0, 3).map((doc) => (
+              <button
+                key={doc.id}
+                onClick={() => onNavigate?.("documents")}
+                className="w-full flex items-center gap-3 p-2 rounded-lg hover:bg-muted transition-colors text-left"
+              >
+                <div className="p-1.5 rounded-full bg-amber-500/10 text-amber-500 flex-shrink-0">
+                  <FolderOpen className="w-3 h-3" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium text-foreground truncate">{doc.title}</p>
+                  <p className="text-xs text-muted-foreground">Document • {doc.status}</p>
+                </div>
+                {doc.expiry_date && (
+                  <span className="text-xs text-muted-foreground flex-shrink-0">
+                    Exp: {format(new Date(doc.expiry_date), "MMM d")}
+                  </span>
+                )}
+              </button>
+            ))}
+            
+            {(!contracts || contracts.length === 0) && (!documents || documents.length === 0) && (
+              <div className="flex flex-col items-center justify-center py-8 text-muted-foreground">
+                <FileText className="w-8 h-8 mb-2 opacity-50" />
+                <p className="text-sm">No files yet</p>
+              </div>
+            )}
           </div>
         </div>
       </div>
