@@ -1082,6 +1082,69 @@ export type Database = {
           },
         ]
       }
+      entity_software: {
+        Row: {
+          account_email: string | null
+          category: string
+          created_at: string
+          custom_name: string | null
+          entity_id: string
+          id: string
+          is_active: boolean | null
+          license_expiry_date: string | null
+          license_type: string | null
+          login_url: string | null
+          notes: string | null
+          software_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          account_email?: string | null
+          category?: string
+          created_at?: string
+          custom_name?: string | null
+          entity_id: string
+          id?: string
+          is_active?: boolean | null
+          license_expiry_date?: string | null
+          license_type?: string | null
+          login_url?: string | null
+          notes?: string | null
+          software_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          account_email?: string | null
+          category?: string
+          created_at?: string
+          custom_name?: string | null
+          entity_id?: string
+          id?: string
+          is_active?: boolean | null
+          license_expiry_date?: string | null
+          license_type?: string | null
+          login_url?: string | null
+          notes?: string | null
+          software_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "entity_software_entity_id_fkey"
+            columns: ["entity_id"]
+            isOneToOne: false
+            referencedRelation: "entities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "entity_software_software_id_fkey"
+            columns: ["software_id"]
+            isOneToOne: false
+            referencedRelation: "software_catalog"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       entity_websites: {
         Row: {
           created_at: string
@@ -1902,6 +1965,39 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      software_catalog: {
+        Row: {
+          category: string
+          created_at: string
+          description: string | null
+          id: string
+          name: string
+          updated_at: string
+          vendor: string | null
+          website: string | null
+        }
+        Insert: {
+          category?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          name: string
+          updated_at?: string
+          vendor?: string | null
+          website?: string | null
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          name?: string
+          updated_at?: string
+          vendor?: string | null
+          website?: string | null
+        }
+        Relationships: []
       }
       tax_id_types: {
         Row: {

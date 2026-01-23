@@ -382,3 +382,30 @@ export const entityWebsiteSchema = z.object({
 });
 
 export type EntityWebsiteFormData = z.infer<typeof entityWebsiteSchema>;
+
+// Software Catalog Schema
+export const softwareCatalogSchema = z.object({
+  name: z.string().trim().min(1, "Name is required").max(100, "Name must be 100 characters or less"),
+  category: z.string().min(1, "Category is required"),
+  vendor: z.string().trim().max(100, "Vendor must be 100 characters or less").optional().or(z.literal("")),
+  website: z.string().trim().url("Invalid URL").optional().or(z.literal("")),
+  description: z.string().trim().max(500, "Description must be 500 characters or less").optional().or(z.literal("")),
+});
+
+export type SoftwareCatalogFormData = z.infer<typeof softwareCatalogSchema>;
+
+// Entity Software Schema
+export const entitySoftwareSchema = z.object({
+  entity_id: z.string().uuid("Entity is required"),
+  software_id: z.string().uuid().optional().or(z.literal("")),
+  custom_name: z.string().trim().max(100, "Name must be 100 characters or less").optional().or(z.literal("")),
+  category: z.string().min(1, "Category is required"),
+  login_url: z.string().trim().url("Invalid URL").optional().or(z.literal("")),
+  account_email: z.string().trim().email("Invalid email").optional().or(z.literal("")),
+  notes: z.string().trim().max(1000, "Notes must be 1000 characters or less").optional().or(z.literal("")),
+  is_active: z.boolean().default(true),
+  license_type: z.string().trim().max(50, "License type must be 50 characters or less").optional().or(z.literal("")),
+  license_expiry_date: z.string().optional().or(z.literal("")),
+});
+
+export type EntitySoftwareFormData = z.infer<typeof entitySoftwareSchema>;

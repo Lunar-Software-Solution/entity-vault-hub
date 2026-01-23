@@ -1130,3 +1130,99 @@ export const useDeleteEntityWebsite = () => {
     onError: (error) => toast.error(`Failed to delete website: ${error.message}`),
   });
 };
+
+// Software Catalog mutations
+export const useCreateSoftwareCatalog = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (software: TablesInsert<"software_catalog">) => {
+      const { data, error } = await supabase.from("software_catalog").insert(software).select().single();
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["software_catalog"] });
+      toast.success("Software added to catalog successfully");
+    },
+    onError: (error) => toast.error(`Failed to add software: ${error.message}`),
+  });
+};
+
+export const useUpdateSoftwareCatalog = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, ...software }: TablesUpdate<"software_catalog"> & { id: string }) => {
+      const { data, error } = await supabase.from("software_catalog").update(software).eq("id", id).select().single();
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["software_catalog"] });
+      toast.success("Software updated successfully");
+    },
+    onError: (error) => toast.error(`Failed to update software: ${error.message}`),
+  });
+};
+
+export const useDeleteSoftwareCatalog = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from("software_catalog").delete().eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["software_catalog"] });
+      toast.success("Software deleted from catalog");
+    },
+    onError: (error) => toast.error(`Failed to delete software: ${error.message}`),
+  });
+};
+
+// Entity Software mutations
+export const useCreateEntitySoftware = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (software: TablesInsert<"entity_software">) => {
+      const { data, error } = await supabase.from("entity_software").insert(software).select().single();
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["entity_software"] });
+      toast.success("Software added successfully");
+    },
+    onError: (error) => toast.error(`Failed to add software: ${error.message}`),
+  });
+};
+
+export const useUpdateEntitySoftware = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, ...software }: TablesUpdate<"entity_software"> & { id: string }) => {
+      const { data, error } = await supabase.from("entity_software").update(software).eq("id", id).select().single();
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["entity_software"] });
+      toast.success("Software updated successfully");
+    },
+    onError: (error) => toast.error(`Failed to update software: ${error.message}`),
+  });
+};
+
+export const useDeleteEntitySoftware = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from("entity_software").delete().eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["entity_software"] });
+      toast.success("Software deleted successfully");
+    },
+    onError: (error) => toast.error(`Failed to delete software: ${error.message}`),
+  });
+};
