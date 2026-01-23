@@ -743,6 +743,7 @@ export type Database = {
           duns_number: string | null
           ein_tax_id: string | null
           email: string | null
+          fiscal_year_end: string | null
           founded_date: string | null
           id: string
           is_verified: boolean
@@ -760,6 +761,7 @@ export type Database = {
           duns_number?: string | null
           ein_tax_id?: string | null
           email?: string | null
+          fiscal_year_end?: string | null
           founded_date?: string | null
           id?: string
           is_verified?: boolean
@@ -777,6 +779,7 @@ export type Database = {
           duns_number?: string | null
           ein_tax_id?: string | null
           email?: string | null
+          fiscal_year_end?: string | null
           founded_date?: string | null
           id?: string
           is_verified?: boolean
