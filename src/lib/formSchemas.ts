@@ -366,3 +366,19 @@ export const filingTaskSchema = z.object({
 });
 
 export type FilingTaskFormData = z.infer<typeof filingTaskSchema>;
+
+// Entity Website Schema
+export const entityWebsiteSchema = z.object({
+  entity_id: z.string().uuid("Entity is required"),
+  url: z.string().trim().url("Invalid URL").min(1, "URL is required"),
+  name: z.string().trim().min(1, "Name is required").max(100, "Name must be 100 characters or less"),
+  type: z.string().min(1, "Type is required"),
+  platform: z.string().trim().max(100, "Platform must be 100 characters or less").optional().or(z.literal("")),
+  is_primary: z.boolean().default(false),
+  is_active: z.boolean().default(true),
+  ssl_expiry_date: z.string().optional().or(z.literal("")),
+  domain_expiry_date: z.string().optional().or(z.literal("")),
+  notes: z.string().trim().max(1000, "Notes must be 1000 characters or less").optional().or(z.literal("")),
+});
+
+export type EntityWebsiteFormData = z.infer<typeof entityWebsiteSchema>;

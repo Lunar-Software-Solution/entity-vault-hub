@@ -1083,3 +1083,50 @@ export const useMarkFilingFiled = () => {
   });
 };
 
+// Entity Website mutations
+export const useCreateEntityWebsite = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (website: TablesInsert<"entity_websites">) => {
+      const { data, error } = await supabase.from("entity_websites").insert(website).select().single();
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["entity_websites"] });
+      toast.success("Website added successfully");
+    },
+    onError: (error) => toast.error(`Failed to add website: ${error.message}`),
+  });
+};
+
+export const useUpdateEntityWebsite = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, ...website }: TablesUpdate<"entity_websites"> & { id: string }) => {
+      const { data, error } = await supabase.from("entity_websites").update(website).eq("id", id).select().single();
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["entity_websites"] });
+      toast.success("Website updated successfully");
+    },
+    onError: (error) => toast.error(`Failed to update website: ${error.message}`),
+  });
+};
+
+export const useDeleteEntityWebsite = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from("entity_websites").delete().eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["entity_websites"] });
+      toast.success("Website deleted successfully");
+    },
+    onError: (error) => toast.error(`Failed to delete website: ${error.message}`),
+  });
+};

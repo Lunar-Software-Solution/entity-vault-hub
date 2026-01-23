@@ -20,7 +20,8 @@ import {
   useFilingsForEntity,
   useTasksForEntity,
   useSocialMediaAccounts,
-  useEmailAddresses
+  useEmailAddresses,
+  useEntityWebsites
 } from "@/hooks/usePortalData";
 import { useUpdateEntity, useDeleteEntity } from "@/hooks/usePortalMutations";
 import { useUserRole } from "@/hooks/useUserRole";
@@ -75,6 +76,7 @@ import LinkedFilings from "@/components/entity-detail/LinkedFilings";
 import LinkedFilingTasks from "@/components/entity-detail/LinkedFilingTasks";
 import LinkedSocialMedia from "@/components/entity-detail/LinkedSocialMedia";
 import LinkedDirectorsUbos from "@/components/entity-detail/LinkedDirectorsUbos";
+import LinkedWebsites from "@/components/entity-detail/LinkedWebsites";
 import type { EntityFormData } from "@/lib/formSchemas";
 
 const useDirectorsUbosForEntity = (entityId: string) => {
@@ -121,6 +123,7 @@ const EntityDetail = () => {
   const { data: socialMediaAccounts, isLoading: socialLoading } = useSocialMediaAccounts();
   const { data: directorsUbos, isLoading: directorsLoading } = useDirectorsUbosForEntity(id || "");
   const { data: emailAddresses, isLoading: emailsLoading } = useEmailAddresses();
+  const { data: entityWebsites, isLoading: websitesLoading } = useEntityWebsites();
 
   const entity = entities?.find(e => e.id === id);
   const linkedBankAccounts = bankAccounts?.filter(b => b.entity_id === id) ?? [];
@@ -139,10 +142,11 @@ const EntityDetail = () => {
   const linkedSocialMedia = socialMediaAccounts?.filter(s => s.entity_id === id) ?? [];
   const linkedDirectorsUbos = directorsUbos ?? [];
   const linkedEmails = emailAddresses?.filter(e => e.entity_id === id) ?? [];
+  const linkedWebsites = entityWebsites?.filter(w => w.entity_id === id) ?? [];
 
   const isLoading = entitiesLoading || bankLoading || cardsLoading || addressesLoading || 
     contractsLoading || phonesLoading || taxIdsLoading || accountantsLoading || 
-    lawFirmsLoading || agentsLoading || advisorsLoading || consultantsLoading || auditorsLoading || docsLoading || filingsLoading || tasksLoading || socialLoading || directorsLoading || emailsLoading;
+    lawFirmsLoading || agentsLoading || advisorsLoading || consultantsLoading || auditorsLoading || docsLoading || filingsLoading || tasksLoading || socialLoading || directorsLoading || emailsLoading || websitesLoading;
 
   if (isLoading) {
     return (
@@ -456,6 +460,7 @@ const EntityDetail = () => {
         <LinkedAddresses addresses={linkedAddresses} />
         <LinkedDocuments documents={linkedDocuments} entityId={id!} />
         <LinkedContracts contracts={linkedContracts} />
+        <LinkedWebsites websites={linkedWebsites} entityId={id!} />
         <LinkedSocialMedia accounts={linkedSocialMedia} entityId={id!} />
         <LinkedFilings entityId={id!} />
         <LinkedFilingTasks entityId={id!} />
