@@ -89,7 +89,7 @@ const AddressesSection = ({ entityFilter }: AddressesSectionProps) => {
 
   const handleViewOnMap = (address: Address) => {
     const addressParts = [
-      address.street,
+      address.street.replace(/#/g, "Suite "), // Replace # with "Suite " for better Google Maps compatibility
       address.city,
       address.state,
       address.zip,
