@@ -22,6 +22,7 @@ import ShareClassForm from "@/components/captable/ShareClassForm";
 import ShareholderForm from "@/components/captable/ShareholderForm";
 import TransactionForm from "@/components/captable/TransactionForm";
 import CapTableOverview from "@/components/captable/CapTableOverview";
+import GravatarAvatar from "@/components/shared/GravatarAvatar";
 
 // Types
 interface ShareClass {
@@ -358,7 +359,16 @@ const CapTableSection = () => {
               <TableBody>
                 {filteredShareholders.map((shareholder) => (
                   <TableRow key={shareholder.id}>
-                    <TableCell className="font-medium text-foreground">{shareholder.name}</TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-3">
+                        <GravatarAvatar
+                          email={shareholder.email}
+                          name={shareholder.name}
+                          size="sm"
+                        />
+                        <span className="font-medium text-foreground">{shareholder.name}</span>
+                      </div>
+                    </TableCell>
                     <TableCell>
                       <Badge variant="secondary">{shareholder.shareholder_type}</Badge>
                     </TableCell>
