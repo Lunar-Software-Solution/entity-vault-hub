@@ -82,8 +82,16 @@ const CONTROL_TYPES = [
 
 const ID_DOCUMENT_TYPES = [
   { value: "passport", label: "Passport" },
-  { value: "national_id", label: "National ID" },
+  { value: "national_id", label: "National ID Card" },
   { value: "drivers_license", label: "Driver's License" },
+  { value: "residence_permit", label: "Residence Permit" },
+  { value: "visa", label: "Visa" },
+  { value: "military_id", label: "Military ID" },
+  { value: "government_id", label: "Government ID" },
+  { value: "state_id", label: "State ID" },
+  { value: "social_security", label: "Social Security Card" },
+  { value: "tax_id_card", label: "Tax ID Card" },
+  { value: "other", label: "Other" },
 ];
 
 interface DirectorUboFormProps {
