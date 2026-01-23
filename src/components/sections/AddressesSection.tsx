@@ -88,9 +88,15 @@ const AddressesSection = ({ entityFilter }: AddressesSectionProps) => {
   };
 
   const handleViewOnMap = (address: Address) => {
-    const query = encodeURIComponent(
-      `${address.street}, ${address.city}${address.state ? `, ${address.state}` : ""} ${address.zip || ""}, ${address.country}`
-    );
+    const addressParts = [
+      address.street,
+      address.city,
+      address.state,
+      address.zip,
+      address.country
+    ].filter(Boolean).join(", ");
+    
+    const query = encodeURIComponent(addressParts);
     window.open(`https://www.google.com/maps/search/?api=1&query=${query}`, "_blank");
   };
 
