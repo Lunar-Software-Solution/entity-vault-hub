@@ -225,7 +225,12 @@ const BankAccountsSection = ({ entityFilter }: BankAccountsSectionProps) => {
                       </p>
                       <CopyButton value={account.account_number} label="Account number" />
                       <button
-                        onClick={() => toggleReveal(account.id)}
+                        type="button"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          toggleReveal(account.id);
+                        }}
                         className="p-1 hover:bg-muted rounded transition-colors text-muted-foreground hover:text-foreground"
                         title={isRevealed ? "Hide details" : "Show details"}
                       >
