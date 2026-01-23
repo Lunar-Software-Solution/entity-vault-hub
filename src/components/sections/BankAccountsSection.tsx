@@ -175,17 +175,6 @@ const BankAccountsSection = ({ entityFilter }: BankAccountsSectionProps) => {
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
-                    {/* Reveal/Hide Toggle */}
-                    <Button 
-                      variant="outline" 
-                      size="sm"
-                      className="gap-1.5 text-foreground"
-                      onClick={() => toggleReveal(account.id)}
-                      title={isRevealed ? "Hide details" : "Show details"}
-                    >
-                      {isRevealed ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
-                      {isRevealed ? "Hide" : "Show"}
-                    </Button>
                     {/* Open Bank Website Button */}
                     {bankWebsite && (
                       <Button 
@@ -235,6 +224,13 @@ const BankAccountsSection = ({ entityFilter }: BankAccountsSectionProps) => {
                         {isRevealed ? account.account_number : maskAccountNumber(account.account_number)}
                       </p>
                       <CopyButton value={account.account_number} label="Account number" />
+                      <button
+                        onClick={() => toggleReveal(account.id)}
+                        className="p-1 hover:bg-muted rounded transition-colors text-muted-foreground hover:text-foreground"
+                        title={isRevealed ? "Hide details" : "Show details"}
+                      >
+                        {isRevealed ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                      </button>
                     </div>
                   </div>
                   {(account as any).iban && (
