@@ -89,17 +89,17 @@ const AddressesSection = ({ entityFilter }: AddressesSectionProps) => {
 
   const handleViewOnMap = (address: Address) => {
     const addressParts = [
-      address.street.replace(/#/g, "Suite "), // Replace # with "Suite " for better Google Maps compatibility
+      address.street.replace(/#/g, "Suite "),
       address.city,
       address.state,
       address.zip,
       address.country
     ].filter(Boolean).join(", ");
     
-    const query = encodeURIComponent(addressParts);
+    // Use + for spaces instead of %20 for Google Maps compatibility
+    const query = addressParts.replace(/\s+/g, "+");
     const url = `https://www.google.com/maps/search/?api=1&query=${query}`;
     
-    // Use anchor element click for better cross-browser/iframe compatibility
     const link = document.createElement("a");
     link.href = url;
     link.target = "_blank";
