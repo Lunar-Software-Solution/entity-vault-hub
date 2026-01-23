@@ -1,165 +1,324 @@
-import { LayoutDashboard, Building2, CreditCard, Wallet, Share2, MapPin, FileText, Settings, LogOut, User, ChevronUp, Phone, Receipt, Calendar, Briefcase, Mail, Users, PieChart } from "lucide-react";
+import { useState } from "react";
+import { 
+  LayoutDashboard, Building2, CreditCard, Wallet, Share2, MapPin, 
+  FileText, Settings, LogOut, User, ChevronUp, ChevronDown, ChevronRight,
+  Phone, Receipt, Calendar, Briefcase, Mail, Users, PieChart, 
+  PanelLeftClose, PanelLeft
+} from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
 import braxLogo from "@/assets/braxtech-logo.png";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { 
+  DropdownMenu, DropdownMenuContent, DropdownMenuItem, 
+  DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger 
+} from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Button } from "@/components/ui/button";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+
 interface SidebarProps {
   activeSection: string;
   onSectionChange: (section: string) => void;
+  collapsed?: boolean;
+  onCollapsedChange?: (collapsed: boolean) => void;
 }
-const menuItems = [{
-  id: "dashboard",
-  label: "Dashboard",
-  icon: LayoutDashboard
-}, {
-  id: "entity",
-  label: "Entities",
-  icon: Building2
-}, {
-  id: "directors-ubo",
-  label: "Directors & UBOs",
-  icon: Users
-}, {
-  id: "cap-table",
-  label: "Cap Table",
-  icon: PieChart
-}, {
-  id: "service-providers",
-  label: "Service Providers",
-  icon: Briefcase
-}, {
-  id: "filings",
-  label: "Filings",
-  icon: Calendar
-}, {
-  id: "bank-accounts",
-  label: "Bank Accounts",
-  icon: Wallet
-}, {
-  id: "credit-cards",
-  label: "Credit Cards",
-  icon: CreditCard
-}, {
-  id: "phone-numbers",
-  label: "Phone Numbers",
-  icon: Phone
-}, {
-  id: "tax-ids",
-  label: "Tax IDs",
-  icon: Receipt
-}, {
-  id: "emails",
-  label: "Emails",
-  icon: Mail
-}, {
-  id: "social-media",
-  label: "Social Media",
-  icon: Share2
-}, {
-  id: "addresses",
-  label: "Addresses",
-  icon: MapPin
-}, {
-  id: "documents",
-  label: "Documents",
-  icon: FileText
-}, {
-  id: "contracts",
-  label: "Contracts",
-  icon: FileText
-}, {
-  id: "users",
-  label: "Users",
-  icon: Users
-}, {
-  id: "settings",
-  label: "Settings",
-  icon: Settings
-}];
+
+interface MenuGroup {
+  id: string;
+  label: string;
+  items: MenuItem[];
+}
+
+interface MenuItem {
+  id: string;
+  label: string;
+  icon: React.ComponentType<{ className?: string }>;
+}
+
+const menuGroups: MenuGroup[] = [
+  {
+    id: "main",
+    label: "Main",
+    items: [
+      { id: "dashboard", label: "Dashboard", icon: LayoutDashboard },
+      { id: "entity", label: "Entities", icon: Building2 },
+    ],
+  },
+  {
+    id: "corporate",
+    label: "Corporate",
+    items: [
+      { id: "directors-ubo", label: "Directors & UBOs", icon: Users },
+      { id: "cap-table", label: "Cap Table", icon: PieChart },
+      { id: "service-providers", label: "Service Providers", icon: Briefcase },
+      { id: "filings", label: "Filings", icon: Calendar },
+    ],
+  },
+  {
+    id: "financial",
+    label: "Financial",
+    items: [
+      { id: "bank-accounts", label: "Bank Accounts", icon: Wallet },
+      { id: "credit-cards", label: "Credit Cards", icon: CreditCard },
+      { id: "tax-ids", label: "Tax IDs", icon: Receipt },
+    ],
+  },
+  {
+    id: "contact",
+    label: "Contact",
+    items: [
+      { id: "phone-numbers", label: "Phone Numbers", icon: Phone },
+      { id: "emails", label: "Emails", icon: Mail },
+      { id: "social-media", label: "Social Media", icon: Share2 },
+      { id: "addresses", label: "Addresses", icon: MapPin },
+    ],
+  },
+  {
+    id: "legal",
+    label: "Legal & Docs",
+    items: [
+      { id: "documents", label: "Documents", icon: FileText },
+      { id: "contracts", label: "Contracts", icon: FileText },
+    ],
+  },
+  {
+    id: "admin",
+    label: "Admin",
+    items: [
+      { id: "users", label: "Users", icon: Users },
+      { id: "settings", label: "Settings", icon: Settings },
+    ],
+  },
+];
+
 const Sidebar = ({
   activeSection,
-  onSectionChange
+  onSectionChange,
+  collapsed = false,
+  onCollapsedChange,
 }: SidebarProps) => {
-  const {
-    user,
-    signOut
-  } = useAuth();
+  const { user, signOut } = useAuth();
+  const [openGroups, setOpenGroups] = useState<string[]>(["main", "corporate", "financial", "contact", "legal", "admin"]);
+
   const handleLogout = async () => {
     await signOut();
   };
+
   const userEmail = user?.email || "user@example.com";
   const userInitials = userEmail.split("@")[0].slice(0, 2).toUpperCase();
-  return <aside className="fixed left-0 top-0 h-screen w-64 bg-sidebar border-r border-sidebar-border flex flex-col">
-      <div className="p-6">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl overflow-hidden">
-            <img src={braxLogo} alt="BraxTech" className="w-full h-full object-contain" />
-          </div>
-          <div>
-            <h1 className="font-semibold text-sidebar-foreground">Brax Entity Hub</h1>
-            <p className="text-xs text-muted-foreground">Management Portal</p>
+
+  const toggleGroup = (groupId: string) => {
+    setOpenGroups((prev) =>
+      prev.includes(groupId)
+        ? prev.filter((id) => id !== groupId)
+        : [...prev, groupId]
+    );
+  };
+
+  const isGroupActive = (group: MenuGroup) => {
+    return group.items.some((item) => item.id === activeSection);
+  };
+
+  const renderMenuItem = (item: MenuItem) => {
+    const isActive = activeSection === item.id;
+    const IconComponent = item.icon;
+
+    if (collapsed) {
+      return (
+        <Tooltip key={item.id}>
+          <TooltipTrigger asChild>
+            <button
+              onClick={() => onSectionChange(item.id)}
+              className={cn(
+                "w-full flex items-center justify-center p-2 rounded-md transition-all duration-200",
+                isActive
+                  ? "bg-sidebar-accent text-sidebar-primary"
+                  : "text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/50"
+              )}
+            >
+              <IconComponent className="w-4 h-4" />
+            </button>
+          </TooltipTrigger>
+          <TooltipContent side="right" className="bg-popover text-popover-foreground border border-border">
+            {item.label}
+          </TooltipContent>
+        </Tooltip>
+      );
+    }
+
+    return (
+      <button
+        key={item.id}
+        onClick={() => onSectionChange(item.id)}
+        className={cn(
+          "w-full flex items-center gap-2.5 px-3 py-1.5 rounded-md text-sm font-medium transition-all duration-200",
+          isActive
+            ? "bg-sidebar-accent text-sidebar-primary"
+            : "text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/50"
+        )}
+      >
+        <IconComponent className="w-4 h-4 flex-shrink-0" />
+        <span className="truncate">{item.label}</span>
+      </button>
+    );
+  };
+
+  const renderGroup = (group: MenuGroup) => {
+    const isOpen = openGroups.includes(group.id);
+    const hasActiveItem = isGroupActive(group);
+
+    if (collapsed) {
+      return (
+        <div key={group.id} className="space-y-1">
+          {group.items.map(renderMenuItem)}
+        </div>
+      );
+    }
+
+    return (
+      <Collapsible
+        key={group.id}
+        open={isOpen}
+        onOpenChange={() => toggleGroup(group.id)}
+      >
+        <CollapsibleTrigger className="w-full flex items-center justify-between px-3 py-1.5 text-xs font-semibold text-muted-foreground uppercase tracking-wider hover:text-sidebar-foreground transition-colors">
+          <span>{group.label}</span>
+          {isOpen ? (
+            <ChevronDown className="w-3 h-3" />
+          ) : (
+            <ChevronRight className="w-3 h-3" />
+          )}
+        </CollapsibleTrigger>
+        <CollapsibleContent className="space-y-0.5 mt-1">
+          {group.items.map(renderMenuItem)}
+        </CollapsibleContent>
+      </Collapsible>
+    );
+  };
+
+  return (
+    <TooltipProvider delayDuration={0}>
+      <aside
+        className={cn(
+          "fixed left-0 top-0 h-screen bg-sidebar border-r border-sidebar-border flex flex-col transition-all duration-300",
+          collapsed ? "w-14" : "w-56"
+        )}
+      >
+        {/* Header */}
+        <div className={cn("p-3 border-b border-sidebar-border", collapsed && "px-2")}>
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 rounded-lg overflow-hidden flex-shrink-0">
+              <img src={braxLogo} alt="Entity Hub" className="w-full h-full object-contain" />
+            </div>
+            {!collapsed && (
+              <div className="min-w-0 flex-1">
+                <h1 className="font-semibold text-sm text-sidebar-foreground truncate">Entity Hub</h1>
+                <p className="text-xs text-muted-foreground truncate">Management Portal</p>
+              </div>
+            )}
           </div>
         </div>
-      </div>
 
-      <nav className="flex-1 px-3 py-4">
-        <ul className="space-y-1">
-          {menuItems.map(item => <li key={item.id}>
-              <button onClick={() => onSectionChange(item.id)} className={cn("w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-all duration-200", activeSection === item.id ? "bg-sidebar-accent text-sidebar-primary" : "text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/50")}>
-                <item.icon className="w-5 h-5" />
-                {item.label}
+        {/* Collapse Toggle */}
+        <div className={cn("p-2", collapsed && "px-1")}>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => onCollapsedChange?.(!collapsed)}
+                className={cn(
+                  "w-full justify-center text-muted-foreground hover:text-sidebar-foreground",
+                  collapsed ? "px-2" : "px-3"
+                )}
+              >
+                {collapsed ? (
+                  <PanelLeft className="w-4 h-4" />
+                ) : (
+                  <>
+                    <PanelLeftClose className="w-4 h-4 mr-2" />
+                    <span className="text-xs">Collapse</span>
+                  </>
+                )}
+              </Button>
+            </TooltipTrigger>
+            {collapsed && (
+              <TooltipContent side="right" className="bg-popover text-popover-foreground border border-border">
+                Expand sidebar
+              </TooltipContent>
+            )}
+          </Tooltip>
+        </div>
+
+        {/* Navigation */}
+        <nav className="flex-1 overflow-y-auto px-2 py-2 space-y-3">
+          {menuGroups.map(renderGroup)}
+        </nav>
+
+        {/* User Menu */}
+        <div className={cn("p-2 border-t border-sidebar-border", collapsed && "px-1")}>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button
+                className={cn(
+                  "w-full flex items-center gap-2 p-2 rounded-lg hover:bg-sidebar-accent/50 transition-all duration-200",
+                  collapsed && "justify-center"
+                )}
+              >
+                <Avatar className="h-7 w-7 flex-shrink-0">
+                  <AvatarFallback className="bg-primary text-primary-foreground text-xs font-medium">
+                    {userInitials}
+                  </AvatarFallback>
+                </Avatar>
+                {!collapsed && (
+                  <>
+                    <div className="flex-1 text-left min-w-0">
+                      <p className="text-xs font-medium text-sidebar-foreground truncate">
+                        {userEmail.split("@")[0]}
+                      </p>
+                    </div>
+                    <ChevronUp className="w-3 h-3 text-muted-foreground flex-shrink-0" />
+                  </>
+                )}
               </button>
-            </li>)}
-        </ul>
-      </nav>
-
-      <div className="p-3 border-t border-sidebar-border">
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <button className="w-full flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-sidebar-accent/50 transition-all duration-200">
-              <Avatar className="h-9 w-9">
-                <AvatarFallback className="bg-primary text-primary-foreground text-sm font-medium">
-                  {userInitials}
-                </AvatarFallback>
-              </Avatar>
-              <div className="flex-1 text-left">
-                <p className="text-sm font-medium text-sidebar-foreground truncate max-w-[140px]">
-                  {userEmail.split("@")[0]}
-                </p>
-                <p className="text-xs text-muted-foreground truncate max-w-[140px]">
-                  {userEmail}
-                </p>
-              </div>
-              <ChevronUp className="w-4 h-4 text-muted-foreground" />
-            </button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent side="top" align="start" className="w-56 bg-popover border border-border shadow-lg">
-            <DropdownMenuLabel className="font-normal">
-              <div className="flex flex-col space-y-1">
-                <p className="text-sm font-medium leading-none">Account</p>
-                <p className="text-xs leading-none text-muted-foreground">
-                  {userEmail}
-                </p>
-              </div>
-            </DropdownMenuLabel>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem className="cursor-pointer">
-              <User className="w-4 h-4 mr-2" />
-              Profile
-            </DropdownMenuItem>
-            <DropdownMenuItem className="cursor-pointer">
-              <Settings className="w-4 h-4 mr-2" />
-              Settings
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={handleLogout} className="cursor-pointer text-destructive focus:text-destructive focus:bg-destructive/10">
-              <LogOut className="w-4 h-4 mr-2" />
-              Log out
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      </div>
-    </aside>;
+            </DropdownMenuTrigger>
+            <DropdownMenuContent
+              side={collapsed ? "right" : "top"}
+              align={collapsed ? "end" : "start"}
+              className="w-56 bg-popover border border-border shadow-lg"
+            >
+              <DropdownMenuLabel className="font-normal">
+                <div className="flex flex-col space-y-1">
+                  <p className="text-sm font-medium leading-none text-popover-foreground">Account</p>
+                  <p className="text-xs leading-none text-muted-foreground">
+                    {userEmail}
+                  </p>
+                </div>
+              </DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem className="cursor-pointer text-popover-foreground">
+                <User className="w-4 h-4 mr-2" />
+                Profile
+              </DropdownMenuItem>
+              <DropdownMenuItem className="cursor-pointer text-popover-foreground">
+                <Settings className="w-4 h-4 mr-2" />
+                Settings
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem
+                onClick={handleLogout}
+                className="cursor-pointer text-destructive focus:text-destructive focus:bg-destructive/10"
+              >
+                <LogOut className="w-4 h-4 mr-2" />
+                Log out
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+      </aside>
+    </TooltipProvider>
+  );
 };
+
 export default Sidebar;
