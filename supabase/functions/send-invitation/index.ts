@@ -53,6 +53,10 @@ const handler = async (req: Request): Promise<Response> => {
     }
 
     const brevoApiKey = Deno.env.get("BREVO_API_KEY");
+    console.log("BREVO_API_KEY exists:", !!brevoApiKey);
+    console.log("BREVO_API_KEY length:", brevoApiKey?.length || 0);
+    console.log("BREVO_API_KEY starts with 'xkeysib-':", brevoApiKey?.startsWith("xkeysib-") || false);
+    
     if (!brevoApiKey) {
       console.error("BREVO_API_KEY not configured");
       return new Response(JSON.stringify({ error: "Email service not configured" }), {
