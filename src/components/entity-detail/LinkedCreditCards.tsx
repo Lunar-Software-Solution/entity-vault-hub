@@ -1,12 +1,13 @@
 import { useState } from "react";
 import type { CreditCard } from "@/hooks/usePortalData";
-import { CreditCard as CreditCardIcon, Eye, EyeOff, ExternalLink } from "lucide-react";
+import { CreditCard as CreditCardIcon, Eye, EyeOff, ExternalLink, Copy, Check } from "lucide-react";
 import CompanyLogo from "@/components/shared/CompanyLogo";
 import CopyButton from "@/components/shared/CopyButton";
 import CardBrandIcon from "@/components/shared/CardBrandIcon";
 import { detectCardBrand } from "@/lib/cardBrandUtils";
 import { Button } from "@/components/ui/button";
 import { format } from "date-fns";
+import { toast } from "sonner";
 
 interface LinkedCreditCardsProps {
   cards: CreditCard[];
@@ -14,6 +15,7 @@ interface LinkedCreditCardsProps {
 
 const LinkedCreditCards = ({ cards }: LinkedCreditCardsProps) => {
   const [revealedCards, setRevealedCards] = useState<Set<string>>(new Set());
+  const [copied, setCopied] = useState(false);
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat("en-US", {
@@ -45,16 +47,66 @@ const LinkedCreditCards = ({ cards }: LinkedCreditCardsProps) => {
     return `****-****-****-${cleanNumber.slice(-4)}`;
   };
 
+  const formatAllCards = (): string => {
+    return cards.map(card => {
+      const lines = [
+        `💳 ${card.name}`,
+        `Card Number: ${card.card_number}`,
+      ];
+      
+      if (card.cardholder_name) {
+        lines.push(`Cardholder: ${card.cardholder_name}`);
+      }
+      if (card.expiry_date) {
+        lines.push(`Expires: ${card.expiry_date}`);
+      }
+      if ((card as any).security_code) {
+        lines.push(`CVV: ${(card as any).security_code}`);
+      }
+      lines.push(`Credit Limit: ${formatCurrency(Number(card.credit_limit))}`);
+      
+      if (card.due_date) {
+        lines.push(`Due Date: ${format(new Date(card.due_date), "MMM d, yyyy")}`);
+      }
+      if ((card as any).billing_address) {
+        lines.push(`Billing Address: ${(card as any).billing_address}`);
+      }
+      
+      return lines.join('\n');
+    }).join('\n\n---\n\n');
+  };
+
+  const copyAllCards = async () => {
+    if (cards.length === 0) return;
+    
+    const text = formatAllCards();
+    await navigator.clipboard.writeText(text);
+    setCopied(true);
+    toast.success(`Copied ${cards.length} credit card(s) to clipboard`);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
   return (
     <div className="glass-card rounded-xl p-6">
       <div className="flex items-center gap-3 mb-4">
         <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
           <CreditCardIcon className="w-5 h-5 text-primary" />
         </div>
-        <div>
+        <div className="flex-1">
           <h3 className="font-semibold text-foreground">Credit Cards</h3>
           <p className="text-sm text-muted-foreground">{cards.length} linked</p>
         </div>
+        {cards.length > 0 && (
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={copyAllCards}
+            className="gap-1.5"
+          >
+            {copied ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
+            Copy All
+          </Button>
+        )}
       </div>
 
       {cards.length === 0 ? (
