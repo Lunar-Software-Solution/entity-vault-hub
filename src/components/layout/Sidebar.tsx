@@ -3,7 +3,7 @@ import {
   LayoutDashboard, Building2, CreditCard, Wallet, Share2, MapPin, 
   FileText, Settings, LogOut, User, ChevronUp, ChevronDown, ChevronRight,
   Phone, Receipt, Calendar, Briefcase, Mail, Users, PieChart, Globe,
-  PanelLeftClose, PanelLeft
+  PanelLeftClose, PanelLeft, Monitor
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
@@ -80,6 +80,7 @@ const menuGroups: MenuGroup[] = [
     label: "Digital",
     items: [
       { id: "websites", label: "Websites", icon: Globe },
+      { id: "software", label: "Software", icon: Monitor },
     ],
   },
   {
