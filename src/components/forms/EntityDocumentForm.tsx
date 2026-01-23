@@ -8,6 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import DocumentFileUpload from "@/components/documents/DocumentFileUpload";
+import DocumentSummary from "@/components/documents/DocumentSummary";
 import { useState } from "react";
 
 interface EntityDocumentFormProps {
@@ -29,6 +30,10 @@ const categoryColors: Record<string, string> = {
 const EntityDocumentForm = ({ entityId, document, onSubmit, onCancel, isLoading }: EntityDocumentFormProps) => {
   const { data: documentTypes } = useDocumentTypes();
   const [documentId] = useState(() => document?.id || crypto.randomUUID());
+  const [aiSummary, setAiSummary] = useState<string | null>((document as any)?.ai_summary ?? null);
+  const [summaryGeneratedAt, setSummaryGeneratedAt] = useState<string | null>(
+    (document as any)?.summary_generated_at ?? null
+  );
 
   const form = useForm<EntityDocumentFormData>({
     resolver: zodResolver(entityDocumentSchema),
@@ -50,6 +55,11 @@ const EntityDocumentForm = ({ entityId, document, onSubmit, onCancel, isLoading 
   const handleFileUpload = (filePath: string, fileName: string) => {
     form.setValue("file_path", filePath);
     form.setValue("file_name", fileName);
+  };
+
+  const handleSummaryGenerated = (summary: string, generatedAt: string) => {
+    setAiSummary(summary);
+    setSummaryGeneratedAt(generatedAt);
   };
 
   // Group document types by category
@@ -118,9 +128,14 @@ const EntityDocumentForm = ({ entityId, document, onSubmit, onCancel, isLoading 
               existingFilePath={form.watch("file_path")}
               existingFileName={form.watch("file_name")}
               onUploadComplete={handleFileUpload}
+              onSummaryGenerated={handleSummaryGenerated}
             />
           </div>
         </div>
+
+        {aiSummary && (
+          <DocumentSummary summary={aiSummary} generatedAt={summaryGeneratedAt} />
+        )}
 
         <div className="grid grid-cols-2 gap-4">
           <FormField

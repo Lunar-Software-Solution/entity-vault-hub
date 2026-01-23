@@ -796,6 +796,7 @@ export type Database = {
       }
       entity_documents: {
         Row: {
+          ai_summary: string | null
           created_at: string
           document_type_id: string | null
           entity_id: string
@@ -808,10 +809,12 @@ export type Database = {
           notes: string | null
           reference_number: string | null
           status: string
+          summary_generated_at: string | null
           title: string
           updated_at: string
         }
         Insert: {
+          ai_summary?: string | null
           created_at?: string
           document_type_id?: string | null
           entity_id: string
@@ -824,10 +827,12 @@ export type Database = {
           notes?: string | null
           reference_number?: string | null
           status?: string
+          summary_generated_at?: string | null
           title: string
           updated_at?: string
         }
         Update: {
+          ai_summary?: string | null
           created_at?: string
           document_type_id?: string | null
           entity_id?: string
@@ -840,6 +845,7 @@ export type Database = {
           notes?: string | null
           reference_number?: string | null
           status?: string
+          summary_generated_at?: string | null
           title?: string
           updated_at?: string
         }
