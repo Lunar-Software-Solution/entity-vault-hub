@@ -1,4 +1,4 @@
-import { Wallet, CreditCard, Share2, FileText, MapPin, Building2, Calendar, CheckSquare } from "lucide-react";
+import { Wallet, CreditCard, Share2, FileText, MapPin, Building2, Calendar, CheckSquare, Users, PieChart, Briefcase, Phone, Mail, Receipt } from "lucide-react";
 import StatCard from "./StatCard";
 import { useDashboardStats, useBankAccounts, useContracts, useUpcomingFilings, useOpenTasks } from "@/hooks/usePortalData";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -148,20 +148,34 @@ const DashboardSection = ({ onNavigate }: DashboardSectionProps) => {
 
         <div className="glass-card rounded-xl p-6">
           <h3 className="text-lg font-semibold text-foreground mb-4">Quick Actions</h3>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
             {[
-              { label: "Add Bank Account", icon: Wallet, section: "bank-accounts" },
-              { label: "New Contract", icon: FileText, section: "contracts" },
+              // Corporate
+              { label: "Add Entity", icon: Building2, section: "entity" },
+              { label: "Add Director/UBO", icon: Users, section: "directors-ubo" },
+              { label: "Add Cap Table", icon: PieChart, section: "cap-table" },
+              { label: "Add Provider", icon: Briefcase, section: "service-providers" },
               { label: "Add Filing", icon: Calendar, section: "filings" },
+              // Financial
+              { label: "Add Bank Account", icon: Wallet, section: "bank-accounts" },
+              { label: "Add Credit Card", icon: CreditCard, section: "credit-cards" },
+              { label: "Add Tax ID", icon: Receipt, section: "tax-ids" },
+              // Contact
+              { label: "Add Phone", icon: Phone, section: "phone-numbers" },
+              { label: "Add Email", icon: Mail, section: "email" },
+              { label: "Add Social Media", icon: Share2, section: "social-media" },
               { label: "Add Address", icon: MapPin, section: "addresses" },
+              // Legal & Docs
+              { label: "Add Document", icon: FileText, section: "documents" },
+              { label: "New Contract", icon: FileText, section: "contracts" },
             ].map((action, index) => (
               <button
                 key={index}
                 onClick={() => onNavigate?.(action.section)}
-                className="flex items-center gap-3 p-4 rounded-lg bg-muted text-foreground hover:bg-primary/10 hover:text-primary transition-all duration-200 text-sm font-medium cursor-pointer"
+                className="flex items-center gap-3 p-3 rounded-lg bg-muted text-foreground hover:bg-primary/10 hover:text-primary transition-all duration-200 text-sm font-medium cursor-pointer"
               >
-                <action.icon className="w-5 h-5" />
-                {action.label}
+                <action.icon className="w-4 h-4 flex-shrink-0" />
+                <span className="truncate">{action.label}</span>
               </button>
             ))}
           </div>
