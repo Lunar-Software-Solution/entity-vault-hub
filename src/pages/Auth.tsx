@@ -196,7 +196,8 @@ const Auth = () => {
   }, [needs2FA, pending2FAUser, user]);
 
   // Loading state - must come AFTER all hooks
-  if (authLoading || inviteLoading) {
+  // Don't show loading if we're in 2FA mode (user just logged out for 2FA)
+  if ((authLoading || inviteLoading) && !needs2FA) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="animate-pulse text-muted-foreground">Loading...</div>
@@ -204,8 +205,8 @@ const Auth = () => {
     );
   }
 
-  // Redirect authenticated users
-  if (user) {
+  // Redirect authenticated users (but not during 2FA flow)
+  if (user && !needs2FA) {
     return <Navigate to="/" replace />;
   }
 
