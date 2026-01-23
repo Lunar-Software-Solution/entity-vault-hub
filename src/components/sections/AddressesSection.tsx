@@ -221,15 +221,19 @@ const AddressesSection = ({ entityFilter }: AddressesSectionProps) => {
                     <Copy className="w-3 h-3" />
                     Copy Address
                   </Button>
-                  <a 
-                    href={getMapUrl(address)}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex-1 gap-2 text-foreground border-border/60 hover:bg-primary/10 hover:text-primary hover:border-primary/50 inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border bg-background h-9 px-3"
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className="flex-1 gap-2 text-foreground border-border/60 hover:bg-primary/10 hover:text-primary hover:border-primary/50"
+                    onClick={() => {
+                      navigator.clipboard.writeText(getMapUrl(address)).then(() => {
+                        toast.success("Map link copied! Paste in a new tab to open.");
+                      });
+                    }}
                   >
-                    <ExternalLink className="w-3 h-3 mr-2" />
-                    View on Map
-                  </a>
+                    <ExternalLink className="w-3 h-3" />
+                    Copy Map Link
+                  </Button>
                 </div>
               </div>
             );
