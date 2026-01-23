@@ -33,6 +33,7 @@ export const entitySchema = z.object({
   status: z.string().min(1, "Status is required"),
   jurisdiction: z.string().trim().max(100).optional().or(z.literal("")),
   founded_date: z.string().optional().or(z.literal("")),
+  fiscal_year_end: z.string().trim().max(5).regex(/^(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$/, "Must be MM-DD format").optional().or(z.literal("")),
 });
 
 export const bankAccountSchema = z.object({
