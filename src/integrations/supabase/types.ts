@@ -832,7 +832,6 @@ export type Database = {
           fiscal_year_end: string | null
           founded_date: string | null
           id: string
-          is_verified: boolean
           jurisdiction: string | null
           name: string
           status: string
@@ -844,7 +843,6 @@ export type Database = {
           fiscal_year_end?: string | null
           founded_date?: string | null
           id?: string
-          is_verified?: boolean
           jurisdiction?: string | null
           name: string
           status?: string
@@ -856,7 +854,6 @@ export type Database = {
           fiscal_year_end?: string | null
           founded_date?: string | null
           id?: string
-          is_verified?: boolean
           jurisdiction?: string | null
           name?: string
           status?: string
