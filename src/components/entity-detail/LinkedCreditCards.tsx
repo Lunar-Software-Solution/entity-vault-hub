@@ -1,5 +1,6 @@
 import type { CreditCard } from "@/hooks/usePortalData";
 import { CreditCard as CreditCardIcon } from "lucide-react";
+import CompanyLogo from "@/components/shared/CompanyLogo";
 
 interface LinkedCreditCardsProps {
   cards: CreditCard[];
@@ -39,7 +40,12 @@ const LinkedCreditCards = ({ cards }: LinkedCreditCardsProps) => {
             >
               <div className="flex items-start justify-between mb-3">
                 <p className="font-medium">{card.name}</p>
-                <CreditCardIcon className="w-5 h-5 opacity-80" />
+                <CompanyLogo 
+                  domain={(card as any).issuer_website} 
+                  name={card.name} 
+                  size="sm"
+                  className="bg-white/20 rounded-lg"
+                />
               </div>
               <p className="font-mono text-sm opacity-80 mb-2">
                 •••• •••• •••• {card.card_number.slice(-4)}

@@ -23,6 +23,7 @@ const BankAccountForm = ({ account, onSubmit, onCancel, isLoading }: BankAccount
     defaultValues: {
       name: account?.name ?? "",
       bank: account?.bank ?? "",
+      bank_website: (account as any)?.bank_website ?? "",
       account_number: account?.account_number ?? "",
       routing_number: account?.routing_number ?? "",
       type: account?.type ?? "Checking",
@@ -63,6 +64,14 @@ const BankAccountForm = ({ account, onSubmit, onCancel, isLoading }: BankAccount
             <FormItem>
               <FormLabel>Bank Name *</FormLabel>
               <FormControl><Input placeholder="Chase Bank" {...field} /></FormControl>
+              <FormMessage />
+            </FormItem>
+          )} />
+
+          <FormField control={form.control} name="bank_website" render={({ field }) => (
+            <FormItem className="md:col-span-2">
+              <FormLabel>Bank Website</FormLabel>
+              <FormControl><Input placeholder="https://chase.com" {...field} /></FormControl>
               <FormMessage />
             </FormItem>
           )} />

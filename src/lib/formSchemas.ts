@@ -45,6 +45,7 @@ export const entitySchema = z.object({
 export const bankAccountSchema = z.object({
   name: z.string().trim().min(1, "Account name is required").max(100),
   bank: z.string().trim().min(1, "Bank name is required").max(100),
+  bank_website: z.string().trim().url("Invalid URL").optional().or(z.literal("")),
   account_number: z.string().trim().min(1, "Account number is required").max(50),
   routing_number: z.string().trim().max(50).optional().or(z.literal("")),
   type: z.string().min(1, "Account type is required"),
@@ -54,6 +55,7 @@ export const bankAccountSchema = z.object({
 
 export const creditCardSchema = z.object({
   name: z.string().trim().min(1, "Card name is required").max(100),
+  issuer_website: z.string().trim().url("Invalid URL").optional().or(z.literal("")),
   card_number: z.string().trim().min(1, "Card number is required").max(30),
   cardholder_name: z.string().trim().max(100).optional().or(z.literal("")),
   expiry_date: z.string().trim().max(10).optional().or(z.literal("")),
@@ -185,6 +187,7 @@ export type EntityFormData = {
 export type BankAccountFormData = {
   name: string;
   bank: string;
+  bank_website?: string;
   account_number: string;
   routing_number?: string;
   type: string;
@@ -194,6 +197,7 @@ export type BankAccountFormData = {
 
 export type CreditCardFormData = {
   name: string;
+  issuer_website?: string;
   card_number: string;
   cardholder_name?: string;
   expiry_date?: string;

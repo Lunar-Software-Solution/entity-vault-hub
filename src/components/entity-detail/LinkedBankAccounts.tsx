@@ -1,5 +1,6 @@
 import type { BankAccount } from "@/hooks/usePortalData";
 import { Wallet } from "lucide-react";
+import CompanyLogo from "@/components/shared/CompanyLogo";
 
 interface LinkedBankAccountsProps {
   accounts: BankAccount[];
@@ -29,20 +30,29 @@ const LinkedBankAccounts = ({ accounts }: LinkedBankAccountsProps) => {
               key={account.id} 
               className="bg-muted/30 rounded-lg p-4 border border-border/50"
             >
-              <div className="flex items-start justify-between">
-                <div>
-                  <p className="font-medium text-foreground">{account.name}</p>
-                  <p className="text-sm text-muted-foreground">{account.bank}</p>
+              <div className="flex items-start gap-3">
+                <CompanyLogo
+                  domain={(account as any).bank_website}
+                  name={account.bank}
+                  size="sm"
+                />
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-start justify-between">
+                    <div>
+                      <p className="font-medium text-foreground">{account.name}</p>
+                      <p className="text-sm text-muted-foreground">{account.bank}</p>
+                    </div>
+                    <span className="text-xs px-2 py-1 rounded-full bg-muted text-muted-foreground">
+                      {account.type}
+                    </span>
+                  </div>
+                  <div className="mt-2 flex items-center gap-4 text-sm">
+                    <span className="font-mono text-muted-foreground">
+                      ••••{account.account_number.slice(-4)}
+                    </span>
+                    <span className="text-muted-foreground">{account.currency}</span>
+                  </div>
                 </div>
-                <span className="text-xs px-2 py-1 rounded-full bg-muted text-muted-foreground">
-                  {account.type}
-                </span>
-              </div>
-              <div className="mt-2 flex items-center gap-4 text-sm">
-                <span className="font-mono text-muted-foreground">
-                  ••••{account.account_number.slice(-4)}
-                </span>
-                <span className="text-muted-foreground">{account.currency}</span>
               </div>
             </div>
           ))}
