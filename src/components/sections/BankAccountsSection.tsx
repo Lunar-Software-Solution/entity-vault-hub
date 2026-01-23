@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Plus, MoreVertical, Edit2, Trash2, Building2, ExternalLink, Eye, EyeOff } from "lucide-react";
+import { Plus, MoreVertical, Edit2, Trash2, Building2, ExternalLink, Eye, EyeOff, Copy, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useBankAccounts, useEntities } from "@/hooks/usePortalData";
 import { useCreateBankAccount, useUpdateBankAccount, useDeleteBankAccount } from "@/hooks/usePortalMutations";
@@ -11,6 +11,7 @@ import DeleteConfirmDialog from "@/components/shared/DeleteConfirmDialog";
 import CompanyLogo from "@/components/shared/CompanyLogo";
 import CopyButton from "@/components/shared/CopyButton";
 import { useUserRole } from "@/hooks/useUserRole";
+import { toast } from "sonner";
 import type { BankAccount } from "@/hooks/usePortalData";
 import type { BankAccountFormData } from "@/lib/formSchemas";
 
@@ -27,6 +28,7 @@ const BankAccountsSection = ({ entityFilter }: BankAccountsSectionProps) => {
   const [editingAccount, setEditingAccount] = useState<BankAccount | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [revealedAccounts, setRevealedAccounts] = useState<Set<string>>(new Set());
+  const [copiedAll, setCopiedAll] = useState(false);
   
   const createAccount = useCreateBankAccount();
   const updateAccount = useUpdateBankAccount();
@@ -99,6 +101,46 @@ const BankAccountsSection = ({ entityFilter }: BankAccountsSectionProps) => {
     return `****${lastFour}`;
   };
 
+  const formatAllAccounts = (accounts: BankAccount[]): string => {
+    return accounts.map(account => {
+      const lines = [
+        `📌 ${account.name}`,
+        `Bank: ${account.bank}`,
+        `Type: ${account.type} • Currency: ${account.currency}`,
+      ];
+      
+      if ((account as any).account_holder_name) {
+        lines.push(`Account Holder: ${(account as any).account_holder_name}`);
+      }
+      lines.push(`Account Number: ${account.account_number}`);
+      
+      if ((account as any).iban) {
+        lines.push(`IBAN: ${(account as any).iban}`);
+      }
+      if (account.routing_number) {
+        lines.push(`Routing Number: ${account.routing_number}`);
+      }
+      if ((account as any).swift_bic) {
+        lines.push(`SWIFT/BIC: ${(account as any).swift_bic}`);
+      }
+      if ((account as any).bank_address) {
+        lines.push(`Bank Address: ${(account as any).bank_address}`);
+      }
+      
+      return lines.join('\n');
+    }).join('\n\n---\n\n');
+  };
+
+  const copyAllAccounts = async () => {
+    if (filteredAccounts.length === 0) return;
+    
+    const text = formatAllAccounts(filteredAccounts);
+    await navigator.clipboard.writeText(text);
+    setCopiedAll(true);
+    toast.success(`Copied ${filteredAccounts.length} bank account(s) to clipboard`);
+    setTimeout(() => setCopiedAll(false), 2000);
+  };
+
   if (isLoading) {
     return (
       <div className="space-y-8">
@@ -135,12 +177,20 @@ const BankAccountsSection = ({ entityFilter }: BankAccountsSectionProps) => {
               : "Manage your connected bank accounts."}
           </p>
         </div>
-        {canWrite && (
-          <Button className="gap-2" onClick={() => setIsFormOpen(true)}>
-            <Plus className="w-4 h-4" />
-            Add Account
-          </Button>
-        )}
+        <div className="flex items-center gap-2">
+          {filteredAccounts.length > 0 && (
+            <Button variant="outline" className="gap-2" onClick={copyAllAccounts}>
+              {copiedAll ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+              Copy All
+            </Button>
+          )}
+          {canWrite && (
+            <Button className="gap-2" onClick={() => setIsFormOpen(true)}>
+              <Plus className="w-4 h-4" />
+              Add Account
+            </Button>
+          )}
+        </div>
       </div>
 
       {isEmpty ? (
