@@ -1,9 +1,10 @@
 import { useState } from "react";
 import type { BankAccount } from "@/hooks/usePortalData";
-import { Wallet, ExternalLink, Eye, EyeOff } from "lucide-react";
+import { Wallet, ExternalLink, Eye, EyeOff, Copy, Check } from "lucide-react";
 import CompanyLogo from "@/components/shared/CompanyLogo";
 import CopyButton from "@/components/shared/CopyButton";
 import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
 
 interface LinkedBankAccountsProps {
   accounts: BankAccount[];
@@ -11,6 +12,7 @@ interface LinkedBankAccountsProps {
 
 const LinkedBankAccounts = ({ accounts }: LinkedBankAccountsProps) => {
   const [revealedAccounts, setRevealedAccounts] = useState<Set<string>>(new Set());
+  const [copied, setCopied] = useState(false);
 
   const openBankWebsite = (url: string) => {
     window.open(url, '_blank', 'noopener,noreferrer');
@@ -39,16 +41,67 @@ const LinkedBankAccounts = ({ accounts }: LinkedBankAccountsProps) => {
     return `****${clean.slice(-4)}`;
   };
 
+  const formatAllAccounts = (): string => {
+    return accounts.map(account => {
+      const lines = [
+        `📌 ${account.name}`,
+        `Bank: ${account.bank}`,
+        `Type: ${account.type} • Currency: ${account.currency}`,
+      ];
+      
+      if ((account as any).account_holder_name) {
+        lines.push(`Account Holder: ${(account as any).account_holder_name}`);
+      }
+      lines.push(`Account Number: ${account.account_number}`);
+      
+      if ((account as any).iban) {
+        lines.push(`IBAN: ${(account as any).iban}`);
+      }
+      if (account.routing_number) {
+        lines.push(`Routing Number: ${account.routing_number}`);
+      }
+      if ((account as any).swift_bic) {
+        lines.push(`SWIFT/BIC: ${(account as any).swift_bic}`);
+      }
+      if ((account as any).bank_address) {
+        lines.push(`Bank Address: ${(account as any).bank_address}`);
+      }
+      
+      return lines.join('\n');
+    }).join('\n\n---\n\n');
+  };
+
+  const copyAllAccounts = async () => {
+    if (accounts.length === 0) return;
+    
+    const text = formatAllAccounts();
+    await navigator.clipboard.writeText(text);
+    setCopied(true);
+    toast.success(`Copied ${accounts.length} bank account(s) to clipboard`);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
   return (
     <div className="glass-card rounded-xl p-6">
       <div className="flex items-center gap-3 mb-4">
         <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
           <Wallet className="w-5 h-5 text-primary" />
         </div>
-        <div>
+        <div className="flex-1">
           <h3 className="font-semibold text-foreground">Bank Accounts</h3>
           <p className="text-sm text-muted-foreground">{accounts.length} linked</p>
         </div>
+        {accounts.length > 0 && (
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={copyAllAccounts}
+            className="gap-1.5"
+          >
+            {copied ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
+            Copy All
+          </Button>
+        )}
       </div>
 
       {accounts.length === 0 ? (
