@@ -225,22 +225,6 @@ const EntityDetail = () => {
             <p className="text-foreground font-medium">{entity.jurisdiction || "Not specified"}</p>
           </div>
         </div>
-
-        {entity.website && (
-          <div className="mt-6 pt-6 border-t border-border">
-            <a 
-              href={entity.website} 
-              target="_blank" 
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 text-primary hover:underline"
-            >
-              <Globe className="w-4 h-4" />
-              {entity.website}
-              <ExternalLink className="w-3 h-3" />
-            </a>
-          </div>
-        )}
-
       </div>
 
       {/* Primary Items & Social Media */}
