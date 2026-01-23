@@ -90,9 +90,12 @@ const LinkedPhoneNumbers = ({ phones, entityId }: LinkedPhoneNumbersProps) => {
                       <Star className="w-3 h-3 text-amber-500 fill-amber-500" />
                     )}
                   </div>
-                  <p className="text-sm font-mono text-muted-foreground">
+                  <button
+                    onClick={() => handleEdit(phone)}
+                    className="text-sm font-mono text-muted-foreground hover:text-primary hover:underline cursor-pointer transition-colors text-left"
+                  >
                     {phone.country_code} {phone.phone_number}
-                  </p>
+                  </button>
                   {phone.purpose && (
                     <p className="text-xs text-muted-foreground">{phone.purpose}</p>
                   )}
