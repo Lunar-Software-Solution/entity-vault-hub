@@ -164,7 +164,12 @@ const BankAccountsSection = ({ entityFilter }: BankAccountsSectionProps) => {
                       size="md"
                     />
                     <div>
-                      <h3 className="font-semibold text-foreground">{account.name}</h3>
+                      <div className="flex items-center gap-2">
+                        <h3 className="font-semibold text-foreground">{account.name}</h3>
+                        {(account as any).is_primary && (
+                          <span className="px-2 py-0.5 rounded-full bg-primary/20 text-primary text-xs font-medium">Primary</span>
+                        )}
+                      </div>
                       <p className="text-sm text-muted-foreground">{account.bank}</p>
                       {linkedEntity && (
                         <div className="flex items-center gap-1 mt-1">
