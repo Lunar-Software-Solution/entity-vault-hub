@@ -233,6 +233,7 @@ const UserManagementSection = () => {
       const expiresAt = new Date();
       expiresAt.setDate(expiresAt.getDate() + 7); // 7 days expiry
 
+      // First, insert the invitation record
       const { error } = await supabase.from("team_invitations").insert({
         email: data.email,
         role: data.role as "admin" | "viewer",
@@ -241,6 +242,33 @@ const UserManagementSection = () => {
         expires_at: expiresAt.toISOString(),
       } as any);
       if (error) throw error;
+
+      // Then, send the invitation email
+      const { data: session } = await supabase.auth.getSession();
+      const response = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/send-invitation`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${session?.session?.access_token}`,
+          },
+          body: JSON.stringify({
+            email: data.email,
+            role: data.role,
+            invitedBy: user?.id,
+            token,
+          }),
+        }
+      );
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error("Failed to send invitation email:", errorData);
+        // Don't throw here - the invitation was created, just email failed
+        toast.warning("Invitation created but email could not be sent");
+        return;
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["team_invitations"] });
