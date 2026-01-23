@@ -87,7 +87,7 @@ const AddressesSection = ({ entityFilter }: AddressesSectionProps) => {
     });
   };
 
-  const handleViewOnMap = (address: Address) => {
+  const getMapUrl = (address: Address) => {
     const addressParts = [
       address.street.replace(/#/g, "Suite "),
       address.city,
@@ -96,17 +96,9 @@ const AddressesSection = ({ entityFilter }: AddressesSectionProps) => {
       address.country
     ].filter(Boolean).join(", ");
     
-    // Use + for spaces instead of %20 for Google Maps compatibility
+    // Use + for spaces for Google Maps compatibility
     const query = addressParts.replace(/\s+/g, "+");
-    const url = `https://www.google.com/maps/search/?api=1&query=${query}`;
-    
-    const link = document.createElement("a");
-    link.href = url;
-    link.target = "_blank";
-    link.rel = "noopener noreferrer";
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    return `https://www.google.com/maps/search/?api=1&query=${query}`;
   };
 
   if (isLoading) {
@@ -229,15 +221,15 @@ const AddressesSection = ({ entityFilter }: AddressesSectionProps) => {
                     <Copy className="w-3 h-3" />
                     Copy Address
                   </Button>
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    className="flex-1 gap-2 text-foreground border-border/60 hover:bg-primary/10 hover:text-primary hover:border-primary/50"
-                    onClick={() => handleViewOnMap(address)}
+                  <a 
+                    href={getMapUrl(address)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex-1 gap-2 text-foreground border-border/60 hover:bg-primary/10 hover:text-primary hover:border-primary/50 inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border bg-background h-9 px-3"
                   >
-                    <ExternalLink className="w-3 h-3" />
+                    <ExternalLink className="w-3 h-3 mr-2" />
                     View on Map
-                  </Button>
+                  </a>
                 </div>
               </div>
             );
