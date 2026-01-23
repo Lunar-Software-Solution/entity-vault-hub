@@ -28,7 +28,7 @@ const Auth = () => {
   const [inviteLoading, setInviteLoading] = useState(!!inviteToken);
   const [inviteError, setInviteError] = useState<string | null>(null);
   
-  const { user, signIn, signUp, loading: authLoading } = useAuth();
+  const { user, signIn, signUp, signOut, loading: authLoading } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
 
@@ -76,8 +76,20 @@ const Auth = () => {
   };
 
   // Accept invitation after successful auth
-  const acceptInvitation = async (userId: string) => {
+  const acceptInvitation = async (userId: string, userEmail: string) => {
     if (!invitation) return;
+
+    // Verify the authenticated user's email matches the invitation
+    if (userEmail.toLowerCase() !== invitation.email.toLowerCase()) {
+      toast({
+        variant: "destructive",
+        title: "Email mismatch",
+        description: `This invitation was sent to ${invitation.email}. Please sign in with that email address.`,
+      });
+      // Sign out the mismatched user
+      await signOut();
+      return;
+    }
 
     try {
       // Update invitation status
@@ -109,8 +121,8 @@ const Auth = () => {
 
   // Handle user authentication after invite acceptance
   useEffect(() => {
-    if (user && invitation) {
-      acceptInvitation(user.id);
+    if (user && invitation && user.email) {
+      acceptInvitation(user.id, user.email);
     }
   }, [user, invitation]);
 
