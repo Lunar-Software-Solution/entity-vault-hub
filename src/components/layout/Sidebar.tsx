@@ -2,7 +2,7 @@ import { useState } from "react";
 import { 
   LayoutDashboard, Building2, CreditCard, Wallet, Share2, MapPin, 
   FileText, Settings, LogOut, User, ChevronUp, ChevronDown, ChevronRight,
-  Phone, Receipt, Calendar, Briefcase, Mail, Users, PieChart, 
+  Phone, Receipt, Calendar, Briefcase, Mail, Users, PieChart, Globe,
   PanelLeftClose, PanelLeft
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -73,6 +73,13 @@ const menuGroups: MenuGroup[] = [
       { id: "emails", label: "Emails", icon: Mail },
       { id: "social-media", label: "Social Media", icon: Share2 },
       { id: "addresses", label: "Addresses", icon: MapPin },
+    ],
+  },
+  {
+    id: "digital",
+    label: "Digital",
+    items: [
+      { id: "websites", label: "Websites", icon: Globe },
     ],
   },
   {

@@ -19,6 +19,7 @@ import EmailSection from "@/components/sections/EmailSection";
 import UserManagementSection from "@/components/sections/UserManagementSection";
 import CapTableSection from "@/components/sections/CapTableSection";
 import DirectorsUboSection from "@/components/sections/DirectorsUboSection";
+import WebsitesSection from "@/components/sections/WebsitesSection";
 import AIChatAssistant from "@/components/ai/AIChatAssistant";
 import { cn } from "@/lib/utils";
 
@@ -28,7 +29,7 @@ const Index = () => {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
   // Sections that support entity filtering
-  const filterableSections = ["bank-accounts", "credit-cards", "addresses", "contracts", "phone-numbers", "tax-ids", "documents", "filings", "social-media", "directors-ubo"];
+  const filterableSections = ["bank-accounts", "credit-cards", "addresses", "contracts", "phone-numbers", "tax-ids", "documents", "filings", "social-media", "directors-ubo", "websites"];
   const showFilter = filterableSections.includes(activeSection);
 
   const renderSection = () => {
@@ -63,6 +64,8 @@ const Index = () => {
         return <DocumentsSection entityFilter={selectedEntityId} />;
       case "contracts":
         return <ContractsSection entityFilter={selectedEntityId} />;
+      case "websites":
+        return <WebsitesSection entityFilter={selectedEntityId} />;
       case "users":
         return <UserManagementSection />;
       case "settings":
