@@ -866,6 +866,7 @@ export type Database = {
           confirmation_number: string | null
           created_at: string
           due_date: string
+          due_day: number | null
           entity_id: string
           filed_by: string | null
           filing_date: string | null
@@ -884,6 +885,7 @@ export type Database = {
           confirmation_number?: string | null
           created_at?: string
           due_date: string
+          due_day?: number | null
           entity_id: string
           filed_by?: string | null
           filing_date?: string | null
@@ -902,6 +904,7 @@ export type Database = {
           confirmation_number?: string | null
           created_at?: string
           due_date?: string
+          due_day?: number | null
           entity_id?: string
           filed_by?: string | null
           filing_date?: string | null
