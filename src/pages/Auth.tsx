@@ -39,6 +39,7 @@ const Auth = () => {
   
   // Only show signup option when there's a valid invitation
   const [isLogin, setIsLogin] = useState(!inviteToken);
+  const [isForgotPassword, setIsForgotPassword] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -176,7 +177,26 @@ const Auth = () => {
     setLoading(true);
 
     try {
-      if (isLogin) {
+      if (isForgotPassword) {
+        // Send password reset email
+        const { error } = await supabase.auth.resetPasswordForEmail(email, {
+          redirectTo: `${window.location.origin}/reset-password`,
+        });
+        
+        if (error) {
+          toast({
+            variant: "destructive",
+            title: "Failed to send reset email",
+            description: error.message,
+          });
+        } else {
+          toast({
+            title: "Check your email",
+            description: "We've sent you a password reset link.",
+          });
+          setIsForgotPassword(false);
+        }
+      } else if (isLogin) {
         const { error } = await signIn(email, password);
         if (error) {
           toast({
@@ -233,6 +253,15 @@ const Auth = () => {
                   </h1>
                   <p className="text-destructive mt-1">{inviteError}</p>
                 </>
+              ) : isForgotPassword ? (
+                <>
+                  <h1 className="text-2xl font-bold text-foreground">
+                    Reset Password
+                  </h1>
+                  <p className="text-muted-foreground mt-1">
+                    Enter your email to receive a reset link
+                  </p>
+                </>
               ) : (
                 <>
                   <h1 className="text-2xl font-bold text-foreground">
@@ -278,33 +307,61 @@ const Auth = () => {
                 />
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="password">Password</Label>
-                <Input
-                  id="password"
-                  type="password"
-                  placeholder="••••••••"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
-                  minLength={6}
-                  className="h-11"
-                />
-              </div>
+              {!isForgotPassword && (
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="password">Password</Label>
+                    {isLogin && !invitation && (
+                      <button
+                        type="button"
+                        onClick={() => setIsForgotPassword(true)}
+                        className="text-xs text-primary hover:underline"
+                      >
+                        Forgot password?
+                      </button>
+                    )}
+                  </div>
+                  <Input
+                    id="password"
+                    type="password"
+                    placeholder="••••••••"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    required
+                    minLength={6}
+                    className="h-11"
+                  />
+                </div>
+              )}
 
               <Button type="submit" className="w-full h-11" disabled={loading}>
                 {loading 
                   ? "Please wait..." 
-                  : invitation 
-                    ? (isLogin ? "Sign In & Accept" : "Create Account & Accept")
-                    : "Sign In"
+                  : isForgotPassword
+                    ? "Send Reset Link"
+                    : invitation 
+                      ? (isLogin ? "Sign In & Accept" : "Create Account & Accept")
+                      : "Sign In"
                 }
               </Button>
             </form>
           )}
 
+          {/* Back to login from forgot password */}
+          {!inviteError && isForgotPassword && (
+            <div className="text-center">
+              <button
+                type="button"
+                onClick={() => setIsForgotPassword(false)}
+                className="text-sm text-muted-foreground hover:text-primary transition-colors"
+              >
+                ← Back to login
+              </button>
+            </div>
+          )}
+
           {/* Toggle - only show for invitations */}
-          {!inviteError && invitation && (
+          {!inviteError && invitation && !isForgotPassword && (
             <div className="text-center">
               <button
                 type="button"
