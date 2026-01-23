@@ -50,14 +50,50 @@ const LinkedDirectorsUbos = ({ directorsUbos, entityId }: LinkedDirectorsUbosPro
   
   const queryClient = useQueryClient();
 
+  const saveIdDocuments = async (directorId: string, idDocuments: any[]) => {
+    // Delete existing documents first
+    await supabase
+      .from("director_id_documents")
+      .delete()
+      .eq("director_id", directorId);
+
+    // Insert new documents
+    if (idDocuments && idDocuments.length > 0) {
+      const docsToInsert = idDocuments
+        .filter((doc: any) => doc.document_type)
+        .map((doc: any) => ({
+          director_id: directorId,
+          document_type: doc.document_type,
+          document_number: doc.document_number || null,
+          expiry_date: doc.expiry_date || null,
+          file_path: doc.file_path || null,
+          file_name: doc.file_name || null,
+          notes: doc.notes || null,
+        }));
+
+      if (docsToInsert.length > 0) {
+        const { error } = await supabase
+          .from("director_id_documents")
+          .insert(docsToInsert);
+        if (error) console.error("Error saving ID documents:", error);
+      }
+    }
+  };
+
   const createMutation = useMutation({
     mutationFn: async (data: any) => {
+      const { _id_documents, ...directorData } = data;
       const { data: result, error } = await supabase
         .from("directors_ubos")
-        .insert(data)
+        .insert(directorData)
         .select()
         .single();
       if (error) throw error;
+      
+      if (_id_documents) {
+        await saveIdDocuments(result.id, _id_documents);
+      }
+      
       return result;
     },
     onSuccess: () => {
@@ -71,13 +107,19 @@ const LinkedDirectorsUbos = ({ directorsUbos, entityId }: LinkedDirectorsUbosPro
 
   const updateMutation = useMutation({
     mutationFn: async ({ id, data }: { id: string; data: any }) => {
+      const { _id_documents, ...directorData } = data;
       const { data: result, error } = await supabase
         .from("directors_ubos")
-        .update(data)
+        .update(directorData)
         .eq("id", id)
         .select()
         .single();
       if (error) throw error;
+      
+      if (_id_documents) {
+        await saveIdDocuments(id, _id_documents);
+      }
+      
       return result;
     },
     onSuccess: () => {
@@ -104,14 +146,14 @@ const LinkedDirectorsUbos = ({ directorsUbos, entityId }: LinkedDirectorsUbosPro
   });
 
   const handleSubmit = (data: DirectorUboFormData) => {
+    const { id_documents, ...rest } = data;
     const payload = {
-      ...data,
+      ...rest,
       entity_id: entityId,
       ownership_percentage: data.ownership_percentage ? parseFloat(data.ownership_percentage) : null,
       date_of_birth: data.date_of_birth || null,
       appointment_date: data.appointment_date || null,
       resignation_date: data.resignation_date || null,
-      id_expiry_date: data.id_expiry_date || null,
       email: data.email || null,
       title: data.title || null,
       nationality: data.nationality || null,
@@ -121,10 +163,9 @@ const LinkedDirectorsUbos = ({ directorsUbos, entityId }: LinkedDirectorsUbosPro
       address: data.address || null,
       phone: data.phone || null,
       passport_number: data.passport_number || null,
-      id_document_type: data.id_document_type || null,
-      id_document_number: data.id_document_number || null,
       pep_details: data.pep_details || null,
       notes: data.notes || null,
+      _id_documents: id_documents, // Pass separately for processing
     };
 
     if (editingItem) {
