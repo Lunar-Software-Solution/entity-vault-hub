@@ -579,6 +579,66 @@ export type Database = {
           },
         ]
       }
+      director_entity_links: {
+        Row: {
+          appointment_date: string | null
+          created_at: string
+          director_id: string
+          entity_id: string
+          id: string
+          is_active: boolean | null
+          notes: string | null
+          ownership_percentage: number | null
+          resignation_date: string | null
+          role_type: string
+          title: string | null
+          updated_at: string
+        }
+        Insert: {
+          appointment_date?: string | null
+          created_at?: string
+          director_id: string
+          entity_id: string
+          id?: string
+          is_active?: boolean | null
+          notes?: string | null
+          ownership_percentage?: number | null
+          resignation_date?: string | null
+          role_type?: string
+          title?: string | null
+          updated_at?: string
+        }
+        Update: {
+          appointment_date?: string | null
+          created_at?: string
+          director_id?: string
+          entity_id?: string
+          id?: string
+          is_active?: boolean | null
+          notes?: string | null
+          ownership_percentage?: number | null
+          resignation_date?: string | null
+          role_type?: string
+          title?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "director_entity_links_director_id_fkey"
+            columns: ["director_id"]
+            isOneToOne: false
+            referencedRelation: "directors_ubos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "director_entity_links_entity_id_fkey"
+            columns: ["entity_id"]
+            isOneToOne: false
+            referencedRelation: "entities"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       director_id_documents: {
         Row: {
           created_at: string
