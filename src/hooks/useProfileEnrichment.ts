@@ -64,7 +64,8 @@ export const useProfileEnrichment = ({
       }
     },
     enabled: enabled && !!(email || linkedin_url),
-    staleTime: 1000 * 60 * 60, // Cache for 1 hour (reduced from 24h)
+    staleTime: 1000 * 60 * 5, // Cache for 5 minutes to pick up new enrichment data
+    gcTime: 1000 * 60 * 30, // Garbage collect after 30 minutes
     retry: 1,
   });
 };
