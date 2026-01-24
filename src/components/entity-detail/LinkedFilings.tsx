@@ -120,7 +120,7 @@ const LinkedFilings = ({ entityId }: LinkedFilingsProps) => {
       ) : (
         <div className="space-y-3 max-h-80 overflow-y-auto">
           {filings?.map(filing => {
-            const displayStatus = getFilingDisplayStatus(filing.due_date, filing.status);
+            const displayStatus = getFilingDisplayStatus(filing.due_date, filing.status, filing.frequency);
             const filingType = getFilingType(filing.filing_type_id);
 
             return (

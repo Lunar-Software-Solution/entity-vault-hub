@@ -170,9 +170,9 @@ const FilingsCalendar = ({
           const hasFilings = dayFilings.length > 0;
 
           // Count by status for display
-          const pendingCount = dayFilings.filter(f => getFilingDisplayStatus(f.due_date, f.status) === "pending").length;
-          const filedCount = dayFilings.filter(f => f.status === "filed").length;
-          const overdueCount = dayFilings.filter(f => getFilingDisplayStatus(f.due_date, f.status) === "overdue").length;
+          const pendingCount = dayFilings.filter(f => getFilingDisplayStatus(f.due_date, f.status, f.frequency) === "pending").length;
+          const filedCount = dayFilings.filter(f => getFilingDisplayStatus(f.due_date, f.status, f.frequency) === "filed").length;
+          const overdueCount = dayFilings.filter(f => getFilingDisplayStatus(f.due_date, f.status, f.frequency) === "overdue").length;
 
           return (
             <CalendarDayPopover

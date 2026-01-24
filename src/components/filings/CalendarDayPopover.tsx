@@ -71,7 +71,7 @@ const CalendarDayPopover = ({
           ) : (
             <div className="divide-y divide-border">
               {filings.map(filing => {
-                const displayStatus = getFilingDisplayStatus(filing.due_date, filing.status);
+                const displayStatus = getFilingDisplayStatus(filing.due_date, filing.status, filing.frequency);
                 const filingType = getFilingType(filing.filing_type_id);
 
                 return (

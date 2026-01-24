@@ -1019,18 +1019,46 @@ export const useCompleteTask = () => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (id: string) => {
+      // First, get the task to check for filing_id
+      const { data: task, error: fetchError } = await supabase
+        .from("filing_tasks")
+        .select("filing_id")
+        .eq("id", id)
+        .single();
+      
+      if (fetchError) throw fetchError;
+      
+      // Update the task status
       const { data, error } = await supabase
         .from("filing_tasks")
         .update({ status: "completed", completed_at: new Date().toISOString() })
         .eq("id", id)
         .select()
         .single();
+      
       if (error) throw error;
-      return data;
+      
+      // If task has an associated filing, mark it as filed
+      if (task?.filing_id) {
+        await supabase
+          .from("entity_filings")
+          .update({ 
+            status: "filed", 
+            filing_date: new Date().toISOString().split("T")[0] 
+          })
+          .eq("id", task.filing_id);
+      }
+      
+      return { task: data, filingUpdated: !!task?.filing_id };
     },
-    onSuccess: () => {
+    onSuccess: (result) => {
       queryClient.invalidateQueries({ queryKey: ["filing_tasks"] });
-      toast.success("Task completed!");
+      queryClient.invalidateQueries({ queryKey: ["entity_filings"] });
+      if (result.filingUpdated) {
+        toast.success("Task completed and filing marked as filed!");
+      } else {
+        toast.success("Task completed!");
+      }
     },
     onError: (error) => toast.error(`Failed to complete task: ${error.message}`),
   });
