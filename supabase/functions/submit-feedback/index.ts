@@ -14,6 +14,16 @@ serve(async (req) => {
   }
 
   try {
+    const PLANE_API_KEY = Deno.env.get("PLANE_API_KEY");
+    
+    if (!PLANE_API_KEY) {
+      console.error("PLANE_API_KEY not configured");
+      return new Response(
+        JSON.stringify({ error: "Server configuration error" }),
+        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
     const { name, description, email } = await req.json();
 
     if (!name) {
@@ -31,6 +41,7 @@ serve(async (req) => {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
+        "X-API-Key": PLANE_API_KEY,
       },
       body: JSON.stringify(payload),
     });
