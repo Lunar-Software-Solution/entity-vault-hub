@@ -68,6 +68,14 @@ const GravatarAvatar = ({
   const gravatarUrl = getGravatarUrl(email, pixelSizes[size] * 2, "404");
   const initials = getInitials(name);
 
+  // Extract LinkedIn username for unavatar fallback
+  const getLinkedInUsername = (url: string | null | undefined): string | null => {
+    if (!url) return null;
+    const match = url.match(/linkedin\.com\/in\/([^\/\?]+)/);
+    return match ? match[1] : null;
+  };
+  const linkedinUsername = getLinkedInUsername(linkedinUrl);
+
   // Build ordered list of avatar URLs to try
   const avatarUrls: string[] = [];
   
@@ -81,7 +89,12 @@ const GravatarAvatar = ({
     avatarUrls.push(enrichedProfile.avatar_url);
   }
   
-  // 3. Gravatar fallback
+  // 3. Unavatar LinkedIn fallback (works when LinkedIn CDN URLs are blocked)
+  if (linkedinUsername) {
+    avatarUrls.push(`https://unavatar.io/linkedin/${linkedinUsername}?fallback=false`);
+  }
+  
+  // 4. Gravatar fallback
   if (gravatarUrl) {
     avatarUrls.push(gravatarUrl);
   }
