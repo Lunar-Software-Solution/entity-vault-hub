@@ -15,7 +15,7 @@ import DeleteConfirmDialog from "@/components/shared/DeleteConfirmDialog";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { 
-  Plus, Pencil, Trash2, Search, PieChart, Users, Layers, ArrowRightLeft, 
+  Plus, SquarePen, Trash2, Search, PieChart, Users, Layers, ArrowRightLeft, 
   TrendingUp, DollarSign, Percent
 } from "lucide-react";
 import ShareClassForm from "@/components/captable/ShareClassForm";
@@ -428,7 +428,7 @@ const CapTableSection = () => {
                     <TableCell>
                       <div className="flex gap-1">
                         <Button variant="ghost" size="icon" className="h-8 w-8 text-primary hover:text-primary" onClick={() => { setEditingShareholder(shareholder); setShowShareholderForm(true); }}>
-                          <Pencil className="h-4 w-4" />
+                          <SquarePen className="h-4 w-4" />
                         </Button>
                         <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:text-destructive" onClick={() => setDeletingItem({ type: "shareholder", item: shareholder })}>
                           <Trash2 className="h-4 w-4" />
@@ -492,7 +492,7 @@ const CapTableSection = () => {
                     <TableCell>
                       <div className="flex gap-1">
                         <Button variant="ghost" size="icon" className="h-8 w-8 text-primary hover:text-primary" onClick={() => { setEditingShareClass(sc); setShowShareClassForm(true); }}>
-                          <Pencil className="h-4 w-4" />
+                          <SquarePen className="h-4 w-4" />
                         </Button>
                         <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:text-destructive" onClick={() => setDeletingItem({ type: "share_class", item: sc })}>
                           <Trash2 className="h-4 w-4" />
