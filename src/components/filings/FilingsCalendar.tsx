@@ -90,7 +90,7 @@ const FilingsCalendar = ({
           <h2 className="text-xl font-semibold text-foreground">
             {format(currentMonth, "MMMM yyyy")}
           </h2>
-          <Button variant="outline" size="sm" onClick={goToToday}>
+          <Button variant="outline" size="sm" onClick={goToToday} className="text-foreground">
             Today
           </Button>
         </div>
