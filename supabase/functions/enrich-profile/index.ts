@@ -57,19 +57,26 @@ async function fetchCoresignalProfile(linkedinUrl: string): Promise<{
     const data = await response.json();
     console.log("Coresignal response keys:", Object.keys(data));
     console.log("Coresignal picture_url:", data.picture_url || "NOT FOUND");
-    console.log("Coresignal headline:", data.headline || "NOT FOUND");
-    console.log("Coresignal summary:", data.summary || "NOT FOUND");
-    console.log("Coresignal location:", data.location || "NOT FOUND");
+    console.log("Coresignal job_title:", data.job_title || "NOT FOUND");
+    console.log("Coresignal description:", data.description || "NOT FOUND");
+    console.log("Coresignal location_raw_address:", data.location_raw_address || "NOT FOUND");
 
-    // Extract the most recent experience for title/company
-    const experiences = data.member_experience_collection || [];
-    const currentJob = experiences.find((exp: any) => !exp.date_to) || experiences[0];
+    // Check if picture_url is LinkedIn's default placeholder (skip it)
+    let avatarUrl = data.picture_url || null;
+    if (avatarUrl && avatarUrl.includes("static.licdn.com/aero-v1/sc/h/")) {
+      console.log("Detected LinkedIn default placeholder, skipping avatar");
+      avatarUrl = null;
+    }
+
+    // Use job_title directly from Coresignal if available
+    let title = data.job_title || null;
     
-    // Parse title and company from headline if not in experiences
-    let title = currentJob?.title || null;
+    // Get company from experience if available
+    const experiences = data.experience || data.member_experience_collection || [];
+    const currentJob = experiences.find((exp: any) => !exp.date_to) || experiences[0];
     let company = currentJob?.company_name || null;
     
-    // If no experience data, try to parse from headline (e.g., "CEO at Secure Group")
+    // If no direct fields, try to parse from headline (e.g., "CEO at Secure Group")
     if ((!title || !company) && data.headline) {
       const headlineMatch = data.headline.match(/^([^|]+?)\s+at\s+([^|]+)/i);
       if (headlineMatch) {
@@ -78,13 +85,19 @@ async function fetchCoresignalProfile(linkedinUrl: string): Promise<{
       }
     }
 
+    // Build location from available fields
+    const location = data.location_raw_address || 
+                     (data.location_city && data.location_country 
+                       ? `${data.location_city}, ${data.location_country}` 
+                       : data.location_country || null);
+
     return {
-      avatar_url: data.picture_url || null,
+      avatar_url: avatarUrl,
       name: data.full_name || null,
       title: title,
       company: company,
-      location: data.location || null,
-      bio: data.summary || data.generated_headline || null,
+      location: location,
+      bio: data.description || data.summary || data.generated_headline || null,
     };
   } catch (error) {
     console.error("Coresignal fetch error:", error);
