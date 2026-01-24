@@ -13,32 +13,89 @@ function extractLinkedInUsername(url: string): string | null {
   return match ? match[1] : null;
 }
 
-// Try to fetch avatar from unavatar.io using LinkedIn username
+// Fetch profile data from Coresignal Clean Employee API
+async function fetchCoresignalProfile(linkedinUrl: string): Promise<{
+  avatar_url: string | null;
+  name: string | null;
+  title: string | null;
+  company: string | null;
+  location: string | null;
+  bio: string | null;
+} | null> {
+  const CORESIGNAL_API_KEY = Deno.env.get("CORESIGNAL_API_KEY");
+  if (!CORESIGNAL_API_KEY) {
+    console.log("CORESIGNAL_API_KEY not configured");
+    return null;
+  }
+
+  const username = extractLinkedInUsername(linkedinUrl);
+  if (!username) {
+    console.log("Could not extract LinkedIn username from:", linkedinUrl);
+    return null;
+  }
+
+  try {
+    console.log("Fetching Coresignal profile for:", username);
+    
+    const response = await fetch(
+      `https://api.coresignal.com/cdapi/v2/employee_clean/collect/${encodeURIComponent(username)}`,
+      {
+        method: "GET",
+        headers: {
+          "accept": "application/json",
+          "apikey": CORESIGNAL_API_KEY,
+        },
+      }
+    );
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error("Coresignal API error:", response.status, errorText);
+      return null;
+    }
+
+    const data = await response.json();
+    console.log("Coresignal response:", JSON.stringify(data).slice(0, 500));
+
+    // Extract the most recent experience for title/company
+    const experiences = data.member_experience_collection || [];
+    const currentJob = experiences.find((exp: any) => !exp.date_to) || experiences[0];
+
+    return {
+      avatar_url: data.picture_url || null,
+      name: data.full_name || null,
+      title: currentJob?.title || data.title || null,
+      company: currentJob?.company_name || data.company || null,
+      location: data.location || null,
+      bio: data.summary || null,
+    };
+  } catch (error) {
+    console.error("Coresignal fetch error:", error);
+    return null;
+  }
+}
+
+// Try to fetch avatar from unavatar.io using LinkedIn username (fallback)
 async function getUnavatarUrl(linkedinUrl: string): Promise<string | null> {
   const username = extractLinkedInUsername(linkedinUrl);
   if (!username) return null;
   
-  // Use unavatar with fallback=false to get null if not found
   const avatarUrl = `https://unavatar.io/linkedin/${username}?fallback=false`;
   
   try {
-    // Check if the avatar actually exists
     const response = await fetch(avatarUrl, { method: "GET", redirect: "follow" });
     
-    // If status is not 200, unavatar couldn't find a real avatar
     if (!response.ok) {
       console.log("Unavatar returned non-OK status:", response.status);
       return null;
     }
     
-    // Check content type
     const contentType = response.headers.get("content-type");
     if (!contentType?.startsWith("image/")) {
       console.log("Unavatar returned non-image content type:", contentType);
       return null;
     }
     
-    // Check for x-fallback header (unavatar sets this when returning default)
     const isFallback = response.headers.get("x-fallback");
     if (isFallback === "true") {
       console.log("Unavatar returned fallback avatar");
@@ -46,7 +103,6 @@ async function getUnavatarUrl(linkedinUrl: string): Promise<string | null> {
     }
     
     console.log("Unavatar found valid avatar for:", username);
-    // Return URL without fallback=false for actual use (cleaner URL)
     return `https://unavatar.io/linkedin/${username}`;
   } catch (error) {
     console.log("Unavatar check failed:", error);
@@ -74,7 +130,6 @@ serve(async (req) => {
       global: { headers: { Authorization: authHeader } },
     });
 
-    // Use getClaims() instead of getUser() for signing-keys compatibility
     const token = authHeader.replace("Bearer ", "");
     const { data, error: authError } = await supabase.auth.getClaims(token);
     if (authError || !data?.claims) {
@@ -94,15 +149,47 @@ serve(async (req) => {
       );
     }
 
+    // PRIORITY 1: Try Coresignal for LinkedIn profiles (most reliable for avatars)
+    let coresignalData = null;
+    if (linkedin_url) {
+      coresignalData = await fetchCoresignalProfile(linkedin_url);
+      if (coresignalData) {
+        console.log("Coresignal enrichment successful:", coresignalData.name);
+      }
+    }
+
+    // If Coresignal returned data with avatar, return immediately
+    if (coresignalData?.avatar_url) {
+      const result = {
+        success: true,
+        fallback: false,
+        source: "coresignal",
+        data: {
+          name: coresignalData.name || name || null,
+          email: email || null,
+          linkedin_url: linkedin_url || null,
+          avatar_url: coresignalData.avatar_url,
+          title: coresignalData.title || null,
+          company: coresignalData.company || null,
+          location: coresignalData.location || null,
+          bio: coresignalData.bio || null,
+        }
+      };
+      return new Response(
+        JSON.stringify(result),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // PRIORITY 2: Try Lovable AI for additional enrichment
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) {
-      console.error("LOVABLE_API_KEY is not configured");
+      console.log("LOVABLE_API_KEY not configured, trying fallbacks");
       
-      // Try unavatar fallback for LinkedIn
+      // Try unavatar as last resort for avatar
       let avatarUrl = null;
       if (linkedin_url) {
         avatarUrl = await getUnavatarUrl(linkedin_url);
-        console.log("Using unavatar fallback for LinkedIn:", avatarUrl);
       }
       
       return new Response(
@@ -110,17 +197,28 @@ serve(async (req) => {
           success: false, 
           fallback: true,
           message: "AI enrichment not configured",
-          data: { name: name || null, email: email || null, linkedin_url: linkedin_url || null, avatar_url: avatarUrl }
+          data: { 
+            name: coresignalData?.name || name || null, 
+            email: email || null, 
+            linkedin_url: linkedin_url || null, 
+            avatar_url: avatarUrl,
+            title: coresignalData?.title || null,
+            company: coresignalData?.company || null,
+            location: coresignalData?.location || null,
+            bio: coresignalData?.bio || null,
+          }
         }),
         { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    // Build search context
+    // Build search context for AI
     const searchContext = [];
-    if (name) searchContext.push(`Name: ${name}`);
+    if (name || coresignalData?.name) searchContext.push(`Name: ${coresignalData?.name || name}`);
     if (email) searchContext.push(`Email: ${email}`);
     if (linkedin_url) searchContext.push(`LinkedIn: ${linkedin_url}`);
+    if (coresignalData?.title) searchContext.push(`Title: ${coresignalData.title}`);
+    if (coresignalData?.company) searchContext.push(`Company: ${coresignalData.company}`);
 
     const prompt = `You are a professional profile enrichment assistant. Given the following information about a person, provide any additional professional details you can infer or know about them.
 
@@ -149,9 +247,7 @@ Important: Only include information you are confident about. For avatar_url, onl
       },
       body: JSON.stringify({
         model: "google/gemini-3-flash-preview",
-        messages: [
-          { role: "user", content: prompt }
-        ],
+        messages: [{ role: "user", content: prompt }],
         temperature: 0.1,
       }),
     });
@@ -174,7 +270,7 @@ Important: Only include information you are confident about. For avatar_url, onl
         );
       }
       
-      // Try unavatar fallback
+      // Fallback to unavatar
       let avatarUrl = null;
       if (linkedin_url) {
         avatarUrl = await getUnavatarUrl(linkedin_url);
@@ -185,7 +281,16 @@ Important: Only include information you are confident about. For avatar_url, onl
           success: false,
           fallback: true,
           message: "AI enrichment unavailable",
-          data: { name: name || null, email: email || null, linkedin_url: linkedin_url || null, avatar_url: avatarUrl }
+          data: { 
+            name: coresignalData?.name || name || null, 
+            email: email || null, 
+            linkedin_url: linkedin_url || null, 
+            avatar_url: avatarUrl,
+            title: coresignalData?.title || null,
+            company: coresignalData?.company || null,
+            location: coresignalData?.location || null,
+            bio: coresignalData?.bio || null,
+          }
         }),
         { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
@@ -196,29 +301,27 @@ Important: Only include information you are confident about. For avatar_url, onl
     
     console.log("AI response:", content);
 
-    // Parse the JSON response
     let enrichedData;
     try {
-      // Extract JSON from the response (handle markdown code blocks)
       const jsonMatch = content.match(/```(?:json)?\s*([\s\S]*?)```/) || [null, content];
       const jsonStr = jsonMatch[1]?.trim() || content.trim();
       enrichedData = JSON.parse(jsonStr);
     } catch (parseError) {
       console.error("Failed to parse AI response:", parseError);
       enrichedData = {
-        name: name || null,
+        name: coresignalData?.name || name || null,
         email: email || null,
         linkedin_url: linkedin_url || null,
         avatar_url: null,
-        title: null,
-        company: null,
-        location: null,
-        bio: null,
+        title: coresignalData?.title || null,
+        company: coresignalData?.company || null,
+        location: coresignalData?.location || null,
+        bio: coresignalData?.bio || null,
       };
     }
 
-    // If AI didn't return an avatar, try unavatar.io fallback for LinkedIn
-    let finalAvatarUrl = enrichedData.avatar_url || null;
+    // Determine final avatar: Coresignal > AI > Unavatar
+    let finalAvatarUrl = coresignalData?.avatar_url || enrichedData.avatar_url || null;
     const finalLinkedInUrl = linkedin_url || enrichedData.linkedin_url;
     
     if (!finalAvatarUrl && finalLinkedInUrl) {
@@ -228,19 +331,18 @@ Important: Only include information you are confident about. For avatar_url, onl
       }
     }
 
-    // Merge with input data (input takes precedence for email/linkedin_url)
     const result = {
       success: true,
       fallback: false,
       data: {
-        name: enrichedData.name || name || null,
+        name: coresignalData?.name || enrichedData.name || name || null,
         email: email || enrichedData.email || null,
         linkedin_url: finalLinkedInUrl || null,
         avatar_url: finalAvatarUrl,
-        title: enrichedData.title || null,
-        company: enrichedData.company || null,
-        location: enrichedData.location || null,
-        bio: enrichedData.bio || null,
+        title: coresignalData?.title || enrichedData.title || null,
+        company: coresignalData?.company || enrichedData.company || null,
+        location: coresignalData?.location || enrichedData.location || null,
+        bio: coresignalData?.bio || enrichedData.bio || null,
       }
     };
 
