@@ -195,6 +195,7 @@ const EntityDetail = () => {
         <div className="flex items-center justify-between gap-4 mb-4">
           <div className="flex items-center gap-4">
             <CompanyLogo 
+              domain={(entity as any).website}
               name={entity.name} 
               size="md"
               className="w-12 h-12 rounded-xl"

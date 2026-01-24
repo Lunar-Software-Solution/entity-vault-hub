@@ -855,6 +855,7 @@ export type Database = {
           status: string
           type: string
           updated_at: string
+          website: string | null
         }
         Insert: {
           created_at?: string
@@ -866,6 +867,7 @@ export type Database = {
           status?: string
           type?: string
           updated_at?: string
+          website?: string | null
         }
         Update: {
           created_at?: string
@@ -877,6 +879,7 @@ export type Database = {
           status?: string
           type?: string
           updated_at?: string
+          website?: string | null
         }
         Relationships: []
       }

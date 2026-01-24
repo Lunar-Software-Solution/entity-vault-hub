@@ -24,6 +24,7 @@ const EntityForm = ({ entity, onSubmit, onCancel, isLoading }: EntityFormProps) 
       jurisdiction: entity?.jurisdiction ?? "",
       founded_date: entity?.founded_date ?? "",
       fiscal_year_end: (entity as any)?.fiscal_year_end ?? "",
+      website: (entity as any)?.website ?? "",
     },
   });
 
@@ -93,6 +94,14 @@ const EntityForm = ({ entity, onSubmit, onCancel, isLoading }: EntityFormProps) 
             <FormItem>
               <FormLabel>Fiscal Year End</FormLabel>
               <FormControl><Input placeholder="MM-DD (e.g., 12-31)" maxLength={5} {...field} /></FormControl>
+              <FormMessage />
+            </FormItem>
+          )} />
+
+          <FormField control={form.control} name="website" render={({ field }) => (
+            <FormItem className="md:col-span-2">
+              <FormLabel>Website</FormLabel>
+              <FormControl><Input placeholder="https://example.com" {...field} /></FormControl>
               <FormMessage />
             </FormItem>
           )} />

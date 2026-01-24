@@ -117,6 +117,7 @@ const EntitySection = () => {
               className="glass-card rounded-xl p-4 flex items-center gap-4 cursor-pointer hover:bg-muted/50 transition-colors group"
             >
               <CompanyLogo 
+                domain={(entity as any).website}
                 name={entity.name} 
                 size="md"
               />
