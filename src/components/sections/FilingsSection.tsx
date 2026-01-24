@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-import { Plus, Calendar, List, CheckSquare, Search, Filter, Square, SquareCheck, SquarePen, Trash2 } from "lucide-react";
+import { Plus, Calendar, List, CheckSquare, Search, Filter, Square, SquareCheck, SquarePen, SquareX, PlaySquare, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -480,16 +480,30 @@ const FilingsSection = ({ entityFilter }: FilingsSectionProps) => {
                         <div className="flex items-center justify-end gap-1">
                           {canWrite && (
                             task.status === "completed" ? (
-                              <div className="h-8 w-8 flex items-center justify-center text-green-500">
+                              <div className="h-8 w-8 flex items-center justify-center text-green-500" title="Completed">
                                 <SquareCheck className="h-4 w-4" />
                               </div>
-                            ) : task.status === "cancelled" ? null : (
+                            ) : task.status === "cancelled" ? (
+                              <div className="h-8 w-8 flex items-center justify-center text-zinc-500" title="Cancelled">
+                                <SquareX className="h-4 w-4" />
+                              </div>
+                            ) : task.status === "in_progress" ? (
+                              <Button 
+                                variant="ghost" 
+                                size="icon"
+                                className="h-8 w-8 text-yellow-500 hover:text-green-500"
+                                onClick={() => completeTask.mutate(task.id)}
+                                title="In Progress - Click to Complete"
+                              >
+                                <PlaySquare className="h-4 w-4" />
+                              </Button>
+                            ) : (
                               <Button 
                                 variant="ghost" 
                                 size="icon"
                                 className="h-8 w-8 text-muted-foreground hover:text-green-500"
                                 onClick={() => completeTask.mutate(task.id)}
-                                title="Complete"
+                                title="Pending - Click to Complete"
                               >
                                 <Square className="h-4 w-4" />
                               </Button>
