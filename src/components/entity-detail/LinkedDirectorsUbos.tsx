@@ -109,7 +109,8 @@ const LinkedDirectorsUbos = ({ directorsUbos, entityId, entityName }: LinkedDire
 
   const updateMutation = useMutation({
     mutationFn: async ({ id, data }: { id: string; data: any }) => {
-      const { _id_documents, ...directorData } = data;
+      // Exclude avatar fields - they're managed separately by the avatar buttons
+      const { _id_documents, avatar_url, suppress_avatar, ...directorData } = data;
       const { data: result, error } = await supabase
         .from("directors_ubos")
         .update(directorData)
