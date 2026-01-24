@@ -33,7 +33,8 @@ export const useProfileEnrichment = ({
   enabled = true,
 }: UseProfileEnrichmentOptions) => {
   return useQuery({
-    queryKey: ["profile-enrichment", email, linkedin_url],
+    // Include linkedin_url in the query key so cache invalidates when it changes
+    queryKey: ["profile-enrichment", email, linkedin_url, name],
     queryFn: async (): Promise<EnrichedProfile | null> => {
       if (!email && !linkedin_url) return null;
 
@@ -63,8 +64,8 @@ export const useProfileEnrichment = ({
       }
     },
     enabled: enabled && !!(email || linkedin_url),
-    staleTime: 1000 * 60 * 60 * 24, // Cache for 24 hours
-    retry: false,
+    staleTime: 1000 * 60 * 60, // Cache for 1 hour (reduced from 24h)
+    retry: 1,
   });
 };
 
