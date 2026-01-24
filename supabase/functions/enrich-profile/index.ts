@@ -42,7 +42,7 @@ async function fetchLinkdAPIProfile(linkedinUrl: string): Promise<{
       {
         method: "GET",
         headers: {
-          "Authorization": `Bearer ${LINKDAPI_KEY}`,
+          "X-linkdapi-apikey": LINKDAPI_KEY,
           "Content-Type": "application/json",
         },
       }
