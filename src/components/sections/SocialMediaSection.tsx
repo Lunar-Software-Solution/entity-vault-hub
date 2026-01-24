@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-import { Plus, ExternalLink, MoreVertical, CheckCircle2, Edit2, Trash2, Building2, User } from "lucide-react";
+import { Plus, ExternalLink, MoreVertical, CheckCircle2, Pencil, Trash2, Building2, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { useSocialMediaAccounts, useEntities } from "@/hooks/usePortalData";
@@ -182,13 +182,14 @@ const SocialMediaSection = ({ entityFilter }: SocialMediaSectionProps) => {
                   {canWrite && (
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
-                        <button className="p-1.5 hover:bg-muted rounded-lg transition-colors">
-                          <MoreVertical className="w-4 h-4 text-muted-foreground" />
-                        </button>
+                        <Button variant="ghost" size="icon" className="h-8 w-8 text-foreground">
+                          <MoreVertical className="h-4 w-4" />
+                        </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
                         <DropdownMenuItem onClick={() => handleEdit(account)}>
-                          <Edit2 className="w-4 h-4 mr-2" /> Edit
+                          <Pencil className="h-4 w-4 mr-2" />
+                          Edit
                         </DropdownMenuItem>
                         <DropdownMenuItem onClick={() => setDeletingId(account.id)} className="text-destructive">
                           <Trash2 className="w-4 h-4 mr-2" /> Remove
