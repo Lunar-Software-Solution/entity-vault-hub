@@ -38,7 +38,7 @@ async function fetchLinkdAPIProfile(linkedinUrl: string): Promise<{
     console.log("Fetching LinkdAPI profile for:", username);
     
     const response = await fetch(
-      `https://api.linkdapi.com/api/v1/profile/overview?username=${encodeURIComponent(username)}`,
+      `https://linkdapi.com/api/v1/profile/overview?username=${encodeURIComponent(username)}`,
       {
         method: "GET",
         headers: {
