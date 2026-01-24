@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-import { Plus, ExternalLink, MoreVertical, Edit2, Trash2, Building2, Monitor, Calendar, Mail } from "lucide-react";
+import { Plus, ExternalLink, MoreVertical, Edit2, Trash2, Building2, Calendar, Mail } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useEntitySoftware, useEntities, useSoftwareCatalog } from "@/hooks/usePortalData";
 import { useCreateEntitySoftware, useUpdateEntitySoftware, useDeleteEntitySoftware } from "@/hooks/usePortalMutations";
@@ -9,6 +9,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { Badge } from "@/components/ui/badge";
 import EntitySoftwareForm from "@/components/forms/EntitySoftwareForm";
 import DeleteConfirmDialog from "@/components/shared/DeleteConfirmDialog";
+import CompanyLogo from "@/components/shared/CompanyLogo";
 import { useUserRole } from "@/hooks/useUserRole";
 import type { EntitySoftwareFormData } from "@/lib/formSchemas";
 import { format, differenceInDays, parseISO } from "date-fns";
@@ -162,14 +163,18 @@ const SoftwareSection = ({ entityFilter }: SoftwareSectionProps) => {
             const displayName = software.custom_name || catalogItem?.name || "Unknown Software";
             const licenseExpiringSoon = isExpiringSoon(software.license_expiry_date);
             const licenseExpired = isExpired(software.license_expiry_date);
+            // Use login_url first, then catalog website for logo
+            const logoUrl = software.login_url || catalogItem?.website;
             
             return (
               <div key={software.id} className="glass-card rounded-xl p-5 hover:border-primary/30 transition-all duration-300">
                 <div className="flex items-start justify-between mb-4">
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
-                      <Monitor className="w-5 h-5 text-primary" />
-                    </div>
+                    <CompanyLogo 
+                      domain={logoUrl} 
+                      name={displayName} 
+                      size="sm"
+                    />
                     <div className="min-w-0">
                       <h3 className="font-semibold text-foreground truncate">{displayName}</h3>
                       {catalogItem?.vendor && (
