@@ -42,6 +42,7 @@ const directorUboSchema = z.object({
   ownership_percentage: z.string().optional(),
   control_type: z.string().optional(),
   address: z.string().optional(),
+  bio: z.string().optional(),
   email: z.string().email().optional().or(z.literal("")),
   phone: z.string().optional(),
   linkedin_url: z.string().url().optional().or(z.literal("")),
@@ -148,6 +149,7 @@ export const DirectorUboForm = ({
       ownership_percentage: item?.ownership_percentage?.toString() || "",
       control_type: item?.control_type || "",
       address: item?.address || "",
+      bio: item?.bio || "",
       email: item?.email || "",
       phone: item?.phone || "",
       linkedin_url: item?.linkedin_url || "",
@@ -496,6 +498,24 @@ export const DirectorUboForm = ({
               <FormLabel>Address</FormLabel>
               <FormControl>
                 <Textarea placeholder="Full address..." {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
+          name="bio"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Bio</FormLabel>
+              <FormControl>
+                <Textarea 
+                  placeholder="Professional summary or biography..." 
+                  {...field} 
+                  className="min-h-[80px]"
+                />
               </FormControl>
               <FormMessage />
             </FormItem>
