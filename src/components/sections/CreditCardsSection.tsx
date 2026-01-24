@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Plus, CreditCard, MoreVertical, Edit2, Trash2, Building2, Eye, EyeOff, ExternalLink, Copy, Check } from "lucide-react";
+import { Plus, CreditCard, MoreVertical, Pencil, Trash2, Building2, Eye, EyeOff, ExternalLink, Copy, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useCreditCards, useEntities } from "@/hooks/usePortalData";
 import { useCreateCreditCard, useUpdateCreditCard, useDeleteCreditCard } from "@/hooks/usePortalMutations";
@@ -233,7 +233,8 @@ const CreditCardsSection = ({ entityFilter }: CreditCardsSectionProps) => {
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end">
                               <DropdownMenuItem onClick={() => handleEdit(card)}>
-                                <Edit2 className="w-4 h-4 mr-2" /> Edit
+                                <Pencil className="h-4 w-4 mr-2" />
+                                Edit
                               </DropdownMenuItem>
                               <DropdownMenuItem onClick={() => setDeletingId(card.id)} className="text-destructive">
                                 <Trash2 className="w-4 h-4 mr-2" /> Delete

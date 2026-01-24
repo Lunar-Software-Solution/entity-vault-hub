@@ -2,7 +2,7 @@ import { useState, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Plus, Search, Building2, User, Users, Crown, MoreVertical, Mail, Phone, Calendar, Percent, Shield, AlertTriangle } from "lucide-react";
+import { Plus, Search, Building2, User, Users, Crown, MoreVertical, Mail, Phone, Calendar, Percent, Shield, AlertTriangle, Pencil, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -475,7 +475,10 @@ const DirectorsUboSection = ({ entityFilter }: DirectorsUboSectionProps) => {
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
-                          <DropdownMenuItem onClick={() => handleEdit(item)}>Edit</DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => handleEdit(item)}>
+                            <Pencil className="h-4 w-4 mr-2" />
+                            Edit
+                          </DropdownMenuItem>
                           <DropdownMenuItem
                             onClick={() => setDeletingItem(item)}
                             className="text-destructive"

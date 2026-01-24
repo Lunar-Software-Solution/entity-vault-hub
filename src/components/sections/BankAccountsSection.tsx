@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Plus, MoreVertical, Edit2, Trash2, Building2, ExternalLink, Eye, EyeOff, Copy, Check } from "lucide-react";
+import { Plus, MoreVertical, Pencil, Trash2, Building2, ExternalLink, Eye, EyeOff, Copy, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useBankAccounts, useEntities } from "@/hooks/usePortalData";
 import { useCreateBankAccount, useUpdateBankAccount, useDeleteBankAccount } from "@/hooks/usePortalMutations";
@@ -258,7 +258,8 @@ const BankAccountsSection = ({ entityFilter }: BankAccountsSectionProps) => {
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
                           <DropdownMenuItem onClick={() => handleEdit(account)}>
-                            <Edit2 className="w-4 h-4 mr-2" /> Edit
+                            <Pencil className="h-4 w-4 mr-2" />
+                            Edit
                           </DropdownMenuItem>
                           <DropdownMenuItem onClick={() => setDeletingId(account.id)} className="text-destructive">
                             <Trash2 className="w-4 h-4 mr-2" /> Delete
