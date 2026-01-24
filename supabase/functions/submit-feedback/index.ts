@@ -1,6 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
-const PLANE_INTAKE_URL = "https://projects.lunr.tech/api/v1/intake/9ec06cc8e1f749f8b13a1c87a29e191c/";
+const PLANE_API_URL = "https://projects.lunr.tech/api/v1/workspaces/brax/projects/76bc3b1f-f2db-4caf-892a-0136bd90fba0/intake-issues/";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -33,15 +33,25 @@ serve(async (req) => {
       );
     }
 
-    const payload: Record<string, string> = { name };
-    if (description) payload.description = description;
-    if (email) payload.email = email;
+    // Build description with email if provided
+    let fullDescription = description || "";
+    if (email) {
+      fullDescription = fullDescription ? `${fullDescription}\n\nSubmitted by: ${email}` : `Submitted by: ${email}`;
+    }
 
-    const response = await fetch(PLANE_INTAKE_URL, {
+    // Plane API expects issue wrapped in an "issue" object
+    const payload = {
+      issue: {
+        name,
+        description_html: `<p>${fullDescription.replace(/\n/g, "</p><p>")}</p>`,
+      }
+    };
+
+    const response = await fetch(PLANE_API_URL, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "X-API-Key": PLANE_API_KEY,
+        "x-api-key": PLANE_API_KEY,
       },
       body: JSON.stringify(payload),
     });
