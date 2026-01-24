@@ -357,7 +357,7 @@ const FilingsSection = ({ entityFilter }: FilingsSectionProps) => {
                               </Badge>
                             )}
                             <div>
-                              <p className="font-medium">{filing.title}</p>
+                              <p className="font-medium text-foreground">{filing.title}</p>
                               {filing.jurisdiction && (
                                 <p className="text-xs text-muted-foreground">{filing.jurisdiction}</p>
                               )}
