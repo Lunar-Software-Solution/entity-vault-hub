@@ -483,6 +483,7 @@ const DirectorsUboSection = ({ entityFilter }: DirectorsUboSectionProps) => {
                             onClick={() => setDeletingItem(item)}
                             className="text-destructive"
                           >
+                            <Trash2 className="h-4 w-4 mr-2" />
                             Delete
                           </DropdownMenuItem>
                         </DropdownMenuContent>
