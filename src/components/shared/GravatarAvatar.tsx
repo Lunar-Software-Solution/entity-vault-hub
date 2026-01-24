@@ -125,8 +125,8 @@ const GravatarAvatar = ({
     );
   }
 
-  // If no URLs available or all failed, show initials fallback
-  if (avatarUrls.length === 0 || imageStatus === "error") {
+  // If no URLs available, all failed, or no current URL, show initials fallback
+  if (avatarUrls.length === 0 || imageStatus === "error" || !currentUrl) {
     return (
       <div
         className={cn(
@@ -159,20 +159,18 @@ const GravatarAvatar = ({
       {imageStatus === "loading" && (
         <div className={cn(sizeClasses[size], "bg-muted animate-pulse")} />
       )}
-      {currentUrl && (
-        <img
-          key={currentUrl}
-          src={currentUrl}
-          alt={name}
-          className={cn(
-            "w-full h-full object-cover",
-            imageStatus === "loading" && "hidden"
-          )}
-          onError={handleError}
-          onLoad={handleLoad}
-          referrerPolicy="no-referrer"
-        />
-      )}
+      <img
+        key={currentUrl}
+        src={currentUrl}
+        alt={name}
+        className={cn(
+          "w-full h-full object-cover",
+          imageStatus === "loading" && "hidden"
+        )}
+        onError={handleError}
+        onLoad={handleLoad}
+        referrerPolicy="no-referrer"
+      />
     </div>
   );
 };
