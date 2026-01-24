@@ -8,6 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Sparkles, Loader2, Building2, ExternalLink } from "lucide-react";
 import { toast } from "sonner";
+import GravatarAvatar from "@/components/shared/GravatarAvatar";
 import { Link } from "react-router-dom";
 import {
   Form,
@@ -285,46 +286,55 @@ export const DirectorUboForm = ({
           </div>
         )}
 
-        {/* Basic Info */}
-        <div className="grid grid-cols-2 gap-4">
-          <FormField
-            control={form.control}
-            name="name"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Full Name *</FormLabel>
-                <FormControl>
-                  <Input placeholder="John Doe" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
+        {/* Avatar Preview + Basic Info */}
+        <div className="flex items-start gap-4">
+          <GravatarAvatar
+            email={email}
+            name={name || ""}
+            size="lg"
+            linkedinUrl={linkedinUrl}
+            className="mt-6"
           />
-
-          <FormField
-            control={form.control}
-            name="role_type"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Role Type *</FormLabel>
-                <Select onValueChange={field.onChange} defaultValue={field.value}>
+          <div className="flex-1 grid grid-cols-2 gap-4">
+            <FormField
+              control={form.control}
+              name="name"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Full Name *</FormLabel>
                   <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select role type" />
-                    </SelectTrigger>
+                    <Input placeholder="John Doe" {...field} />
                   </FormControl>
-                  <SelectContent>
-                    {ROLE_TYPES.map((type) => (
-                      <SelectItem key={type.value} value={type.value}>
-                        {type.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="role_type"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Role Type *</FormLabel>
+                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select role type" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {ROLE_TYPES.map((type) => (
+                        <SelectItem key={type.value} value={type.value}>
+                          {type.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
         </div>
 
         <div className="grid grid-cols-2 gap-4">
