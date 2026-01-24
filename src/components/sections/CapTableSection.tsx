@@ -487,13 +487,6 @@ const CapTableSection = () => {
                             <SquarePen className="h-4 w-4 mr-2" />
                             Edit
                           </DropdownMenuItem>
-                          <DropdownMenuItem 
-                            onClick={() => handleReEnrichShareholder(shareholder)}
-                            disabled={enrichingId === shareholder.id || !shareholder.linkedin_url}
-                          >
-                            <RefreshCw className={`h-4 w-4 mr-2 ${enrichingId === shareholder.id ? 'animate-spin' : ''}`} />
-                            {enrichingId === shareholder.id ? 'Enriching...' : 'Re-enrich Profile'}
-                          </DropdownMenuItem>
                           <DropdownMenuItem
                             onClick={() => setDeletingItem({ type: "shareholder", item: shareholder })}
                             className="text-destructive"
