@@ -205,7 +205,7 @@ const FilingsSection = ({ entityFilter }: FilingsSectionProps) => {
       
       toast({
         title: "Reminders sent",
-        description: data.message || `Successfully sent ${data.emails_sent || 0} reminder email(s).`,
+        description: `Successfully sent ${data.emailsSent || 0} reminder email(s) for ${data.tasksFound || 0} task(s).`,
       });
     } catch (error: any) {
       console.error('Error sending reminders:', error);
