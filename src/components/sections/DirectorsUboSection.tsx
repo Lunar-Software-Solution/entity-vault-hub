@@ -520,7 +520,7 @@ const DirectorsUboSection = ({ entityFilter }: DirectorsUboSectionProps) => {
                       <GravatarAvatar
                         email={item.email}
                         name={item.name}
-                        size="md"
+                        size="lg"
                         linkedinUrl={item.linkedin_url}
                         storedAvatarUrl={item.avatar_url}
                         recordId={item.id}
@@ -529,9 +529,9 @@ const DirectorsUboSection = ({ entityFilter }: DirectorsUboSectionProps) => {
                         enableEnrichment={false}
                         fallbackIcon={
                           item.role_type === "ubo" ? (
-                            <Crown className="w-5 h-5 text-purple-400" />
+                            <Crown className="w-6 h-6 text-purple-400" />
                           ) : (
-                            <User className="w-5 h-5 text-primary" />
+                            <User className="w-6 h-6 text-primary" />
                           )
                         }
                       />
