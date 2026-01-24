@@ -111,9 +111,26 @@ export const DirectorUboForm = ({
   const [isEnriching, setIsEnriching] = useState(false);
   const [avatarDeleted, setAvatarDeleted] = useState(false);
   const [isDeletingAvatar, setIsDeletingAvatar] = useState(false);
+  const [enrichedAvatarUrl, setEnrichedAvatarUrl] = useState<string | null>(null);
 
   const handleDeleteAvatar = async () => {
-    if (!item?.id || !item?.avatar_url) return;
+    // If only local enriched avatar (no saved record yet), just clear it
+    if (!item?.id) {
+      setEnrichedAvatarUrl(null);
+      setAvatarDeleted(true);
+      toast.success("Avatar removed");
+      return;
+    }
+
+    // If there's no avatar in DB but we have enriched one, clear locally
+    if (!item?.avatar_url && enrichedAvatarUrl) {
+      setEnrichedAvatarUrl(null);
+      setAvatarDeleted(true);
+      toast.success("Avatar removed");
+      return;
+    }
+
+    if (!item?.avatar_url) return;
     
     setIsDeletingAvatar(true);
     try {
@@ -125,6 +142,7 @@ export const DirectorUboForm = ({
       if (error) throw error;
       
       setAvatarDeleted(true);
+      setEnrichedAvatarUrl(null);
       toast.success("Avatar removed");
     } catch (error) {
       console.error("Failed to delete avatar:", error);
@@ -223,6 +241,24 @@ export const DirectorUboForm = ({
         const enriched = data.data;
         let fieldsUpdated = 0;
 
+        // Save avatar to database if we have one and this is an existing record
+        if (enriched.avatar_url && item?.id) {
+          const { error: avatarError } = await supabase
+            .from("directors_ubos")
+            .update({ avatar_url: enriched.avatar_url })
+            .eq("id", item.id);
+          
+          if (!avatarError) {
+            setEnrichedAvatarUrl(enriched.avatar_url);
+            setAvatarDeleted(false);
+            fieldsUpdated++;
+          }
+        } else if (enriched.avatar_url) {
+          // For new records, just store locally to show preview
+          setEnrichedAvatarUrl(enriched.avatar_url);
+          fieldsUpdated++;
+        }
+
         // Auto-fill form fields with enriched data (only if empty)
         if (enriched.name && !form.getValues("name")) {
           form.setValue("name", enriched.name);
@@ -251,20 +287,18 @@ export const DirectorUboForm = ({
           form.setValue("linkedin_url", enriched.linkedin_url);
           fieldsUpdated++;
         }
-        if (enriched.bio && !form.getValues("notes")) {
-          form.setValue("notes", enriched.bio);
+        if (enriched.bio && !form.getValues("bio")) {
+          form.setValue("bio", enriched.bio);
           fieldsUpdated++;
         }
 
         if (fieldsUpdated > 0) {
           toast.success(`Profile enriched! Updated ${fieldsUpdated} field${fieldsUpdated > 1 ? "s" : ""}`);
-        } else if (data.fallback) {
-          toast.info("Clay enrichment unavailable - no additional data found");
         } else {
           toast.info("No new data found to enrich");
         }
       } else if (data?.fallback) {
-        toast.info("Clay enrichment unavailable at this time");
+        toast.info("Enrichment unavailable at this time");
       } else {
         toast.error("No enrichment data returned");
       }
@@ -316,10 +350,10 @@ export const DirectorUboForm = ({
               name={name || ""}
               size="lg"
               linkedinUrl={linkedinUrl}
-              storedAvatarUrl={avatarDeleted ? null : item?.avatar_url}
+              storedAvatarUrl={avatarDeleted ? null : (enrichedAvatarUrl || item?.avatar_url)}
               enableEnrichment={false}
             />
-            {item?.avatar_url && !avatarDeleted && (
+            {(item?.avatar_url || enrichedAvatarUrl) && !avatarDeleted && (
               <Button
                 type="button"
                 variant="destructive"
