@@ -358,10 +358,10 @@ export const DirectorUboForm = ({
           <div className="relative mt-6">
             <GravatarAvatar
               key={`avatar-${avatarDeleted ? 'deleted' : 'active'}`}
-              email={email}
+              email={avatarDeleted ? undefined : email}
               name={name || ""}
               size="lg"
-              linkedinUrl={linkedinUrl}
+              linkedinUrl={avatarDeleted ? undefined : linkedinUrl}
               storedAvatarUrl={avatarDeleted ? null : (enrichedAvatarUrl || item?.avatar_url)}
               enableEnrichment={false}
             />
