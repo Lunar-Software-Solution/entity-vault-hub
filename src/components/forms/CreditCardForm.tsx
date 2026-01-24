@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { creditCardSchema, CreditCardFormData } from "@/lib/formSchemas";
@@ -6,9 +7,9 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Eye, EyeOff } from "lucide-react";
 import type { CreditCard } from "@/hooks/usePortalData";
 import { useEntities } from "@/hooks/usePortalData";
-
 interface CreditCardFormProps {
   card?: CreditCard | null;
   onSubmit: (data: CreditCardFormData) => void;
@@ -27,6 +28,8 @@ const cardColors = [
 
 const CreditCardForm = ({ card, onSubmit, onCancel, isLoading }: CreditCardFormProps) => {
   const { data: entities } = useEntities();
+  const [showCardNumber, setShowCardNumber] = useState(false);
+  const [showCvv, setShowCvv] = useState(false);
   
   const form = useForm<CreditCardFormData>({
     resolver: zodResolver(creditCardSchema),
@@ -84,7 +87,23 @@ const CreditCardForm = ({ card, onSubmit, onCancel, isLoading }: CreditCardFormP
           <FormField control={form.control} name="card_number" render={({ field }) => (
             <FormItem>
               <FormLabel>Card Number *</FormLabel>
-              <FormControl><Input placeholder="**** **** **** 1234" {...field} /></FormControl>
+              <FormControl>
+                <div className="relative">
+                  <Input 
+                    type={showCardNumber ? "text" : "password"} 
+                    placeholder="**** **** **** 1234" 
+                    {...field} 
+                    className="pr-10"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowCardNumber(!showCardNumber)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                  >
+                    {showCardNumber ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </button>
+                </div>
+              </FormControl>
               <FormMessage />
             </FormItem>
           )} />
@@ -108,7 +127,24 @@ const CreditCardForm = ({ card, onSubmit, onCancel, isLoading }: CreditCardFormP
           <FormField control={form.control} name="security_code" render={({ field }) => (
             <FormItem>
               <FormLabel>Security Code (CVV)</FormLabel>
-              <FormControl><Input type="password" placeholder="***" maxLength={4} {...field} /></FormControl>
+              <FormControl>
+                <div className="relative">
+                  <Input 
+                    type={showCvv ? "text" : "password"} 
+                    placeholder="***" 
+                    maxLength={4} 
+                    {...field} 
+                    className="pr-10"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowCvv(!showCvv)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                  >
+                    {showCvv ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </button>
+                </div>
+              </FormControl>
               <FormMessage />
             </FormItem>
           )} />
