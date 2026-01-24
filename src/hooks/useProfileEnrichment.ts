@@ -44,7 +44,8 @@ export const useProfileEnrichment = ({
     // Include recordId so cache invalidates per-record for auto-save
     queryKey: ["profile-enrichment", email, linkedin_url, name, recordId],
     queryFn: async (): Promise<EnrichedProfile | null> => {
-      if (!email && !linkedin_url) return null;
+      // LinkedIn URL is required for Coresignal enrichment
+      if (!linkedin_url) return null;
 
       try {
         const { data: { session } } = await supabase.auth.getSession();
@@ -112,7 +113,7 @@ export const useProfileEnrichment = ({
         return null;
       }
     },
-    enabled: enabled && !!(email || linkedin_url),
+    enabled: enabled && !!linkedin_url,
     staleTime: 1000 * 60 * 5,
     gcTime: 1000 * 60 * 30,
     retry: 1,
