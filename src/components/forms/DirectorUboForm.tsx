@@ -6,6 +6,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
+import { Sparkles, Loader2 } from "lucide-react";
+import { toast } from "sonner";
 import {
   Form,
   FormControl,
@@ -101,6 +103,7 @@ export const DirectorUboForm = ({
   const [idDocuments, setIdDocuments] = useState<IdDocument[]>(
     item?.id_documents || []
   );
+  const [isEnriching, setIsEnriching] = useState(false);
 
   // Fetch existing ID documents when editing
   useEffect(() => {
@@ -154,7 +157,90 @@ export const DirectorUboForm = ({
 
   const roleType = form.watch("role_type");
   const isPep = form.watch("is_pep");
+  const email = form.watch("email");
+  const name = form.watch("name");
   const showOwnershipFields = roleType === "ubo" || roleType === "both";
+
+  // Enrich profile using Clay API
+  const handleEnrichProfile = async () => {
+    if (!email && !name) {
+      toast.error("Please enter an email or name first");
+      return;
+    }
+
+    setIsEnriching(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.access_token) {
+        toast.error("Please sign in to use profile enrichment");
+        return;
+      }
+
+      const { data, error } = await supabase.functions.invoke("enrich-profile", {
+        body: { email, name },
+        headers: {
+          Authorization: `Bearer ${session.access_token}`,
+        },
+      });
+
+      if (error) {
+        console.error("Enrichment error:", error);
+        toast.error("Failed to enrich profile");
+        return;
+      }
+
+      if (data?.success && data?.data) {
+        const enriched = data.data;
+        let fieldsUpdated = 0;
+
+        // Auto-fill form fields with enriched data (only if empty)
+        if (enriched.name && !form.getValues("name")) {
+          form.setValue("name", enriched.name);
+          fieldsUpdated++;
+        }
+        if (enriched.email && !form.getValues("email")) {
+          form.setValue("email", enriched.email);
+          fieldsUpdated++;
+        }
+        if (enriched.title && !form.getValues("title")) {
+          // Try to match title to available options
+          const matchedTitle = TITLE_OPTIONS.find(t => 
+            enriched.title.toLowerCase().includes(t.toLowerCase()) ||
+            t.toLowerCase().includes(enriched.title.toLowerCase())
+          );
+          if (matchedTitle) {
+            form.setValue("title", matchedTitle);
+            fieldsUpdated++;
+          }
+        }
+        if (enriched.location && !form.getValues("address")) {
+          form.setValue("address", enriched.location);
+          fieldsUpdated++;
+        }
+        if (enriched.bio && !form.getValues("notes")) {
+          form.setValue("notes", enriched.bio);
+          fieldsUpdated++;
+        }
+
+        if (fieldsUpdated > 0) {
+          toast.success(`Profile enriched! Updated ${fieldsUpdated} field${fieldsUpdated > 1 ? "s" : ""}`);
+        } else if (data.fallback) {
+          toast.info("Clay enrichment unavailable - no additional data found");
+        } else {
+          toast.info("No new data found to enrich");
+        }
+      } else if (data?.fallback) {
+        toast.info("Clay enrichment unavailable at this time");
+      } else {
+        toast.error("No enrichment data returned");
+      }
+    } catch (err) {
+      console.error("Enrichment failed:", err);
+      toast.error("Failed to enrich profile");
+    } finally {
+      setIsEnriching(false);
+    }
+  };
 
   const handleFormSubmit = (data: z.infer<typeof directorUboSchema>) => {
     onSubmit({ ...data, id_documents: idDocuments });
@@ -237,9 +323,26 @@ export const DirectorUboForm = ({
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Email</FormLabel>
-                <FormControl>
-                  <Input type="email" placeholder="email@example.com" {...field} />
-                </FormControl>
+                <div className="flex gap-2">
+                  <FormControl>
+                    <Input type="email" placeholder="email@example.com" {...field} />
+                  </FormControl>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="icon"
+                    onClick={handleEnrichProfile}
+                    disabled={isEnriching || (!email && !name)}
+                    title="Enrich profile with Clay"
+                    className="flex-shrink-0"
+                  >
+                    {isEnriching ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <Sparkles className="h-4 w-4 text-primary" />
+                    )}
+                  </Button>
+                </div>
                 <FormMessage />
               </FormItem>
             )}
