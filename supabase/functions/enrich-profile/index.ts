@@ -6,6 +6,68 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
+// Download image and upload to Supabase storage, returns public URL
+async function downloadAndStoreAvatar(
+  supabase: any,
+  imageUrl: string,
+  recordId: string
+): Promise<string | null> {
+  try {
+    console.log("Downloading avatar from:", imageUrl);
+    
+    // Download the image
+    const response = await fetch(imageUrl, {
+      headers: {
+        "User-Agent": "Mozilla/5.0 (compatible; ProfileEnricher/1.0)",
+      },
+    });
+    
+    if (!response.ok) {
+      console.error("Failed to download avatar:", response.status);
+      return null;
+    }
+    
+    const contentType = response.headers.get("content-type") || "image/jpeg";
+    const blob = await response.blob();
+    
+    if (blob.size === 0) {
+      console.error("Downloaded empty avatar");
+      return null;
+    }
+    
+    // Determine file extension
+    const ext = contentType.includes("png") ? "png" : "jpg";
+    const fileName = `directors/${recordId}.${ext}`;
+    
+    // Upload to avatars bucket
+    const { data, error } = await supabase.storage
+      .from("avatars")
+      .upload(fileName, blob, {
+        contentType,
+        upsert: true,
+      });
+    
+    if (error) {
+      console.error("Failed to upload avatar to storage:", error);
+      return null;
+    }
+    
+    // Get public URL
+    const { data: urlData } = supabase.storage
+      .from("avatars")
+      .getPublicUrl(fileName);
+    
+    // Add cache buster
+    const publicUrl = `${urlData.publicUrl}?t=${Date.now()}`;
+    console.log("Avatar stored at:", publicUrl);
+    
+    return publicUrl;
+  } catch (error) {
+    console.error("Error downloading/storing avatar:", error);
+    return null;
+  }
+}
+
 // Extract LinkedIn username from URL
 function extractLinkedInUsername(url: string): string | null {
   if (!url) return null;
@@ -202,9 +264,15 @@ serve(async (req) => {
 
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseKey = Deno.env.get("SUPABASE_ANON_KEY")!;
+    const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    
+    // Use anon key for auth validation
     const supabase = createClient(supabaseUrl, supabaseKey, {
       global: { headers: { Authorization: authHeader } },
     });
+    
+    // Use service role for storage operations
+    const supabaseAdmin = createClient(supabaseUrl, serviceRoleKey);
 
     const token = authHeader.replace("Bearer ", "");
     const { data, error: authError } = await supabase.auth.getClaims(token);
@@ -216,7 +284,7 @@ serve(async (req) => {
       );
     }
 
-    const { email, linkedin_url, name } = await req.json();
+    const { email, linkedin_url, name, record_id } = await req.json();
 
     if (!linkedin_url) {
       return new Response(
@@ -230,7 +298,13 @@ serve(async (req) => {
     
     if (!linkdApiData) {
       // Try unavatar as fallback for avatar only
-      const avatarUrl = await getUnavatarUrl(linkedin_url);
+      let avatarUrl = await getUnavatarUrl(linkedin_url);
+      
+      // If we have an avatar and record_id, download and store it
+      if (avatarUrl && record_id) {
+        const storedUrl = await downloadAndStoreAvatar(supabaseAdmin, avatarUrl, record_id);
+        if (storedUrl) avatarUrl = storedUrl;
+      }
       
       return new Response(
         JSON.stringify({
@@ -256,6 +330,14 @@ serve(async (req) => {
     let finalAvatarUrl = linkdApiData.avatar_url;
     if (!finalAvatarUrl) {
       finalAvatarUrl = await getUnavatarUrl(linkedin_url);
+    }
+    
+    // Download and store the avatar in our storage bucket
+    if (finalAvatarUrl && record_id) {
+      const storedUrl = await downloadAndStoreAvatar(supabaseAdmin, finalAvatarUrl, record_id);
+      if (storedUrl) {
+        finalAvatarUrl = storedUrl;
+      }
     }
 
     const result = {

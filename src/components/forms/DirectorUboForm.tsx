@@ -223,7 +223,12 @@ export const DirectorUboForm = ({
       }
 
       const { data, error } = await supabase.functions.invoke("enrich-profile", {
-        body: { email, linkedin_url: linkedinUrl, name },
+        body: { 
+          email, 
+          linkedin_url: linkedinUrl, 
+          name,
+          record_id: item?.id || null, // Pass record ID for avatar storage
+        },
         headers: {
           Authorization: `Bearer ${session.access_token}`,
         },
