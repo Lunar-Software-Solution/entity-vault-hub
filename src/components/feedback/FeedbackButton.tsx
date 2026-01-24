@@ -73,7 +73,7 @@ const FeedbackButton = () => {
       <Button
         onClick={() => setIsOpen(true)}
         className={cn(
-          "fixed bottom-24 right-6 h-12 w-12 rounded-full shadow-lg z-50",
+          "fixed bottom-24 right-6 h-14 w-14 rounded-full shadow-lg z-50",
           "bg-secondary hover:bg-secondary/90 text-secondary-foreground",
           "transition-transform hover:scale-105",
           isOpen && "hidden"
@@ -81,7 +81,7 @@ const FeedbackButton = () => {
         size="icon"
         title="Send Feedback"
       >
-        <MessageSquarePlus className="h-5 w-5" />
+        <MessageSquarePlus className="h-6 w-6" />
       </Button>
 
       {/* Feedback Panel */}
