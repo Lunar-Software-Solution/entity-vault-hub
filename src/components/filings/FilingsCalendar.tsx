@@ -95,10 +95,10 @@ const FilingsCalendar = ({
           </Button>
         </div>
         <div className="flex items-center gap-2">
-          <Button variant="ghost" size="icon" onClick={() => navigateMonth("prev")}>
+          <Button variant="ghost" size="icon" onClick={() => navigateMonth("prev")} className="text-foreground hover:text-primary">
             <ChevronLeft className="w-4 h-4" />
           </Button>
-          <Button variant="ghost" size="icon" onClick={() => navigateMonth("next")}>
+          <Button variant="ghost" size="icon" onClick={() => navigateMonth("next")} className="text-foreground hover:text-primary">
             <ChevronRight className="w-4 h-4" />
           </Button>
         </div>
