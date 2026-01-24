@@ -45,7 +45,7 @@ const GravatarAvatar = ({
   const [isLoading, setIsLoading] = useState(true);
   const [currentImageUrl, setCurrentImageUrl] = useState<string | null>(null);
 
-  // Use Clay enrichment when enabled and we have email or LinkedIn URL
+  // Use profile enrichment when enabled and we have email or LinkedIn URL
   const { data: enrichedProfile, isLoading: isEnriching } = useProfileEnrichment({
     email,
     linkedin_url: linkedinUrl,
@@ -53,17 +53,32 @@ const GravatarAvatar = ({
     enabled: enableEnrichment && !!(email || linkedinUrl),
   });
 
+  // Direct unavatar.io URL for LinkedIn as primary fallback
+  const getUnavatarUrl = (url: string | null | undefined): string | null => {
+    if (!url) return null;
+    const match = url.match(/linkedin\.com\/in\/([^\/\?]+)/i);
+    if (match) {
+      return `https://unavatar.io/linkedin/${match[1]}?fallback=false`;
+    }
+    return null;
+  };
+
+  const unavatarUrl = getUnavatarUrl(linkedinUrl);
+
   const gravatarUrl = getGravatarUrl(email, pixelSizes[size] * 2, "404");
   const initials = getInitials(name);
 
-  // Determine which avatar URL to use (Clay first, then Gravatar)
+  // Determine which avatar URL to use (enriched > unavatar > gravatar)
   useEffect(() => {
     setHasError(false);
     setIsLoading(true);
 
     if (enrichedProfile?.avatar_url) {
-      // Clay enrichment has an avatar
+      // Enrichment API returned an avatar
       setCurrentImageUrl(enrichedProfile.avatar_url);
+    } else if (unavatarUrl) {
+      // Direct unavatar.io fallback for LinkedIn
+      setCurrentImageUrl(unavatarUrl);
     } else if (gravatarUrl) {
       // Fall back to Gravatar
       setCurrentImageUrl(gravatarUrl);
@@ -71,11 +86,15 @@ const GravatarAvatar = ({
       setCurrentImageUrl(null);
       setIsLoading(false);
     }
-  }, [enrichedProfile?.avatar_url, gravatarUrl]);
+  }, [enrichedProfile?.avatar_url, unavatarUrl, gravatarUrl]);
 
   const handleError = () => {
-    // If Clay avatar failed, try Gravatar as fallback
-    if (currentImageUrl === enrichedProfile?.avatar_url && gravatarUrl) {
+    // Try fallback chain: enriched -> unavatar -> gravatar -> initials
+    if (currentImageUrl === enrichedProfile?.avatar_url && unavatarUrl) {
+      setCurrentImageUrl(unavatarUrl);
+    } else if (currentImageUrl === unavatarUrl && gravatarUrl) {
+      setCurrentImageUrl(gravatarUrl);
+    } else if (currentImageUrl === enrichedProfile?.avatar_url && gravatarUrl) {
       setCurrentImageUrl(gravatarUrl);
     } else {
       setHasError(true);
