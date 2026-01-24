@@ -378,16 +378,22 @@ const FilingsSection = ({ entityFilter }: FilingsSectionProps) => {
                         </TableCell>
                         <TableCell>
                           <div className="flex items-center justify-end gap-1">
-                            {canWrite && filing.status !== "filed" && (
-                              <Button 
-                                variant="ghost" 
-                                size="icon"
-                                className="h-8 w-8 text-green-500 hover:text-green-500"
-                                onClick={() => markFiled.mutate({ id: filing.id })}
-                                title="Mark Filed"
-                              >
-                                <Square className="h-4 w-4" />
-                              </Button>
+                            {canWrite && (
+                              filing.status === "filed" ? (
+                                <div className="h-8 w-8 flex items-center justify-center text-green-500">
+                                  <SquareCheck className="h-4 w-4" />
+                                </div>
+                              ) : (
+                                <Button 
+                                  variant="ghost" 
+                                  size="icon"
+                                  className="h-8 w-8 text-muted-foreground hover:text-green-500"
+                                  onClick={() => markFiled.mutate({ id: filing.id })}
+                                  title="Mark Filed"
+                                >
+                                  <Square className="h-4 w-4" />
+                                </Button>
+                              )
                             )}
                             {canWrite && (
                               <Button 
@@ -472,16 +478,22 @@ const FilingsSection = ({ entityFilter }: FilingsSectionProps) => {
                       <TableCell className="text-foreground">{task.assigned_to || "—"}</TableCell>
                       <TableCell>
                         <div className="flex items-center justify-end gap-1">
-                          {canWrite && task.status !== "completed" && task.status !== "cancelled" && (
-                            <Button 
-                              variant="ghost" 
-                              size="icon"
-                              className="h-8 w-8 text-green-500 hover:text-green-500"
-                              onClick={() => completeTask.mutate(task.id)}
-                              title="Complete"
-                            >
-                              <Square className="h-4 w-4" />
-                            </Button>
+                          {canWrite && (
+                            task.status === "completed" ? (
+                              <div className="h-8 w-8 flex items-center justify-center text-green-500">
+                                <SquareCheck className="h-4 w-4" />
+                              </div>
+                            ) : task.status === "cancelled" ? null : (
+                              <Button 
+                                variant="ghost" 
+                                size="icon"
+                                className="h-8 w-8 text-muted-foreground hover:text-green-500"
+                                onClick={() => completeTask.mutate(task.id)}
+                                title="Complete"
+                              >
+                                <Square className="h-4 w-4" />
+                              </Button>
+                            )
                           )}
                           {canWrite && (
                             <Button 
