@@ -1,5 +1,6 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useQuery } from "@tanstack/react-query";
 import { filingTaskSchema, FilingTaskFormData } from "@/lib/formSchemas";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -21,6 +22,36 @@ import {
 } from "@/components/ui/select";
 import { useEntities, useEntityFilings } from "@/hooks/usePortalData";
 import { TASK_STATUS_OPTIONS, TASK_PRIORITY_OPTIONS } from "@/lib/filingUtils";
+import { supabase } from "@/integrations/supabase/client";
+
+// Hook to fetch admin users
+const useAdminUsers = () => {
+  return useQuery({
+    queryKey: ["admin_users"],
+    queryFn: async () => {
+      // Get all admin role user IDs
+      const { data: adminRoles, error: rolesError } = await supabase
+        .from("user_roles")
+        .select("user_id")
+        .eq("role", "admin");
+      
+      if (rolesError) throw rolesError;
+      if (!adminRoles || adminRoles.length === 0) return [];
+      
+      const adminUserIds = adminRoles.map(r => r.user_id);
+      
+      // Get profiles for admin users
+      const { data: profiles, error: profilesError } = await supabase
+        .from("user_profiles")
+        .select("user_id, full_name")
+        .in("user_id", adminUserIds)
+        .eq("status", "active");
+      
+      if (profilesError) throw profilesError;
+      return profiles ?? [];
+    },
+  });
+};
 
 interface FilingTaskFormProps {
   defaultValues?: Partial<FilingTaskFormData>;
@@ -41,6 +72,7 @@ const FilingTaskForm = ({
 }: FilingTaskFormProps) => {
   const { data: entities } = useEntities();
   const { data: filings } = useEntityFilings();
+  const { data: adminUsers } = useAdminUsers();
 
   const form = useForm<FilingTaskFormData>({
     resolver: zodResolver(filingTaskSchema),
@@ -224,9 +256,24 @@ const FilingTaskForm = ({
           render={({ field }) => (
             <FormItem>
               <FormLabel>Assigned To</FormLabel>
-              <FormControl>
-                <Input placeholder="Person responsible" {...field} />
-              </FormControl>
+              <Select 
+                onValueChange={(val) => field.onChange(val === "__none__" ? "" : val)} 
+                value={field.value || "__none__"}
+              >
+                <FormControl>
+                  <SelectTrigger className="text-foreground">
+                    <SelectValue placeholder="Select team member" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  <SelectItem value="__none__">Unassigned</SelectItem>
+                  {adminUsers?.map((user) => (
+                    <SelectItem key={user.user_id} value={user.full_name || user.user_id}>
+                      {user.full_name || "Unnamed User"}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
               <FormMessage />
             </FormItem>
           )}
