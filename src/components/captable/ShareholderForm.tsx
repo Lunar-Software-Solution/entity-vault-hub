@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -5,6 +6,10 @@ import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Sparkles, Loader2 } from "lucide-react";
+import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
+import ShareholderEntityAffiliationsManager from "./ShareholderEntityAffiliationsManager";
 
 interface ShareholderFormData {
   entity_id: string;
@@ -27,6 +32,8 @@ interface ShareholderFormProps {
 }
 
 const ShareholderForm = ({ item, entities, onSubmit, onCancel }: ShareholderFormProps) => {
+  const [isEnriching, setIsEnriching] = useState(false);
+  
   const form = useForm<ShareholderFormData>({
     defaultValues: {
       entity_id: item?.entity_id || "",
@@ -42,7 +49,78 @@ const ShareholderForm = ({ item, entities, onSubmit, onCancel }: ShareholderForm
     },
   });
 
+  const email = form.watch("email");
+  const name = form.watch("name");
   const shareholderTypes = ["individual", "institution", "founder", "employee", "investor"];
+
+  // Enrich profile using Lovable AI
+  const handleEnrichProfile = async () => {
+    if (!email && !name) {
+      toast.error("Please enter an email or name first");
+      return;
+    }
+
+    setIsEnriching(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.access_token) {
+        toast.error("Please sign in to use profile enrichment");
+        return;
+      }
+
+      const { data, error } = await supabase.functions.invoke("enrich-profile", {
+        body: { email, name },
+        headers: {
+          Authorization: `Bearer ${session.access_token}`,
+        },
+      });
+
+      if (error) {
+        console.error("Enrichment error:", error);
+        toast.error("Failed to enrich profile");
+        return;
+      }
+
+      if (data?.success && data?.data) {
+        const enriched = data.data;
+        let fieldsUpdated = 0;
+
+        if (enriched.name && !form.getValues("name")) {
+          form.setValue("name", enriched.name);
+          fieldsUpdated++;
+        }
+        if (enriched.email && !form.getValues("email")) {
+          form.setValue("email", enriched.email);
+          fieldsUpdated++;
+        }
+        if (enriched.location && !form.getValues("address")) {
+          form.setValue("address", enriched.location);
+          fieldsUpdated++;
+        }
+        if (enriched.bio && !form.getValues("notes")) {
+          form.setValue("notes", enriched.bio);
+          fieldsUpdated++;
+        }
+
+        if (fieldsUpdated > 0) {
+          toast.success(`Profile enriched! Updated ${fieldsUpdated} field${fieldsUpdated > 1 ? "s" : ""}`);
+        } else if (data.fallback) {
+          toast.info("AI enrichment unavailable - no additional data found");
+        } else {
+          toast.info("No new data found to enrich");
+        }
+      } else if (data?.fallback) {
+        toast.info("AI enrichment unavailable at this time");
+      } else {
+        toast.error("No enrichment data returned");
+      }
+    } catch (err) {
+      console.error("Enrichment failed:", err);
+      toast.error("Failed to enrich profile");
+    } finally {
+      setIsEnriching(false);
+    }
+  };
 
   const handleSubmit = (data: ShareholderFormData) => {
     onSubmit({
@@ -55,12 +133,23 @@ const ShareholderForm = ({ item, entities, onSubmit, onCancel }: ShareholderForm
     } as any);
   };
 
+  const currentEntityName = entities.find(e => e.id === form.watch("entity_id"))?.name;
+
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
+        {/* Entity Affiliations - shown at top for existing shareholders */}
+        {item?.id && (
+          <ShareholderEntityAffiliationsManager
+            shareholderId={item.id}
+            currentEntityId={item.entity_id}
+            currentEntityName={currentEntityName}
+          />
+        )}
+
         <FormField control={form.control} name="entity_id" render={({ field }) => (
           <FormItem>
-            <FormLabel>Entity *</FormLabel>
+            <FormLabel>Primary Entity *</FormLabel>
             <Select onValueChange={field.onChange} value={field.value}>
               <FormControl>
                 <SelectTrigger className="bg-background">
@@ -109,7 +198,24 @@ const ShareholderForm = ({ item, entities, onSubmit, onCancel }: ShareholderForm
           <FormField control={form.control} name="email" render={({ field }) => (
             <FormItem>
               <FormLabel>Email</FormLabel>
-              <FormControl><Input type="email" placeholder="john@example.com" {...field} /></FormControl>
+              <div className="flex gap-2">
+                <FormControl><Input type="email" placeholder="john@example.com" {...field} /></FormControl>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="icon"
+                  onClick={handleEnrichProfile}
+                  disabled={isEnriching || (!email && !name)}
+                  title="Enrich profile with AI"
+                  className="flex-shrink-0"
+                >
+                  {isEnriching ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <Sparkles className="h-4 w-4 text-primary" />
+                  )}
+                </Button>
+              </div>
               <FormMessage />
             </FormItem>
           )} />
@@ -168,6 +274,15 @@ const ShareholderForm = ({ item, entities, onSubmit, onCancel }: ShareholderForm
             <FormMessage />
           </FormItem>
         )} />
+
+        {/* Entity Affiliations - for new shareholders only */}
+        {!item?.id && (
+          <ShareholderEntityAffiliationsManager
+            shareholderId={null}
+            currentEntityId={form.watch("entity_id")}
+            currentEntityName={currentEntityName}
+          />
+        )}
 
         <div className="flex justify-end gap-3 pt-4">
           <Button type="button" variant="outline" onClick={onCancel}>Cancel</Button>
