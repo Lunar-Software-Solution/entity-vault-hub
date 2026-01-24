@@ -22,6 +22,7 @@ import DirectorsUboSection from "@/components/sections/DirectorsUboSection";
 import WebsitesSection from "@/components/sections/WebsitesSection";
 import SoftwareSection from "@/components/sections/SoftwareSection";
 import AIChatAssistant from "@/components/ai/AIChatAssistant";
+import FeedbackButton from "@/components/feedback/FeedbackButton";
 import { cn } from "@/lib/utils";
 
 const Index = () => {
@@ -106,6 +107,7 @@ const Index = () => {
           {renderSection()}
         </div>
       </main>
+      <FeedbackButton />
       <AIChatAssistant />
     </div>
   );

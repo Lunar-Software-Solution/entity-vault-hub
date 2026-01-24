@@ -40,12 +40,10 @@ interface DirectorUbo {
   resignation_date: string | null;
   ownership_percentage: number | null;
   control_type: string | null;
-  tax_id: string | null;
   address: string | null;
   email: string | null;
   phone: string | null;
   linkedin_url: string | null;
-  passport_number: string | null;
   id_document_type: string | null;
   id_document_number: string | null;
   id_expiry_date: string | null;
