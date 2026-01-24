@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-import { Plus, Calendar, List, CheckSquare, Search, Filter } from "lucide-react";
+import { Plus, Calendar, List, CheckSquare, Search, Filter, Check, Pencil, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -465,37 +465,42 @@ const FilingsSection = ({ entityFilter }: FilingsSectionProps) => {
                         </Badge>
                       </TableCell>
                       <TableCell className="text-foreground">{task.assigned_to || "—"}</TableCell>
-                      <TableCell className="text-right">
+                      <TableCell>
                         <div className="flex items-center justify-end gap-1">
                           {canWrite && task.status !== "completed" && task.status !== "cancelled" && (
                             <Button 
                               variant="ghost" 
-                              size="sm"
+                              size="icon"
+                              className="h-8 w-8 text-green-500 hover:text-green-500"
                               onClick={() => completeTask.mutate(task.id)}
+                              title="Complete"
                             >
-                              Complete
+                              <Check className="h-4 w-4" />
                             </Button>
                           )}
                           {canWrite && (
                             <Button 
                               variant="ghost" 
-                              size="sm"
+                              size="icon"
+                              className="h-8 w-8 text-primary hover:text-primary"
                               onClick={() => {
                                 setEditingTask(task);
                                 setShowTaskForm(true);
                               }}
+                              title="Edit"
                             >
-                              Edit
+                              <Pencil className="h-4 w-4" />
                             </Button>
                           )}
                           {canWrite && (
                             <Button 
                               variant="ghost" 
-                              size="sm"
-                              className="text-destructive hover:text-destructive"
+                              size="icon"
+                              className="h-8 w-8 text-destructive hover:text-destructive"
                               onClick={() => setDeletingTask(task)}
+                              title="Delete"
                             >
-                              Delete
+                              <Trash2 className="h-4 w-4" />
                             </Button>
                           )}
                         </div>
