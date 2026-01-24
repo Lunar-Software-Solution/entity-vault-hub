@@ -442,7 +442,7 @@ const FilingsSection = ({ entityFilter }: FilingsSectionProps) => {
                 ) : (
                   filteredTasks.map(task => (
                     <TableRow key={task.id} className={task.status === "cancelled" ? "opacity-50" : ""}>
-                      <TableCell>
+                      <TableCell className="text-foreground">
                         <div>
                           <p className={`font-medium ${task.status === "cancelled" ? "line-through" : ""}`}>
                             {task.title}
@@ -452,7 +452,7 @@ const FilingsSection = ({ entityFilter }: FilingsSectionProps) => {
                           )}
                         </div>
                       </TableCell>
-                      <TableCell>{getEntityName(task.entity_id)}</TableCell>
+                      <TableCell className="text-foreground">{getEntityName(task.entity_id)}</TableCell>
                       <TableCell>{format(new Date(task.due_date), "MMM d, yyyy")}</TableCell>
                       <TableCell>
                         <Badge variant="outline" className={PRIORITY_COLORS[task.priority]}>
@@ -464,7 +464,7 @@ const FilingsSection = ({ entityFilter }: FilingsSectionProps) => {
                           {getStatusLabel(task.status)}
                         </Badge>
                       </TableCell>
-                      <TableCell>{task.assigned_to || "-"}</TableCell>
+                      <TableCell className="text-foreground">{task.assigned_to || "—"}</TableCell>
                       <TableCell className="text-right">
                         <div className="flex items-center justify-end gap-1">
                           {canWrite && task.status !== "completed" && task.status !== "cancelled" && (
