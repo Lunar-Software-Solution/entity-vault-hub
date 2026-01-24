@@ -705,6 +705,7 @@ export type Database = {
           is_active: boolean | null
           is_pep: boolean | null
           is_primary: boolean | null
+          linkedin_url: string | null
           name: string
           nationality: string | null
           notes: string | null
@@ -736,6 +737,7 @@ export type Database = {
           is_active?: boolean | null
           is_pep?: boolean | null
           is_primary?: boolean | null
+          linkedin_url?: string | null
           name: string
           nationality?: string | null
           notes?: string | null
@@ -767,6 +769,7 @@ export type Database = {
           is_active?: boolean | null
           is_pep?: boolean | null
           is_primary?: boolean | null
+          linkedin_url?: string | null
           name?: string
           nationality?: string | null
           notes?: string | null
@@ -1995,6 +1998,7 @@ export type Database = {
           id: string
           is_board_member: boolean | null
           is_founder: boolean | null
+          linkedin_url: string | null
           name: string
           notes: string | null
           phone: string | null
@@ -2010,6 +2014,7 @@ export type Database = {
           id?: string
           is_board_member?: boolean | null
           is_founder?: boolean | null
+          linkedin_url?: string | null
           name: string
           notes?: string | null
           phone?: string | null
@@ -2025,6 +2030,7 @@ export type Database = {
           id?: string
           is_board_member?: boolean | null
           is_founder?: boolean | null
+          linkedin_url?: string | null
           name?: string
           notes?: string | null
           phone?: string | null

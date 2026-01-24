@@ -44,6 +44,7 @@ const directorUboSchema = z.object({
   address: z.string().optional(),
   email: z.string().email().optional().or(z.literal("")),
   phone: z.string().optional(),
+  linkedin_url: z.string().url().optional().or(z.literal("")),
   passport_number: z.string().optional(),
   is_pep: z.boolean().default(false),
   pep_details: z.string().optional(),
@@ -151,6 +152,7 @@ export const DirectorUboForm = ({
       address: item?.address || "",
       email: item?.email || "",
       phone: item?.phone || "",
+      linkedin_url: item?.linkedin_url || "",
       passport_number: item?.passport_number || "",
       is_pep: item?.is_pep || false,
       pep_details: item?.pep_details || "",
@@ -163,6 +165,7 @@ export const DirectorUboForm = ({
   const isPep = form.watch("is_pep");
   const email = form.watch("email");
   const name = form.watch("name");
+  const linkedinUrl = form.watch("linkedin_url");
   const showOwnershipFields = roleType === "ubo" || roleType === "both";
 
   // Enrich profile using Clay API
@@ -181,7 +184,7 @@ export const DirectorUboForm = ({
       }
 
       const { data, error } = await supabase.functions.invoke("enrich-profile", {
-        body: { email, name },
+        body: { email, linkedin_url: linkedinUrl, name },
         headers: {
           Authorization: `Bearer ${session.access_token}`,
         },
@@ -219,6 +222,10 @@ export const DirectorUboForm = ({
         }
         if (enriched.location && !form.getValues("address")) {
           form.setValue("address", enriched.location);
+          fieldsUpdated++;
+        }
+        if (enriched.linkedin_url && !form.getValues("linkedin_url")) {
+          form.setValue("linkedin_url", enriched.linkedin_url);
           fieldsUpdated++;
         }
         if (enriched.bio && !form.getValues("notes")) {
@@ -407,6 +414,20 @@ export const DirectorUboForm = ({
             )}
           />
         </div>
+
+        <FormField
+          control={form.control}
+          name="linkedin_url"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>LinkedIn URL</FormLabel>
+              <FormControl>
+                <Input placeholder="https://linkedin.com/in/username" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
 
         {/* Location Info */}
         <div className="grid grid-cols-2 gap-4">
