@@ -6,8 +6,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
-import { Sparkles, Loader2 } from "lucide-react";
+import { Sparkles, Loader2, Building2, ExternalLink } from "lucide-react";
 import { toast } from "sonner";
+import { Link } from "react-router-dom";
 import {
   Form,
   FormControl,
@@ -88,6 +89,7 @@ const CONTROL_TYPES = [
 interface DirectorUboFormProps {
   item?: any;
   entityId: string;
+  entityName?: string;
   onSubmit: (data: DirectorUboFormData) => void;
   onCancel: () => void;
   isLoading?: boolean;
@@ -96,6 +98,7 @@ interface DirectorUboFormProps {
 export const DirectorUboForm = ({
   item,
   entityId,
+  entityName,
   onSubmit,
   onCancel,
   isLoading,
@@ -249,6 +252,22 @@ export const DirectorUboForm = ({
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(handleFormSubmit)} className="space-y-6">
+        {/* Parent Entity Link */}
+        {entityName && (
+          <div className="flex items-center gap-2 p-3 bg-muted/50 rounded-lg border">
+            <Building2 className="h-4 w-4 text-muted-foreground" />
+            <span className="text-sm text-muted-foreground">Linked to:</span>
+            <Link
+              to={`/entity/${entityId}`}
+              className="text-sm font-medium text-primary hover:underline inline-flex items-center gap-1"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {entityName}
+              <ExternalLink className="h-3 w-3" />
+            </Link>
+          </div>
+        )}
+
         {/* Basic Info */}
         <div className="grid grid-cols-2 gap-4">
           <FormField

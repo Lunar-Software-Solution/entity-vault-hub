@@ -557,6 +557,7 @@ const DirectorsUboSection = ({ entityFilter }: DirectorsUboSectionProps) => {
           <DirectorUboForm
             item={editingItem}
             entityId={selectedEntityId || entities[0]?.id || ""}
+            entityName={entities.find(e => e.id === (selectedEntityId || entities[0]?.id))?.name}
             onSubmit={handleSubmit}
             onCancel={handleCloseForm}
             isLoading={createMutation.isPending || updateMutation.isPending}
