@@ -111,9 +111,9 @@ const FeedbackButton = () => {
           {/* Form */}
           <form onSubmit={handleSubmit} className="p-4 space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="feedback-type">Type *</Label>
+              <Label htmlFor="feedback-type" className="text-foreground">Type *</Label>
               <Select value={feedbackType} onValueChange={setFeedbackType}>
-                <SelectTrigger id="feedback-type">
+                <SelectTrigger id="feedback-type" className="text-foreground">
                   <SelectValue placeholder="Select feedback type" />
                 </SelectTrigger>
                 <SelectContent>
@@ -127,18 +127,19 @@ const FeedbackButton = () => {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="feedback-title">Title *</Label>
+              <Label htmlFor="feedback-title" className="text-foreground">Title *</Label>
               <Input
                 id="feedback-title"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 placeholder="Brief summary of your feedback"
                 maxLength={100}
+                className="text-foreground"
               />
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="feedback-description">Description</Label>
+              <Label htmlFor="feedback-description" className="text-foreground">Description</Label>
               <Textarea
                 id="feedback-description"
                 value={description}
@@ -146,6 +147,7 @@ const FeedbackButton = () => {
                 placeholder="Provide more details (optional)"
                 rows={4}
                 maxLength={2000}
+                className="text-foreground"
               />
             </div>
 
