@@ -487,6 +487,7 @@ const DirectorsUboSection = ({ entityFilter }: DirectorsUboSectionProps) => {
                         email={item.email}
                         name={item.name}
                         size="md"
+                        linkedinUrl={item.linkedin_url}
                         fallbackIcon={
                           item.role_type === "ubo" ? (
                             <Crown className="w-5 h-5 text-purple-400" />
