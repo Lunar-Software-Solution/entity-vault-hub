@@ -2,6 +2,7 @@ import { useState, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useEntities } from "@/hooks/usePortalData";
+import { useEnrichAndSaveProfile } from "@/hooks/useProfileEnrichment";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -11,12 +12,13 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import DeleteConfirmDialog from "@/components/shared/DeleteConfirmDialog";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { 
   Plus, SquarePen, Trash2, Search, PieChart, Users, Layers, ArrowRightLeft, 
-  TrendingUp, DollarSign, Percent, Linkedin
+  TrendingUp, DollarSign, Percent, Linkedin, MoreVertical, RefreshCw
 } from "lucide-react";
 import ShareClassForm from "@/components/captable/ShareClassForm";
 import ShareholderForm from "@/components/captable/ShareholderForm";
@@ -160,11 +162,13 @@ const CapTableSection = () => {
   const [editingShareholder, setEditingShareholder] = useState<Shareholder | null>(null);
   const [editingTransaction, setEditingTransaction] = useState<EquityTransaction | null>(null);
   const [deletingItem, setDeletingItem] = useState<{ type: string; item: any } | null>(null);
+  const [enrichingId, setEnrichingId] = useState<string | null>(null);
 
   const { data: entities } = useEntities();
   const { data: shareClasses, isLoading: classesLoading } = useShareClasses(selectedEntityId || undefined);
   const { data: shareholders, isLoading: shareholdersLoading } = useShareholders(selectedEntityId || undefined);
   const { data: transactions, isLoading: transactionsLoading } = useEquityTransactions(selectedEntityId || undefined);
+  const enrichMutation = useEnrichAndSaveProfile();
 
   // Mutations
   const createShareClass = useMutation({
@@ -283,6 +287,35 @@ const CapTableSection = () => {
       case "transaction":
         deleteTransaction.mutate(item.id, { onSuccess: () => setDeletingItem(null) });
         break;
+    }
+  };
+
+  const handleReEnrichShareholder = async (shareholder: Shareholder) => {
+    // LinkedIn URL is required for Coresignal enrichment
+    if (!shareholder.linkedin_url) {
+      toast.error("LinkedIn URL is required for profile enrichment");
+      return;
+    }
+    
+    setEnrichingId(shareholder.id);
+    try {
+      const result = await enrichMutation.mutateAsync({
+        email: shareholder.email,
+        linkedin_url: shareholder.linkedin_url,
+        name: shareholder.name,
+        recordId: shareholder.id,
+        tableName: "shareholders",
+      });
+      
+      if (result?.avatar_url) {
+        toast.success("Profile enriched successfully!");
+      } else {
+        toast.info("Enrichment completed, but no avatar found");
+      }
+    } catch (error) {
+      toast.error("Failed to enrich profile");
+    } finally {
+      setEnrichingId(null);
     }
   };
 
@@ -443,14 +476,33 @@ const CapTableSection = () => {
                       </div>
                     </TableCell>
                     <TableCell>
-                      <div className="flex gap-1">
-                        <Button variant="ghost" size="icon" className="h-8 w-8 text-primary hover:text-primary" onClick={() => { setEditingShareholder(shareholder); setShowShareholderForm(true); }}>
-                          <SquarePen className="h-4 w-4" />
-                        </Button>
-                        <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:text-destructive" onClick={() => setDeletingItem({ type: "shareholder", item: shareholder })}>
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="icon" className="h-8 w-8 text-foreground">
+                            <MoreVertical className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem onClick={() => { setEditingShareholder(shareholder); setShowShareholderForm(true); }}>
+                            <SquarePen className="h-4 w-4 mr-2" />
+                            Edit
+                          </DropdownMenuItem>
+                          <DropdownMenuItem 
+                            onClick={() => handleReEnrichShareholder(shareholder)}
+                            disabled={enrichingId === shareholder.id || !shareholder.linkedin_url}
+                          >
+                            <RefreshCw className={`h-4 w-4 mr-2 ${enrichingId === shareholder.id ? 'animate-spin' : ''}`} />
+                            {enrichingId === shareholder.id ? 'Enriching...' : 'Re-enrich Profile'}
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            onClick={() => setDeletingItem({ type: "shareholder", item: shareholder })}
+                            className="text-destructive"
+                          >
+                            <Trash2 className="h-4 w-4 mr-2" />
+                            Delete
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
                     </TableCell>
                   </TableRow>
                 ))}
