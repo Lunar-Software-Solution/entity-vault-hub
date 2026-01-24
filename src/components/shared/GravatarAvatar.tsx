@@ -147,13 +147,11 @@ const GravatarAvatar = ({
     // Save the successfully loaded avatar to database if:
     // 1. We have recordId and tableName
     // 2. Current URL is from a fallback source (not already stored)
-    // 3. Current URL is not a Gravatar URL (those can change)
     if (
       recordId &&
       tableName &&
       currentUrl &&
-      !storedAvatarUrl &&
-      !currentUrl.includes("gravatar.com")
+      !storedAvatarUrl
     ) {
       try {
         console.log(`Saving avatar to ${tableName}:`, currentUrl);
