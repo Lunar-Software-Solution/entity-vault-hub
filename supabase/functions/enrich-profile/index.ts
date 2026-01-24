@@ -13,7 +13,7 @@ function extractLinkedInUsername(url: string): string | null {
   return match ? match[1] : null;
 }
 
-// Fetch profile data from LinkdAPI (RapidAPI)
+// Fetch profile data from LinkdAPI (Direct API)
 async function fetchLinkdAPIProfile(linkedinUrl: string): Promise<{
   avatar_url: string | null;
   name: string | null;
@@ -22,9 +22,9 @@ async function fetchLinkdAPIProfile(linkedinUrl: string): Promise<{
   location: string | null;
   bio: string | null;
 } | null> {
-  const RAPIDAPI_KEY = Deno.env.get("RAPIDAPI_KEY");
-  if (!RAPIDAPI_KEY) {
-    console.log("RAPIDAPI_KEY not configured");
+  const LINKDAPI_KEY = Deno.env.get("LINKDAPI_KEY");
+  if (!LINKDAPI_KEY) {
+    console.log("LINKDAPI_KEY not configured");
     return null;
   }
 
@@ -38,12 +38,12 @@ async function fetchLinkdAPIProfile(linkedinUrl: string): Promise<{
     console.log("Fetching LinkdAPI profile for:", username);
     
     const response = await fetch(
-      `https://linkdapi-best-unofficial-linkedin-api.p.rapidapi.com/api/v1/profile/overview?username=${encodeURIComponent(username)}`,
+      `https://api.linkdapi.com/api/v1/profile/overview?username=${encodeURIComponent(username)}`,
       {
         method: "GET",
         headers: {
-          "x-rapidapi-host": "linkdapi-best-unofficial-linkedin-api.p.rapidapi.com",
-          "x-rapidapi-key": RAPIDAPI_KEY,
+          "Authorization": `Bearer ${LINKDAPI_KEY}`,
+          "Content-Type": "application/json",
         },
       }
     );
