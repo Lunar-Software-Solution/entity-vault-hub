@@ -7,13 +7,11 @@ const corsHeaders = {
 };
 
 serve(async (req) => {
-  // Handle CORS preflight
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    // Verify authentication
     const authHeader = req.headers.get("Authorization");
     if (!authHeader) {
       return new Response(
@@ -38,84 +36,140 @@ serve(async (req) => {
 
     const { email, linkedin_url, name } = await req.json();
 
-    if (!email && !linkedin_url) {
+    if (!email && !linkedin_url && !name) {
       return new Response(
-        JSON.stringify({ error: "Either email or linkedin_url is required" }),
+        JSON.stringify({ error: "At least one of email, linkedin_url, or name is required" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    const CLAY_API_KEY = Deno.env.get("CLAY_API_KEY");
-    if (!CLAY_API_KEY) {
-      console.error("CLAY_API_KEY is not configured");
+    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
+    if (!LOVABLE_API_KEY) {
+      console.error("LOVABLE_API_KEY is not configured");
       return new Response(
-        JSON.stringify({ error: "Clay API not configured" }),
-        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
-
-    // Clay People Enrichment API endpoint
-    // Note: This requires Clay Enterprise access
-    const clayEndpoint = "https://api.clay.com/v1/people/enrich";
-    
-    const enrichmentPayload: Record<string, string> = {};
-    if (email) enrichmentPayload.email = email;
-    if (linkedin_url) enrichmentPayload.linkedin_url = linkedin_url;
-    if (name) enrichmentPayload.name = name;
-
-    console.log("Enriching profile with Clay:", enrichmentPayload);
-
-    const clayResponse = await fetch(clayEndpoint, {
-      method: "POST",
-      headers: {
-        "Authorization": `Bearer ${CLAY_API_KEY}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(enrichmentPayload),
-    });
-
-    if (!clayResponse.ok) {
-      const errorText = await clayResponse.text();
-      console.error("Clay API error:", clayResponse.status, errorText);
-      
-      // If Clay API fails, return a fallback response with available data
-      return new Response(
-        JSON.stringify({
-          success: false,
+        JSON.stringify({ 
+          success: false, 
           fallback: true,
-          message: "Clay enrichment unavailable, using fallback",
-          data: {
-            name: name || null,
-            email: email || null,
-            linkedin_url: linkedin_url || null,
-            avatar_url: null,
-          }
+          message: "AI enrichment not configured",
+          data: { name: name || null, email: email || null, linkedin_url: linkedin_url || null, avatar_url: null }
         }),
         { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    const clayData = await clayResponse.json();
-    console.log("Clay enrichment result:", clayData);
+    // Build search context
+    const searchContext = [];
+    if (name) searchContext.push(`Name: ${name}`);
+    if (email) searchContext.push(`Email: ${email}`);
+    if (linkedin_url) searchContext.push(`LinkedIn: ${linkedin_url}`);
 
-    // Extract relevant profile data from Clay response
-    const enrichedProfile = {
+    const prompt = `You are a professional profile enrichment assistant. Given the following information about a person, provide any additional professional details you can infer or know about them.
+
+Input:
+${searchContext.join("\n")}
+
+Respond with a JSON object containing these fields (use null for unknown values):
+- name: Full name
+- email: Email address
+- linkedin_url: LinkedIn profile URL
+- avatar_url: Profile photo URL (null if unknown)
+- title: Job title or role
+- company: Current company/organization
+- location: City, Country
+- bio: Brief professional summary (1-2 sentences max)
+
+Important: Only include information you are confident about. For avatar_url, only include if you have a direct URL. Respond ONLY with the JSON object, no additional text.`;
+
+    console.log("Enriching profile with Lovable AI:", { email, linkedin_url, name });
+
+    const aiResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${LOVABLE_API_KEY}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        model: "google/gemini-3-flash-preview",
+        messages: [
+          { role: "user", content: prompt }
+        ],
+        temperature: 0.1,
+      }),
+    });
+
+    if (!aiResponse.ok) {
+      const errorText = await aiResponse.text();
+      console.error("Lovable AI error:", aiResponse.status, errorText);
+      
+      if (aiResponse.status === 429) {
+        return new Response(
+          JSON.stringify({ error: "Rate limit exceeded, please try again later" }),
+          { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+      
+      if (aiResponse.status === 402) {
+        return new Response(
+          JSON.stringify({ error: "AI credits exhausted" }),
+          { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+      
+      return new Response(
+        JSON.stringify({
+          success: false,
+          fallback: true,
+          message: "AI enrichment unavailable",
+          data: { name: name || null, email: email || null, linkedin_url: linkedin_url || null, avatar_url: null }
+        }),
+        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    const aiData = await aiResponse.json();
+    const content = aiData.choices?.[0]?.message?.content || "";
+    
+    console.log("AI response:", content);
+
+    // Parse the JSON response
+    let enrichedData;
+    try {
+      // Extract JSON from the response (handle markdown code blocks)
+      const jsonMatch = content.match(/```(?:json)?\s*([\s\S]*?)```/) || [null, content];
+      const jsonStr = jsonMatch[1]?.trim() || content.trim();
+      enrichedData = JSON.parse(jsonStr);
+    } catch (parseError) {
+      console.error("Failed to parse AI response:", parseError);
+      enrichedData = {
+        name: name || null,
+        email: email || null,
+        linkedin_url: linkedin_url || null,
+        avatar_url: null,
+        title: null,
+        company: null,
+        location: null,
+        bio: null,
+      };
+    }
+
+    // Merge with input data (input takes precedence for email/linkedin_url)
+    const result = {
       success: true,
       fallback: false,
       data: {
-        name: clayData.full_name || clayData.name || name || null,
-        email: clayData.email || email || null,
-        linkedin_url: clayData.linkedin_url || linkedin_url || null,
-        avatar_url: clayData.photo_url || clayData.profile_image || clayData.avatar_url || null,
-        title: clayData.title || clayData.job_title || null,
-        company: clayData.company || clayData.organization || null,
-        location: clayData.location || null,
-        bio: clayData.bio || clayData.summary || null,
+        name: enrichedData.name || name || null,
+        email: email || enrichedData.email || null,
+        linkedin_url: linkedin_url || enrichedData.linkedin_url || null,
+        avatar_url: enrichedData.avatar_url || null,
+        title: enrichedData.title || null,
+        company: enrichedData.company || null,
+        location: enrichedData.location || null,
+        bio: enrichedData.bio || null,
       }
     };
 
     return new Response(
-      JSON.stringify(enrichedProfile),
+      JSON.stringify(result),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
 
