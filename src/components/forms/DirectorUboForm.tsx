@@ -122,16 +122,17 @@ export const DirectorUboForm = ({
       return;
     }
 
-    // If there's no avatar in DB but we have enriched one, clear locally
-    if (!item?.avatar_url && enrichedAvatarUrl) {
-      setEnrichedAvatarUrl(null);
+    // Always clear the enriched avatar first
+    setEnrichedAvatarUrl(null);
+
+    // If there's no avatar in DB, just mark as deleted locally
+    if (!item?.avatar_url) {
       setAvatarDeleted(true);
       toast.success("Avatar removed");
       return;
     }
-
-    if (!item?.avatar_url) return;
     
+    // If there's an avatar in DB, delete it
     setIsDeletingAvatar(true);
     try {
       const { error } = await supabase
@@ -142,7 +143,6 @@ export const DirectorUboForm = ({
       if (error) throw error;
       
       setAvatarDeleted(true);
-      setEnrichedAvatarUrl(null);
       toast.success("Avatar removed");
     } catch (error) {
       console.error("Failed to delete avatar:", error);
