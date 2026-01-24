@@ -1,7 +1,8 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { getGravatarUrl, getInitials } from "@/lib/gravatar";
 import { cn } from "@/lib/utils";
 import { User } from "lucide-react";
+import { useProfileEnrichment } from "@/hooks/useProfileEnrichment";
 
 interface GravatarAvatarProps {
   email?: string | null;
@@ -9,6 +10,8 @@ interface GravatarAvatarProps {
   size?: "sm" | "md" | "lg";
   className?: string;
   fallbackIcon?: React.ReactNode;
+  linkedinUrl?: string | null;
+  enableEnrichment?: boolean;
 }
 
 const sizeClasses = {
@@ -35,24 +38,70 @@ const GravatarAvatar = ({
   size = "md",
   className = "",
   fallbackIcon,
+  linkedinUrl,
+  enableEnrichment = true,
 }: GravatarAvatarProps) => {
   const [hasError, setHasError] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [currentImageUrl, setCurrentImageUrl] = useState<string | null>(null);
 
-  const gravatarUrl = getGravatarUrl(email, pixelSizes[size] * 2, "404"); // Use 404 to detect no gravatar
+  // Use Clay enrichment when enabled and we have email or LinkedIn URL
+  const { data: enrichedProfile, isLoading: isEnriching } = useProfileEnrichment({
+    email,
+    linkedin_url: linkedinUrl,
+    name,
+    enabled: enableEnrichment && !!(email || linkedinUrl),
+  });
+
+  const gravatarUrl = getGravatarUrl(email, pixelSizes[size] * 2, "404");
   const initials = getInitials(name);
 
+  // Determine which avatar URL to use (Clay first, then Gravatar)
+  useEffect(() => {
+    setHasError(false);
+    setIsLoading(true);
+
+    if (enrichedProfile?.avatar_url) {
+      // Clay enrichment has an avatar
+      setCurrentImageUrl(enrichedProfile.avatar_url);
+    } else if (gravatarUrl) {
+      // Fall back to Gravatar
+      setCurrentImageUrl(gravatarUrl);
+    } else {
+      setCurrentImageUrl(null);
+      setIsLoading(false);
+    }
+  }, [enrichedProfile?.avatar_url, gravatarUrl]);
+
   const handleError = () => {
-    setHasError(true);
-    setIsLoading(false);
+    // If Clay avatar failed, try Gravatar as fallback
+    if (currentImageUrl === enrichedProfile?.avatar_url && gravatarUrl) {
+      setCurrentImageUrl(gravatarUrl);
+    } else {
+      setHasError(true);
+      setIsLoading(false);
+    }
   };
 
   const handleLoad = () => {
     setIsLoading(false);
   };
 
-  // If no email or gravatar failed, show initials fallback
-  if (!email || hasError) {
+  // Show loading state while enriching
+  if (isEnriching && enableEnrichment) {
+    return (
+      <div
+        className={cn(
+          sizeClasses[size],
+          "rounded-full bg-muted animate-pulse flex-shrink-0",
+          className
+        )}
+      />
+    );
+  }
+
+  // If no image URL available or all sources failed, show initials fallback
+  if (!currentImageUrl || hasError) {
     return (
       <div
         className={cn(
@@ -86,7 +135,7 @@ const GravatarAvatar = ({
         <div className={cn(sizeClasses[size], "bg-muted animate-pulse")} />
       )}
       <img
-        src={gravatarUrl!}
+        src={currentImageUrl}
         alt={name}
         className={cn(
           "w-full h-full object-cover",
