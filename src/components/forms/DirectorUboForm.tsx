@@ -357,6 +357,7 @@ export const DirectorUboForm = ({
         <div className="flex items-start gap-4">
           <div className="relative mt-6">
             <GravatarAvatar
+              key={`avatar-${avatarDeleted ? 'deleted' : 'active'}`}
               email={email}
               name={name || ""}
               size="lg"
