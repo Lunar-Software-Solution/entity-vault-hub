@@ -209,10 +209,10 @@ export const DirectorUboForm = ({
   const linkedinUrl = form.watch("linkedin_url");
   const showOwnershipFields = roleType === "ubo" || roleType === "both";
 
-  // Enrich profile using Clay API
+  // Enrich profile using Coresignal (requires LinkedIn URL)
   const handleEnrichProfile = async () => {
-    if (!email && !name) {
-      toast.error("Please enter an email or name first");
+    if (!linkedinUrl) {
+      toast.error("Please enter a LinkedIn URL first");
       return;
     }
 
@@ -460,8 +460,8 @@ export const DirectorUboForm = ({
                     variant="default"
                     size="icon"
                     onClick={handleEnrichProfile}
-                    disabled={isEnriching || (!email && !name && !linkedinUrl)}
-                    title="Enrich profile with AI"
+                    disabled={isEnriching || !linkedinUrl}
+                    title={linkedinUrl ? "Enrich profile from LinkedIn" : "Enter LinkedIn URL to enrich"}
                     className="flex-shrink-0"
                   >
                     {isEnriching ? (
