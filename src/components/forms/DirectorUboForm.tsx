@@ -278,15 +278,8 @@ export const DirectorUboForm = ({
           fieldsUpdated++;
         }
         if (enriched.title && !form.getValues("title")) {
-          // Try to match title to available options
-          const matchedTitle = TITLE_OPTIONS.find(t => 
-            enriched.title.toLowerCase().includes(t.toLowerCase()) ||
-            t.toLowerCase().includes(enriched.title.toLowerCase())
-          );
-          if (matchedTitle) {
-            form.setValue("title", matchedTitle);
-            fieldsUpdated++;
-          }
+          form.setValue("title", enriched.title);
+          fieldsUpdated++;
         }
         if (enriched.location && !form.getValues("address")) {
           form.setValue("address", enriched.location);
