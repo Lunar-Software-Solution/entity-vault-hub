@@ -21,6 +21,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { Checkbox } from "@/components/ui/checkbox";
 import { 
   useEntityFilings, 
   useFilingTasks, 
@@ -37,7 +38,9 @@ import {
   useUpdateFilingTask,
   useDeleteFilingTask,
   useCompleteTask,
-  useMarkFilingFiled
+  useMarkFilingFiled,
+  useBulkDeleteTasks,
+  useBulkUpdateTaskStatus
 } from "@/hooks/usePortalMutations";
 import DeleteConfirmDialog from "@/components/shared/DeleteConfirmDialog";
 import EntityFilingForm from "@/components/forms/EntityFilingForm";
@@ -47,6 +50,7 @@ import { useUserRole } from "@/hooks/useUserRole";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import ColumnMultiFilter, { FilterOption } from "@/components/shared/ColumnMultiFilter";
+import BulkActionsToolbar from "@/components/shared/BulkActionsToolbar";
 import { format } from "date-fns";
 import { 
   getFilingDisplayStatus, 
@@ -84,6 +88,10 @@ const FilingsSection = ({ entityFilter }: FilingsSectionProps) => {
   const [taskAssigneeFilter, setTaskAssigneeFilter] = useState<string[]>([]);
   const [taskSearchQuery, setTaskSearchQuery] = useState("");
 
+  // Bulk selection state
+  const [selectedTaskIds, setSelectedTaskIds] = useState<Set<string>>(new Set());
+  const [showBulkDeleteConfirm, setShowBulkDeleteConfirm] = useState(false);
+
   const { data: filings, isLoading: filingsLoading } = useEntityFilings();
   const { data: tasks, isLoading: tasksLoading } = useFilingTasks();
   const { data: filingTypes, isLoading: typesLoading } = useFilingTypes();
@@ -98,6 +106,8 @@ const FilingsSection = ({ entityFilter }: FilingsSectionProps) => {
   const deleteTask = useDeleteFilingTask();
   const completeTask = useCompleteTask();
   const markFiled = useMarkFilingFiled();
+  const bulkDeleteTasks = useBulkDeleteTasks();
+  const bulkUpdateTaskStatus = useBulkUpdateTaskStatus();
 
   const isLoading = filingsLoading || tasksLoading || typesLoading || entitiesLoading;
 
@@ -223,6 +233,43 @@ const FilingsSection = ({ entityFilter }: FilingsSectionProps) => {
   }, []);
 
   const hasActiveTaskFilters = taskEntityFilter.length > 0 || taskPriorityFilter.length > 0 || taskStatusFilter.length > 0 || taskAssigneeFilter.length > 0 || taskSearchQuery !== "";
+
+  // Bulk selection handlers
+  const toggleTaskSelection = useCallback((taskId: string) => {
+    setSelectedTaskIds(prev => {
+      const next = new Set(prev);
+      if (next.has(taskId)) {
+        next.delete(taskId);
+      } else {
+        next.add(taskId);
+      }
+      return next;
+    });
+  }, []);
+
+  const selectAllFilteredTasks = useCallback(() => {
+    setSelectedTaskIds(new Set(filteredTasks.map(t => t.id)));
+  }, [filteredTasks]);
+
+  const clearTaskSelection = useCallback(() => {
+    setSelectedTaskIds(new Set());
+  }, []);
+
+  const handleBulkDelete = useCallback(async () => {
+    const ids = Array.from(selectedTaskIds);
+    await bulkDeleteTasks.mutateAsync(ids);
+    setSelectedTaskIds(new Set());
+    setShowBulkDeleteConfirm(false);
+  }, [selectedTaskIds, bulkDeleteTasks]);
+
+  const handleBulkStatusChange = useCallback(async (status: string) => {
+    const ids = Array.from(selectedTaskIds);
+    await bulkUpdateTaskStatus.mutateAsync({ ids, status });
+    setSelectedTaskIds(new Set());
+  }, [selectedTaskIds, bulkUpdateTaskStatus]);
+
+  const isAllFilteredSelected = filteredTasks.length > 0 && filteredTasks.every(t => selectedTaskIds.has(t.id));
+  const isSomeSelected = selectedTaskIds.size > 0 && !isAllFilteredSelected;
 
   const getEntityName = (entityId: string) => {
     return entities?.find(e => e.id === entityId)?.name || "Unknown";
@@ -587,10 +634,41 @@ const FilingsSection = ({ entityFilter }: FilingsSectionProps) => {
             </div>
           </div>
 
+          {/* Bulk Actions Toolbar */}
+          {canWrite && (
+            <BulkActionsToolbar
+              selectedCount={selectedTaskIds.size}
+              totalCount={filteredTasks.length}
+              onSelectAll={selectAllFilteredTasks}
+              onClearSelection={clearTaskSelection}
+              onBulkDelete={() => setShowBulkDeleteConfirm(true)}
+              onBulkStatusChange={handleBulkStatusChange}
+              isDeleting={bulkDeleteTasks.isPending}
+              isUpdating={bulkUpdateTaskStatus.isPending}
+            />
+          )}
+
           <div className="glass-card rounded-xl overflow-hidden">
             <Table>
               <TableHeader>
                 <TableRow>
+                  {canWrite && (
+                    <TableHead className="w-[40px]">
+                      <Checkbox
+                        checked={isAllFilteredSelected}
+                        onCheckedChange={(checked) => {
+                          if (checked) {
+                            selectAllFilteredTasks();
+                          } else {
+                            clearTaskSelection();
+                          }
+                        }}
+                        aria-label="Select all"
+                        className={isSomeSelected ? "data-[state=checked]:bg-primary/50" : ""}
+                        {...(isSomeSelected ? { "data-state": "indeterminate" as const } : {})}
+                      />
+                    </TableHead>
+                  )}
                   <TableHead className="text-foreground">Task</TableHead>
                   <TableHead className="p-0">
                     <ColumnMultiFilter
@@ -631,13 +709,25 @@ const FilingsSection = ({ entityFilter }: FilingsSectionProps) => {
               <TableBody>
                 {filteredTasks.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
+                    <TableCell colSpan={canWrite ? 8 : 7} className="text-center py-8 text-muted-foreground">
                       No tasks found
                     </TableCell>
                   </TableRow>
                 ) : (
                   filteredTasks.map(task => (
-                    <TableRow key={task.id} className={task.status === "cancelled" ? "opacity-50" : ""}>
+                    <TableRow 
+                      key={task.id} 
+                      className={`${task.status === "cancelled" ? "opacity-50" : ""} ${selectedTaskIds.has(task.id) ? "bg-primary/5" : ""}`}
+                    >
+                      {canWrite && (
+                        <TableCell>
+                          <Checkbox
+                            checked={selectedTaskIds.has(task.id)}
+                            onCheckedChange={() => toggleTaskSelection(task.id)}
+                            aria-label={`Select ${task.title}`}
+                          />
+                        </TableCell>
+                      )}
                       <TableCell className="text-foreground">
                         <div>
                           <p className={`font-medium ${task.status === "cancelled" ? "line-through" : ""}`}>
@@ -825,6 +915,15 @@ const FilingsSection = ({ entityFilter }: FilingsSectionProps) => {
         }}
         title="Delete Task"
         description={`Are you sure you want to delete "${deletingTask?.title}"? This action cannot be undone.`}
+      />
+
+      {/* Bulk Delete Tasks Confirm */}
+      <DeleteConfirmDialog
+        open={showBulkDeleteConfirm}
+        onOpenChange={setShowBulkDeleteConfirm}
+        onConfirm={handleBulkDelete}
+        title="Delete Selected Tasks"
+        description={`Are you sure you want to delete ${selectedTaskIds.size} selected task(s)? This action cannot be undone.`}
       />
     </div>
   );
