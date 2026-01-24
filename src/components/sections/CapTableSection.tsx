@@ -401,6 +401,7 @@ const CapTableSection = () => {
                           email={shareholder.email}
                           name={shareholder.name}
                           size="sm"
+                          linkedinUrl={shareholder.linkedin_url}
                         />
                         <span className="font-medium text-foreground">{shareholder.name}</span>
                       </div>
