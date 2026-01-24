@@ -1,10 +1,11 @@
 import { useState, useMemo, useCallback } from "react";
-import { Plus, Calendar, List, CheckSquare, Search, Filter, Square, SquareCheck, SquarePen, SquareX, PlaySquare, Trash2, Mail, Loader2, X } from "lucide-react";
+import { Plus, Calendar, List, CheckSquare, Search, Filter, Square, SquareCheck, SquarePen, SquareX, PlaySquare, Trash2, Mail, Loader2, X, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { 
   Select,
   SelectContent,
@@ -91,6 +92,11 @@ const FilingsSection = ({ entityFilter }: FilingsSectionProps) => {
   // Bulk selection state
   const [selectedTaskIds, setSelectedTaskIds] = useState<Set<string>>(new Set());
   const [showBulkDeleteConfirm, setShowBulkDeleteConfirm] = useState(false);
+
+  // Generate recurring tasks state
+  const [generatingFor, setGeneratingFor] = useState<EntityFiling | null>(null);
+  const [taskCount, setTaskCount] = useState("12");
+  const [isGenerating, setIsGenerating] = useState(false);
 
   const { data: filings, isLoading: filingsLoading } = useEntityFilings();
   const { data: tasks, isLoading: tasksLoading } = useFilingTasks();
@@ -354,7 +360,55 @@ const FilingsSection = ({ entityFilter }: FilingsSectionProps) => {
     }
   };
 
-  // Stats
+  const handleGenerateTasks = async () => {
+    if (!generatingFor) return;
+    
+    const count = parseInt(taskCount, 10);
+    if (isNaN(count) || count < 1 || count > 24) {
+      toast({
+        title: "Invalid count",
+        description: "Please enter a number between 1 and 24",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsGenerating(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.access_token) {
+        throw new Error("Not authenticated");
+      }
+
+      const response = await supabase.functions.invoke("generate-recurring-tasks", {
+        body: { filingId: generatingFor.id, count },
+        headers: {
+          Authorization: `Bearer ${session.access_token}`,
+        },
+      });
+
+      if (response.error) {
+        throw new Error(response.error.message || "Failed to generate tasks");
+      }
+
+      toast({
+        title: "Tasks generated",
+        description: response.data.message || `Created ${response.data.tasksCreated} tasks`,
+      });
+      setGeneratingFor(null);
+      setTaskCount("12");
+    } catch (error) {
+      console.error("Error generating tasks:", error);
+      toast({
+        title: "Failed to generate tasks",
+        description: error instanceof Error ? error.message : "Failed to generate tasks",
+        variant: "destructive",
+      });
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
   const upcomingCount = filteredFilings.filter(f => 
     getFilingDisplayStatus(f.due_date, f.status) === "pending"
   ).length;
@@ -587,6 +641,17 @@ const FilingsSection = ({ entityFilter }: FilingsSectionProps) => {
                         </TableCell>
                         <TableCell>
                           <div className="flex items-center justify-end gap-1">
+                            {canWrite && filing.frequency !== "one-time" && (
+                              <Button 
+                                variant="ghost" 
+                                size="icon"
+                                className="h-8 w-8 text-muted-foreground hover:text-primary"
+                                onClick={() => setGeneratingFor(filing)}
+                                title="Generate recurring tasks"
+                              >
+                                <RefreshCw className="h-4 w-4" />
+                              </Button>
+                            )}
                             {canWrite && (
                               filing.status === "filed" ? (
                                 <div className="h-8 w-8 flex items-center justify-center text-green-500">
@@ -957,6 +1022,53 @@ const FilingsSection = ({ entityFilter }: FilingsSectionProps) => {
         title="Delete Selected Tasks"
         description={`Are you sure you want to delete ${selectedTaskIds.size} selected task(s)? This action cannot be undone.`}
       />
+
+      {/* Generate Recurring Tasks Dialog */}
+      <Dialog open={!!generatingFor} onOpenChange={(open) => {
+        if (!open) {
+          setGeneratingFor(null);
+          setTaskCount("12");
+        }
+      }}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Generate Recurring Tasks</DialogTitle>
+            <DialogDescription>
+              Create upcoming tasks for "{generatingFor?.title}"
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-4">
+            <Label htmlFor="taskCount">How many tasks to create?</Label>
+            <Input
+              id="taskCount"
+              type="number"
+              min="1"
+              max="24"
+              value={taskCount}
+              onChange={(e) => setTaskCount(e.target.value)}
+              placeholder="12"
+              className="mt-2"
+            />
+            <p className="text-xs text-muted-foreground mt-2">
+              Enter a number between 1 and 24. Tasks will be created based on the filing's frequency ({generatingFor?.frequency}).
+            </p>
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setGeneratingFor(null);
+                setTaskCount("12");
+              }}
+            >
+              Cancel
+            </Button>
+            <Button onClick={handleGenerateTasks} disabled={isGenerating}>
+              {isGenerating ? "Generating..." : "Generate Tasks"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
