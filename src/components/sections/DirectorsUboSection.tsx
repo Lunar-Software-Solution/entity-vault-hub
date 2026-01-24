@@ -281,10 +281,8 @@ const DirectorsUboSection = ({ entityFilter }: DirectorsUboSectionProps) => {
       nationality: data.nationality || null,
       country_of_residence: data.country_of_residence || null,
       control_type: data.control_type || null,
-      tax_id: data.tax_id || null,
       address: data.address || null,
       phone: data.phone || null,
-      passport_number: data.passport_number || null,
       pep_details: data.pep_details || null,
       notes: data.notes || null,
       _id_documents: id_documents, // Pass separately for processing

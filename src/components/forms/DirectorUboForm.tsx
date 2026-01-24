@@ -41,12 +41,10 @@ const directorUboSchema = z.object({
   resignation_date: z.string().optional(),
   ownership_percentage: z.string().optional(),
   control_type: z.string().optional(),
-  tax_id: z.string().optional(),
   address: z.string().optional(),
   email: z.string().email().optional().or(z.literal("")),
   phone: z.string().optional(),
   linkedin_url: z.string().url().optional().or(z.literal("")),
-  passport_number: z.string().optional(),
   is_pep: z.boolean().default(false),
   pep_details: z.string().optional(),
   is_active: z.boolean().default(true),
@@ -149,12 +147,10 @@ export const DirectorUboForm = ({
       resignation_date: item?.resignation_date || "",
       ownership_percentage: item?.ownership_percentage?.toString() || "",
       control_type: item?.control_type || "",
-      tax_id: item?.tax_id || "",
       address: item?.address || "",
       email: item?.email || "",
       phone: item?.phone || "",
       linkedin_url: item?.linkedin_url || "",
-      passport_number: item?.passport_number || "",
       is_pep: item?.is_pep || false,
       pep_details: item?.pep_details || "",
       is_active: item?.is_active ?? true,
@@ -588,35 +584,6 @@ export const DirectorUboForm = ({
           onChange={setIdDocuments}
         />
 
-        <div className="grid grid-cols-2 gap-4">
-          <FormField
-            control={form.control}
-            name="passport_number"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Passport Number</FormLabel>
-                <FormControl>
-                  <Input placeholder="P12345678" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="tax_id"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Tax ID / SSN</FormLabel>
-                <FormControl>
-                  <Input placeholder="XXX-XX-XXXX" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        </div>
 
         {/* Entity Affiliations - for new directors only (existing directors show it at top) */}
         {!item?.id && (
