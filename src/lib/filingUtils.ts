@@ -70,7 +70,21 @@ export const FILING_CATEGORY_OPTIONS = [
 ];
 
 // Get display status - adjusts for overdue dynamically
-export function getFilingDisplayStatus(dueDate: string, currentStatus: string): string {
+// For recurring filings, shows "pending" if filed but due date has passed (next cycle)
+export function getFilingDisplayStatus(
+  dueDate: string, 
+  currentStatus: string, 
+  frequency?: string
+): string {
+  // For filed recurring filings where due date passed, show as pending (awaiting next cycle)
+  if (currentStatus === "filed" && frequency && frequency !== "one-time") {
+    const today = startOfDay(new Date());
+    const due = startOfDay(new Date(dueDate));
+    if (isBefore(due, today)) {
+      return "pending"; // Next cycle is pending
+    }
+  }
+  
   if (currentStatus === "filed") return "filed";
   
   const today = startOfDay(new Date());

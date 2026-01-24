@@ -123,7 +123,7 @@ const FilingsSection = ({ entityFilter }: FilingsSectionProps) => {
     return filings.filter(filing => {
       if (entityFilter && filing.entity_id !== entityFilter) return false;
       if (statusFilter !== "all") {
-        const displayStatus = getFilingDisplayStatus(filing.due_date, filing.status);
+        const displayStatus = getFilingDisplayStatus(filing.due_date, filing.status, filing.frequency);
         if (displayStatus !== statusFilter) return false;
       }
       if (searchQuery) {
@@ -410,10 +410,10 @@ const FilingsSection = ({ entityFilter }: FilingsSectionProps) => {
   };
 
   const upcomingCount = filteredFilings.filter(f => 
-    getFilingDisplayStatus(f.due_date, f.status) === "pending"
+    getFilingDisplayStatus(f.due_date, f.status, f.frequency) === "pending"
   ).length;
   const overdueCount = filteredFilings.filter(f => 
-    getFilingDisplayStatus(f.due_date, f.status) === "overdue"
+    getFilingDisplayStatus(f.due_date, f.status, f.frequency) === "overdue"
   ).length;
   const filedCount = filteredFilings.filter(f => f.status === "filed").length;
   const openTasksCount = filteredTasks.filter(t => 
@@ -604,7 +604,7 @@ const FilingsSection = ({ entityFilter }: FilingsSectionProps) => {
                   </TableRow>
                 ) : (
                   filteredFilings.map(filing => {
-                    const displayStatus = getFilingDisplayStatus(filing.due_date, filing.status);
+                    const displayStatus = getFilingDisplayStatus(filing.due_date, filing.status, filing.frequency);
                     const filingType = getFilingType(filing.filing_type_id);
 
                     return (
