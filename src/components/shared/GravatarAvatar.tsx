@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { getGravatarUrl, getInitials } from "@/lib/gravatar";
 import { cn } from "@/lib/utils";
 import { User } from "lucide-react";
@@ -41,9 +41,9 @@ const GravatarAvatar = ({
   linkedinUrl,
   enableEnrichment = true,
 }: GravatarAvatarProps) => {
-  const [hasError, setHasError] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
-  const [currentImageUrl, setCurrentImageUrl] = useState<string | null>(null);
+  const [imageStatus, setImageStatus] = useState<"loading" | "loaded" | "error">("loading");
+  const [currentUrlIndex, setCurrentUrlIndex] = useState(0);
+  const triedUrls = useRef<Set<string>>(new Set());
 
   // Use profile enrichment when enabled and we have email or LinkedIn URL
   const { data: enrichedProfile, isLoading: isEnriching } = useProfileEnrichment({
@@ -53,57 +53,47 @@ const GravatarAvatar = ({
     enabled: enableEnrichment && !!(email || linkedinUrl),
   });
 
-  // Direct unavatar.io URL for LinkedIn as primary fallback
-  const getUnavatarUrl = (url: string | null | undefined): string | null => {
-    if (!url) return null;
-    const match = url.match(/linkedin\.com\/in\/([^\/\?]+)/i);
-    if (match) {
-      return `https://unavatar.io/linkedin/${match[1]}?fallback=false`;
-    }
-    return null;
-  };
-
-  const unavatarUrl = getUnavatarUrl(linkedinUrl);
-
   const gravatarUrl = getGravatarUrl(email, pixelSizes[size] * 2, "404");
   const initials = getInitials(name);
 
-  // Determine which avatar URL to use (enriched > unavatar > gravatar)
-  useEffect(() => {
-    setHasError(false);
-    setIsLoading(true);
+  // Build ordered list of avatar URLs to try
+  const avatarUrls: string[] = [];
+  
+  // 1. Enrichment avatar (highest priority)
+  if (enrichedProfile?.avatar_url) {
+    avatarUrls.push(enrichedProfile.avatar_url);
+  }
+  
+  // 2. Gravatar fallback
+  if (gravatarUrl) {
+    avatarUrls.push(gravatarUrl);
+  }
 
-    if (enrichedProfile?.avatar_url) {
-      // Enrichment API returned an avatar
-      setCurrentImageUrl(enrichedProfile.avatar_url);
-    } else if (unavatarUrl) {
-      // Direct unavatar.io fallback for LinkedIn
-      setCurrentImageUrl(unavatarUrl);
-    } else if (gravatarUrl) {
-      // Fall back to Gravatar
-      setCurrentImageUrl(gravatarUrl);
-    } else {
-      setCurrentImageUrl(null);
-      setIsLoading(false);
-    }
-  }, [enrichedProfile?.avatar_url, unavatarUrl, gravatarUrl]);
+  const currentUrl = avatarUrls[currentUrlIndex];
+
+  // Reset when URLs change
+  useEffect(() => {
+    triedUrls.current.clear();
+    setCurrentUrlIndex(0);
+    setImageStatus("loading");
+  }, [enrichedProfile?.avatar_url, gravatarUrl]);
 
   const handleError = () => {
-    // Try fallback chain: enriched -> unavatar -> gravatar -> initials
-    if (currentImageUrl === enrichedProfile?.avatar_url && unavatarUrl) {
-      setCurrentImageUrl(unavatarUrl);
-    } else if (currentImageUrl === unavatarUrl && gravatarUrl) {
-      setCurrentImageUrl(gravatarUrl);
-    } else if (currentImageUrl === enrichedProfile?.avatar_url && gravatarUrl) {
-      setCurrentImageUrl(gravatarUrl);
+    if (currentUrl) {
+      triedUrls.current.add(currentUrl);
+    }
+    
+    // Try next URL in the list
+    if (currentUrlIndex < avatarUrls.length - 1) {
+      setCurrentUrlIndex(prev => prev + 1);
+      setImageStatus("loading");
     } else {
-      setHasError(true);
-      setIsLoading(false);
+      setImageStatus("error");
     }
   };
 
   const handleLoad = () => {
-    setIsLoading(false);
+    setImageStatus("loaded");
   };
 
   // Show loading state while enriching
@@ -119,8 +109,8 @@ const GravatarAvatar = ({
     );
   }
 
-  // If no image URL available or all sources failed, show initials fallback
-  if (!currentImageUrl || hasError) {
+  // If no URLs available or all failed, show initials fallback
+  if (avatarUrls.length === 0 || imageStatus === "error") {
     return (
       <div
         className={cn(
@@ -150,19 +140,23 @@ const GravatarAvatar = ({
         className
       )}
     >
-      {isLoading && (
+      {imageStatus === "loading" && (
         <div className={cn(sizeClasses[size], "bg-muted animate-pulse")} />
       )}
-      <img
-        src={currentImageUrl}
-        alt={name}
-        className={cn(
-          "w-full h-full object-cover",
-          isLoading && "hidden"
-        )}
-        onError={handleError}
-        onLoad={handleLoad}
-      />
+      {currentUrl && (
+        <img
+          key={currentUrl}
+          src={currentUrl}
+          alt={name}
+          className={cn(
+            "w-full h-full object-cover",
+            imageStatus === "loading" && "hidden"
+          )}
+          onError={handleError}
+          onLoad={handleLoad}
+          referrerPolicy="no-referrer"
+        />
+      )}
     </div>
   );
 };
