@@ -1226,3 +1226,47 @@ export const useDeleteEntitySoftware = () => {
     onError: (error) => toast.error(`Failed to delete software: ${error.message}`),
   });
 };
+
+// Bulk Task mutations
+export const useBulkDeleteTasks = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (ids: string[]) => {
+      const { error } = await supabase.from("filing_tasks").delete().in("id", ids);
+      if (error) throw error;
+    },
+    onSuccess: (_, ids) => {
+      queryClient.invalidateQueries({ queryKey: ["filing_tasks"] });
+      toast.success(`${ids.length} task(s) deleted successfully`);
+    },
+    onError: (error) => toast.error(`Failed to delete tasks: ${error.message}`),
+  });
+};
+
+export const useBulkUpdateTaskStatus = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ ids, status }: { ids: string[]; status: string }) => {
+      const updateData: { status: string; completed_at?: string | null } = { status };
+      
+      if (status === "completed") {
+        updateData.completed_at = new Date().toISOString();
+      } else {
+        updateData.completed_at = null;
+      }
+      
+      const { error } = await supabase
+        .from("filing_tasks")
+        .update(updateData)
+        .in("id", ids);
+      if (error) throw error;
+    },
+    onSuccess: (_, { ids, status }) => {
+      queryClient.invalidateQueries({ queryKey: ["filing_tasks"] });
+      const statusLabel = status === "in_progress" ? "In Progress" : 
+                          status.charAt(0).toUpperCase() + status.slice(1);
+      toast.success(`${ids.length} task(s) updated to ${statusLabel}`);
+    },
+    onError: (error) => toast.error(`Failed to update tasks: ${error.message}`),
+  });
+};
