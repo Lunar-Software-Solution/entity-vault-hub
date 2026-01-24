@@ -415,24 +415,56 @@ const FilingsSection = ({ entityFilter }: FilingsSectionProps) => {
         )}
       </div>
 
-      {/* Stats */}
+      {/* Stats - Clickable to filter */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <div className="glass-card rounded-xl p-4">
+        <button 
+          className={`glass-card rounded-xl p-4 text-left transition-all hover:ring-2 hover:ring-blue-400/50 ${
+            activeTab === "list" && statusFilter === "pending" ? "ring-2 ring-blue-400" : ""
+          }`}
+          onClick={() => {
+            setActiveTab("list");
+            setStatusFilter("pending");
+          }}
+        >
           <p className="text-sm text-muted-foreground">Upcoming</p>
           <p className="text-2xl font-bold text-blue-400">{upcomingCount}</p>
-        </div>
-        <div className="glass-card rounded-xl p-4">
+        </button>
+        <button 
+          className={`glass-card rounded-xl p-4 text-left transition-all hover:ring-2 hover:ring-red-400/50 ${
+            activeTab === "list" && statusFilter === "overdue" ? "ring-2 ring-red-400" : ""
+          }`}
+          onClick={() => {
+            setActiveTab("list");
+            setStatusFilter("overdue");
+          }}
+        >
           <p className="text-sm text-muted-foreground">Overdue</p>
           <p className="text-2xl font-bold text-red-400">{overdueCount}</p>
-        </div>
-        <div className="glass-card rounded-xl p-4">
+        </button>
+        <button 
+          className={`glass-card rounded-xl p-4 text-left transition-all hover:ring-2 hover:ring-green-400/50 ${
+            activeTab === "list" && statusFilter === "filed" ? "ring-2 ring-green-400" : ""
+          }`}
+          onClick={() => {
+            setActiveTab("list");
+            setStatusFilter("filed");
+          }}
+        >
           <p className="text-sm text-muted-foreground">Filed</p>
           <p className="text-2xl font-bold text-green-400">{filedCount}</p>
-        </div>
-        <div className="glass-card rounded-xl p-4">
+        </button>
+        <button 
+          className={`glass-card rounded-xl p-4 text-left transition-all hover:ring-2 hover:ring-yellow-400/50 ${
+            activeTab === "tasks" && (taskStatusFilter.includes("pending") || taskStatusFilter.includes("in_progress")) ? "ring-2 ring-yellow-400" : ""
+          }`}
+          onClick={() => {
+            setActiveTab("tasks");
+            setTaskStatusFilter(["pending", "in_progress"]);
+          }}
+        >
           <p className="text-sm text-muted-foreground">Open Tasks</p>
           <p className="text-2xl font-bold text-yellow-400">{openTasksCount}</p>
-        </div>
+        </button>
       </div>
 
       {/* Tabs */}
