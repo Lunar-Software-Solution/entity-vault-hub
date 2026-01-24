@@ -13,8 +13,8 @@ function extractLinkedInUsername(url: string): string | null {
   return match ? match[1] : null;
 }
 
-// Fetch profile data from RapidAPI LinkedIn Profile Data API
-async function fetchRapidAPIProfile(linkedinUrl: string): Promise<{
+// Fetch profile data from LinkdAPI (RapidAPI)
+async function fetchLinkdAPIProfile(linkedinUrl: string): Promise<{
   avatar_url: string | null;
   name: string | null;
   title: string | null;
@@ -35,14 +35,14 @@ async function fetchRapidAPIProfile(linkedinUrl: string): Promise<{
   }
 
   try {
-    console.log("Fetching RapidAPI LinkedIn profile for:", username);
+    console.log("Fetching LinkdAPI profile for:", username);
     
     const response = await fetch(
-      `https://linkedin-profile-data.p.rapidapi.com/linkedin-profile-data?username=${encodeURIComponent(username)}`,
+      `https://linkdapi-best-unofficial-linkedin-api.p.rapidapi.com/api/v1/profile/overview?username=${encodeURIComponent(username)}`,
       {
         method: "GET",
         headers: {
-          "x-rapidapi-host": "linkedin-profile-data.p.rapidapi.com",
+          "x-rapidapi-host": "linkdapi-best-unofficial-linkedin-api.p.rapidapi.com",
           "x-rapidapi-key": RAPIDAPI_KEY,
         },
       }
@@ -50,21 +50,21 @@ async function fetchRapidAPIProfile(linkedinUrl: string): Promise<{
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error("RapidAPI error:", response.status, errorText);
+      console.error("LinkdAPI error:", response.status, errorText);
       return null;
     }
 
     const data = await response.json();
-    console.log("RapidAPI response keys:", Object.keys(data));
+    console.log("LinkdAPI response keys:", Object.keys(data));
     
     // Log available fields for debugging
-    console.log("RapidAPI profile_picture:", data.profile_picture || data.profilePicture || "NOT FOUND");
-    console.log("RapidAPI headline:", data.headline || "NOT FOUND");
-    console.log("RapidAPI summary:", data.summary || data.about || "NOT FOUND");
-    console.log("RapidAPI location:", data.location || "NOT FOUND");
+    console.log("LinkdAPI profilePicture:", data.profilePicture || data.profile_picture || "NOT FOUND");
+    console.log("LinkdAPI headline:", data.headline || "NOT FOUND");
+    console.log("LinkdAPI summary:", data.summary || data.about || "NOT FOUND");
+    console.log("LinkdAPI location:", data.location || data.geoLocationName || "NOT FOUND");
 
     // Check if avatar is LinkedIn's default placeholder (skip it)
-    let avatarUrl = data.profile_picture || data.profilePicture || null;
+    let avatarUrl = data.profilePicture || data.profile_picture || data.avatar || null;
     if (avatarUrl && avatarUrl.includes("static.licdn.com/aero-v1/sc/h/")) {
       console.log("Detected LinkedIn default placeholder, skipping avatar");
       avatarUrl = null;
@@ -75,12 +75,12 @@ async function fetchRapidAPIProfile(linkedinUrl: string): Promise<{
     let company: string | null = null;
 
     // Try to get current position from experiences
-    const experiences = data.experiences || data.experience || [];
-    const currentJob = experiences.find((exp: any) => !exp.end_date && !exp.endDate) || experiences[0];
+    const experiences = data.experiences || data.experience || data.positions || [];
+    const currentJob = experiences.find((exp: any) => !exp.end_date && !exp.endDate && !exp.end) || experiences[0];
     
     if (currentJob) {
-      title = currentJob.title || currentJob.position || null;
-      company = currentJob.company || currentJob.company_name || null;
+      title = currentJob.title || currentJob.position || currentJob.role || null;
+      company = currentJob.company || currentJob.company_name || currentJob.companyName || null;
     }
 
     // Fallback: parse from headline (e.g., "CEO at Secure Group")
@@ -97,17 +97,17 @@ async function fetchRapidAPIProfile(linkedinUrl: string): Promise<{
     }
 
     // Build location
-    const location = data.location || null;
+    const location = data.location || data.geoLocationName || data.geo_location || null;
 
     // Get bio/summary
-    const bio = data.summary || data.about || null;
+    const bio = data.summary || data.about || data.description || null;
 
     // Get full name
-    const fullName = data.full_name || data.fullName || 
-                     (data.first_name && data.last_name 
-                       ? `${data.first_name} ${data.last_name}` 
-                       : data.firstName && data.lastName
-                         ? `${data.firstName} ${data.lastName}`
+    const fullName = data.fullName || data.full_name || data.name ||
+                     (data.firstName && data.lastName 
+                       ? `${data.firstName} ${data.lastName}` 
+                       : data.first_name && data.last_name
+                         ? `${data.first_name} ${data.last_name}`
                          : null);
 
     return {
@@ -119,7 +119,7 @@ async function fetchRapidAPIProfile(linkedinUrl: string): Promise<{
       bio: bio,
     };
   } catch (error) {
-    console.error("RapidAPI fetch error:", error);
+    console.error("LinkdAPI fetch error:", error);
     return null;
   }
 }
@@ -198,10 +198,10 @@ serve(async (req) => {
       );
     }
 
-    // Fetch profile from RapidAPI
-    const rapidApiData = await fetchRapidAPIProfile(linkedin_url);
+    // Fetch profile from LinkdAPI
+    const linkdApiData = await fetchLinkdAPIProfile(linkedin_url);
     
-    if (!rapidApiData) {
+    if (!linkdApiData) {
       // Try unavatar as fallback for avatar only
       const avatarUrl = await getUnavatarUrl(linkedin_url);
       
@@ -209,7 +209,7 @@ serve(async (req) => {
         JSON.stringify({
           success: false,
           fallback: true,
-          message: "Could not fetch profile from RapidAPI",
+          message: "Could not fetch profile from LinkdAPI",
           data: {
             name: name || null,
             email: email || null,
@@ -225,8 +225,8 @@ serve(async (req) => {
       );
     }
 
-    // If RapidAPI didn't return avatar, try unavatar
-    let finalAvatarUrl = rapidApiData.avatar_url;
+    // If LinkdAPI didn't return avatar, try unavatar
+    let finalAvatarUrl = linkdApiData.avatar_url;
     if (!finalAvatarUrl) {
       finalAvatarUrl = await getUnavatarUrl(linkedin_url);
     }
@@ -234,16 +234,16 @@ serve(async (req) => {
     const result = {
       success: true,
       fallback: false,
-      source: "rapidapi",
+      source: "linkdapi",
       data: {
-        name: rapidApiData.name || name || null,
+        name: linkdApiData.name || name || null,
         email: email || null,
         linkedin_url: linkedin_url,
         avatar_url: finalAvatarUrl,
-        title: rapidApiData.title || null,
-        company: rapidApiData.company || null,
-        location: rapidApiData.location || null,
-        bio: rapidApiData.bio || null,
+        title: linkdApiData.title || null,
+        company: linkdApiData.company || null,
+        location: linkdApiData.location || null,
+        bio: linkdApiData.bio || null,
       }
     };
 
