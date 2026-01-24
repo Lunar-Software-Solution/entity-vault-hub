@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-import { Plus, Calendar, List, CheckSquare, Search, Filter, Square, SquareCheck, SquarePen, SquareX, PlaySquare, Trash2 } from "lucide-react";
+import { Plus, Calendar, List, CheckSquare, Search, Filter, Square, SquareCheck, SquarePen, SquareX, PlaySquare, Trash2, Mail, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -44,6 +44,8 @@ import EntityFilingForm from "@/components/forms/EntityFilingForm";
 import FilingTaskForm from "@/components/forms/FilingTaskForm";
 import FilingsCalendar from "@/components/filings/FilingsCalendar";
 import { useUserRole } from "@/hooks/useUserRole";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 import { 
   getFilingDisplayStatus, 
@@ -71,6 +73,8 @@ const FilingsSection = ({ entityFilter }: FilingsSectionProps) => {
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [preselectedDate, setPreselectedDate] = useState<string>("");
+  const [sendingReminders, setSendingReminders] = useState(false);
+  const { toast } = useToast();
 
   const { data: filings, isLoading: filingsLoading } = useEntityFilings();
   const { data: tasks, isLoading: tasksLoading } = useFilingTasks();
@@ -190,6 +194,31 @@ const FilingsSection = ({ entityFilter }: FilingsSectionProps) => {
     setShowFilingForm(true);
   };
 
+  const handleSendReminders = async () => {
+    setSendingReminders(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('send-task-reminders', {
+        body: { days_ahead: 7 }
+      });
+      
+      if (error) throw error;
+      
+      toast({
+        title: "Reminders sent",
+        description: data.message || `Successfully sent ${data.emails_sent || 0} reminder email(s).`,
+      });
+    } catch (error: any) {
+      console.error('Error sending reminders:', error);
+      toast({
+        title: "Failed to send reminders",
+        description: error.message || "An error occurred while sending reminder emails.",
+        variant: "destructive",
+      });
+    } finally {
+      setSendingReminders(false);
+    }
+  };
+
   // Stats
   const upcomingCount = filteredFilings.filter(f => 
     getFilingDisplayStatus(f.due_date, f.status) === "pending"
@@ -226,6 +255,19 @@ const FilingsSection = ({ entityFilter }: FilingsSectionProps) => {
         </div>
         {canWrite && (
           <div className="flex items-center gap-2">
+            <Button 
+              variant="outline" 
+              className="text-foreground" 
+              onClick={handleSendReminders}
+              disabled={sendingReminders}
+            >
+              {sendingReminders ? (
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+              ) : (
+                <Mail className="w-4 h-4 mr-2" />
+              )}
+              Send Reminders
+            </Button>
             <Button variant="outline" className="text-foreground" onClick={() => setShowTaskForm(true)}>
               <CheckSquare className="w-4 h-4 mr-2" />
               Add Task
