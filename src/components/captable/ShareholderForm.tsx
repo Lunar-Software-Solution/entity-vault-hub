@@ -10,6 +10,7 @@ import { Sparkles, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import ShareholderEntityAffiliationsManager from "./ShareholderEntityAffiliationsManager";
+import GravatarAvatar from "@/components/shared/GravatarAvatar";
 
 interface ShareholderFormData {
   entity_id: string;
@@ -174,32 +175,41 @@ const ShareholderForm = ({ item, entities, onSubmit, onCancel }: ShareholderForm
           </FormItem>
         )} />
 
-        <div className="grid grid-cols-2 gap-4">
-          <FormField control={form.control} name="name" render={({ field }) => (
-            <FormItem>
-              <FormLabel>Name *</FormLabel>
-              <FormControl><Input placeholder="John Doe" {...field} /></FormControl>
-              <FormMessage />
-            </FormItem>
-          )} />
-          <FormField control={form.control} name="shareholder_type" render={({ field }) => (
-            <FormItem>
-              <FormLabel>Type *</FormLabel>
-              <Select onValueChange={field.onChange} value={field.value}>
-                <FormControl>
-                  <SelectTrigger className="bg-background">
-                    <SelectValue />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent className="bg-background">
-                  {shareholderTypes.map((type) => (
-                    <SelectItem key={type} value={type}>{type.charAt(0).toUpperCase() + type.slice(1)}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <FormMessage />
-            </FormItem>
-          )} />
+        <div className="flex items-start gap-4">
+          <GravatarAvatar
+            email={email}
+            name={name || ""}
+            size="lg"
+            linkedinUrl={linkedinUrl}
+            className="mt-6"
+          />
+          <div className="flex-1 grid grid-cols-2 gap-4">
+            <FormField control={form.control} name="name" render={({ field }) => (
+              <FormItem>
+                <FormLabel>Name *</FormLabel>
+                <FormControl><Input placeholder="John Doe" {...field} /></FormControl>
+                <FormMessage />
+              </FormItem>
+            )} />
+            <FormField control={form.control} name="shareholder_type" render={({ field }) => (
+              <FormItem>
+                <FormLabel>Type *</FormLabel>
+                <Select onValueChange={field.onChange} value={field.value}>
+                  <FormControl>
+                    <SelectTrigger className="bg-background">
+                      <SelectValue />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent className="bg-background">
+                    {shareholderTypes.map((type) => (
+                      <SelectItem key={type} value={type}>{type.charAt(0).toUpperCase() + type.slice(1)}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )} />
+          </div>
         </div>
 
         <div className="grid grid-cols-2 gap-4">
