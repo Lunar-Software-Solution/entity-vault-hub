@@ -2329,6 +2329,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      reset_recurring_filings: { Args: never; Returns: undefined }
     }
     Enums: {
       app_role: "admin" | "viewer"
