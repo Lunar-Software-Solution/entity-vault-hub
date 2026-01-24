@@ -17,6 +17,7 @@ interface ShareholderFormData {
   shareholder_type: string;
   email?: string;
   phone?: string;
+  linkedin_url?: string;
   address?: string;
   tax_id?: string;
   is_founder: boolean;
@@ -41,6 +42,7 @@ const ShareholderForm = ({ item, entities, onSubmit, onCancel }: ShareholderForm
       shareholder_type: item?.shareholder_type || "individual",
       email: item?.email || "",
       phone: item?.phone || "",
+      linkedin_url: item?.linkedin_url || "",
       address: item?.address || "",
       tax_id: item?.tax_id || "",
       is_founder: item?.is_founder || false,
@@ -51,6 +53,7 @@ const ShareholderForm = ({ item, entities, onSubmit, onCancel }: ShareholderForm
 
   const email = form.watch("email");
   const name = form.watch("name");
+  const linkedinUrl = form.watch("linkedin_url");
   const shareholderTypes = ["individual", "institution", "founder", "employee", "investor"];
 
   // Enrich profile using Lovable AI
@@ -69,7 +72,7 @@ const ShareholderForm = ({ item, entities, onSubmit, onCancel }: ShareholderForm
       }
 
       const { data, error } = await supabase.functions.invoke("enrich-profile", {
-        body: { email, name },
+        body: { email, linkedin_url: linkedinUrl, name },
         headers: {
           Authorization: `Bearer ${session.access_token}`,
         },
@@ -95,6 +98,10 @@ const ShareholderForm = ({ item, entities, onSubmit, onCancel }: ShareholderForm
         }
         if (enriched.location && !form.getValues("address")) {
           form.setValue("address", enriched.location);
+          fieldsUpdated++;
+        }
+        if (enriched.linkedin_url && !form.getValues("linkedin_url")) {
+          form.setValue("linkedin_url", enriched.linkedin_url);
           fieldsUpdated++;
         }
         if (enriched.bio && !form.getValues("notes")) {
@@ -127,6 +134,7 @@ const ShareholderForm = ({ item, entities, onSubmit, onCancel }: ShareholderForm
       ...data,
       email: data.email || null,
       phone: data.phone || null,
+      linkedin_url: data.linkedin_url || null,
       address: data.address || null,
       tax_id: data.tax_id || null,
       notes: data.notes || null,
@@ -227,6 +235,14 @@ const ShareholderForm = ({ item, entities, onSubmit, onCancel }: ShareholderForm
             </FormItem>
           )} />
         </div>
+
+        <FormField control={form.control} name="linkedin_url" render={({ field }) => (
+          <FormItem>
+            <FormLabel>LinkedIn URL</FormLabel>
+            <FormControl><Input placeholder="https://linkedin.com/in/username" {...field} /></FormControl>
+            <FormMessage />
+          </FormItem>
+        )} />
 
         <FormField control={form.control} name="address" render={({ field }) => (
           <FormItem>
