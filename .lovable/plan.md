@@ -1,106 +1,143 @@
 
 
-# Plan: Add International Banking Fields to Bank Accounts
+## Plan: Auto-Reset Recurring Filings After Due Date
 
-## Overview
-Extend the bank accounts feature to support international banking details including IBAN, SWIFT/BIC codes, account holder name, and bank address. This enables proper storage of accounts like Wise that have different details for domestic vs international transfers.
+### Overview
+For recurring filings (non "one-time"), the system will automatically reset the filing status from "filed" back to "pending" once the current due date has passed. This creates a proper recurring workflow where each period's task completion marks the filing as "filed" for that cycle, then resets for the next cycle.
 
-## Database Migration
+### Implementation Approach
 
-Add new columns to the `bank_accounts` table:
+There are two approaches to implement this:
 
-| Column | Type | Description |
-|--------|------|-------------|
-| `iban` | TEXT | International Bank Account Number (SEPA) |
-| `swift_bic` | TEXT | SWIFT/BIC code for international transfers |
-| `account_holder_name` | TEXT | Legal name on the account |
-| `bank_address` | TEXT | Full bank branch address |
+**Option A: Database Trigger (Recommended)**
+Create a PostgreSQL trigger that automatically updates the filing status and advances the due_date when the current due date passes. This runs server-side and keeps the filing perpetually cycling.
 
-```sql
-ALTER TABLE public.bank_accounts 
-ADD COLUMN IF NOT EXISTS iban TEXT,
-ADD COLUMN IF NOT EXISTS swift_bic TEXT,
-ADD COLUMN IF NOT EXISTS account_holder_name TEXT,
-ADD COLUMN IF NOT EXISTS bank_address TEXT;
-```
+**Option B: Display-Based Logic**
+Modify the `getFilingDisplayStatus` function to dynamically show "pending" for recurring filings where the due date has passed, even if the stored status is "filed".
 
-## Code Changes
+I recommend **Option A** as it properly updates the data model and ensures consistency.
 
-### 1. Update Form Schema (`src/lib/formSchemas.ts`)
-- Add `iban` field (optional string)
-- Add `swift_bic` field (optional, max 11 characters per SWIFT standard)
-- Add `account_holder_name` field (optional string)
-- Add `bank_address` field (optional string)
+---
 
-### 2. Update Bank Account Form (`src/components/forms/BankAccountForm.tsx`)
-Add new form fields organized in sections:
-- **Account Holder** section: Account holder name field
-- **Account Details** section: Existing fields plus IBAN
-- **Routing Information** section: Routing number and SWIFT/BIC
-- **Bank Information** section: Bank name, website, and address
+### Changes Required
 
-### 3. Update Bank Accounts Display (`src/components/sections/BankAccountsSection.tsx`)
-Extend the account card to show:
-- Account holder name (if different from account name)
-- IBAN (when present, in addition to account number)
-- SWIFT/BIC code
-- Bank address
+#### 1. Database: Create a Scheduled Function to Reset Filings
+Create a PostgreSQL function that runs periodically (e.g., daily via cron) to:
+- Find all recurring filings where `status = 'filed'` and `due_date < today`
+- Reset their `status` to `'pending'`
+- Advance their `due_date` to the next period based on frequency
+- Clear the `filing_date` and `confirmation_number` for the new period
 
-### 4. Update Entity Detail View (`src/components/entity-detail/LinkedBankAccounts.tsx`)
-Show key international details in the compact linked accounts view.
+#### 2. Alternative: Immediate Client-Side Solution
+Modify the display logic to treat filed recurring filings as "pending" when their due date has passed:
+- Update `getFilingDisplayStatus` in `src/lib/filingUtils.ts`
+- Also update the `useCompleteTask` hook to properly advance the due_date when completing a task for a recurring filing
 
-### 5. Update Mutations (`src/hooks/usePortalMutations.ts`)
-Ensure create and update mutations include the new fields.
+---
 
-## Visual Layout (Updated Form)
+### Technical Details
 
 ```text
-+--------------------------------------------------+
-| Linked Entity: [Select entity dropdown]          |
-+--------------------------------------------------+
-| Account Holder Name    | Account Name (nickname) |
-| [LUNAR TECHNOLOGIES]   | [Primary EUR Account]   |
-+--------------------------------------------------+
-| Bank Name              | Bank Website            |
-| [Wise]                 | [https://wise.com]      |
-+--------------------------------------------------+
-| Account Number         | IBAN                    |
-| [****1234]             | [BE95 9676 8175 4358]   |
-+--------------------------------------------------+
-| Routing Number         | SWIFT/BIC               |
-| [026073150]            | [TRWIBEB1XXX]           |
-+--------------------------------------------------+
-| Account Type           | Currency                |
-| [Checking]             | [EUR]                   |
-+--------------------------------------------------+
-| Bank Address                                     |
-| [Wise, Rue du Trône 100, 3rd floor, Brussels...] |
-+--------------------------------------------------+
+Recurring Filing Lifecycle:
+                                       
+  ┌──────────────────────────────────────────────────────────────────┐
+  │                                                                  │
+  │   ┌─────────┐      Task        ┌────────┐     Due Date    ┌─────────┐
+  │   │ PENDING │  ───────────►    │ FILED  │  ───────────►   │ PENDING │
+  │   │         │    Completed     │        │     Passes      │ (next   │
+  │   │         │                  │        │    + advance    │  cycle) │
+  │   └─────────┘                  └────────┘    due_date     └─────────┘
+  │                                                                  │
+  └──────────────────────────────────────────────────────────────────┘
 ```
 
-## Files to Modify
+#### Database Function (Option A)
 
-| File | Changes |
-|------|---------|
-| `src/lib/formSchemas.ts` | Add 4 new optional fields to schema |
-| `src/components/forms/BankAccountForm.tsx` | Add form inputs for new fields |
-| `src/components/sections/BankAccountsSection.tsx` | Display new fields in card |
-| `src/components/entity-detail/LinkedBankAccounts.tsx` | Show international details |
-| `src/hooks/usePortalMutations.ts` | Include new fields in mutations |
+```sql
+CREATE OR REPLACE FUNCTION reset_recurring_filings()
+RETURNS void AS $$
+BEGIN
+  UPDATE entity_filings
+  SET 
+    status = 'pending',
+    filing_date = NULL,
+    confirmation_number = NULL,
+    due_date = CASE frequency
+      WHEN 'monthly' THEN due_date + INTERVAL '1 month'
+      WHEN 'quarterly' THEN due_date + INTERVAL '3 months'
+      WHEN 'semi-annual' THEN due_date + INTERVAL '6 months'
+      WHEN 'annual' THEN due_date + INTERVAL '1 year'
+      ELSE due_date
+    END
+  WHERE 
+    status = 'filed' 
+    AND frequency != 'one-time'
+    AND due_date < CURRENT_DATE;
+END;
+$$ LANGUAGE plpgsql;
 
-## Example Result
+-- Schedule via pg_cron to run daily at midnight
+SELECT cron.schedule(
+  'reset-recurring-filings',
+  '0 0 * * *',
+  $$SELECT reset_recurring_filings()$$
+);
+```
 
-After implementation, your Wise accounts will display like:
+#### Client-Side Enhancement (Option B)
 
-**EUR Account Card:**
-- Account Holder: LUNAR TECHNOLOGIES OOD
-- IBAN: BE95 9676 8175 4358
-- SWIFT/BIC: TRWIBEB1XXX
-- Bank: Wise, Rue du Trône 100, 3rd floor, Brussels, 1050, Belgium
+Modify `src/lib/filingUtils.ts`:
 
-**USD Account Card:**
-- Account Holder: LUNAR TECHNOLOGIES OOD
-- Account: 8313453359 | Routing: 026073150
-- SWIFT/BIC: CMFGUS33
-- Bank: Community Federal Savings Bank, 89-16 Jamaica Ave, Woodhaven, NY, 11421, United States
+```typescript
+export function getFilingDisplayStatus(
+  dueDate: string, 
+  currentStatus: string, 
+  frequency?: string
+): string {
+  // For filed recurring filings where due date passed, show as pending (awaiting next cycle)
+  if (currentStatus === "filed" && frequency && frequency !== "one-time") {
+    const today = startOfDay(new Date());
+    const due = startOfDay(new Date(dueDate));
+    if (isBefore(due, today)) {
+      return "pending"; // Next cycle is pending
+    }
+  }
+  
+  if (currentStatus === "filed") return "filed";
+  
+  const today = startOfDay(new Date());
+  const due = startOfDay(new Date(dueDate));
+  
+  if (isBefore(due, today)) {
+    return "overdue";
+  }
+  
+  return currentStatus;
+}
+```
+
+---
+
+### Recommended Implementation
+
+I recommend implementing **both approaches together**:
+
+1. **Immediate fix**: Update the display logic to show the correct status visually
+2. **Background job**: Create a daily cron job to actually reset the filing data and advance due dates
+
+This ensures:
+- Users immediately see the correct status
+- The database stays clean and properly reflects the current filing period
+- Due dates automatically advance to the next period
+
+---
+
+### Summary of Changes
+
+| Component | Change |
+|-----------|--------|
+| `src/lib/filingUtils.ts` | Update `getFilingDisplayStatus` to handle recurring filings past due date |
+| Database Migration | Create `reset_recurring_filings()` function |
+| Database (pg_cron) | Schedule daily job to reset recurring filings and advance due dates |
+| `src/hooks/usePortalMutations.ts` | Update `useCompleteTask` to set filing status to "filed" when task is completed |
 
