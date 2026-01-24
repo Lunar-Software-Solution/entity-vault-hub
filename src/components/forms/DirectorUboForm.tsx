@@ -291,6 +291,7 @@ export const DirectorUboForm = ({
             name={name || ""}
             size="lg"
             linkedinUrl={linkedinUrl}
+            storedAvatarUrl={item?.avatar_url}
             className="mt-6"
           />
           <div className="flex-1 grid grid-cols-2 gap-4">
