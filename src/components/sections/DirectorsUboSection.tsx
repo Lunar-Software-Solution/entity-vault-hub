@@ -525,6 +525,7 @@ const DirectorsUboSection = ({ entityFilter }: DirectorsUboSectionProps) => {
                         recordId={item.id}
                         tableName="directors_ubos"
                         suppressAvatar={item.suppress_avatar}
+                        enableEnrichment={false}
                         fallbackIcon={
                           item.role_type === "ubo" ? (
                             <Crown className="w-5 h-5 text-purple-400" />
