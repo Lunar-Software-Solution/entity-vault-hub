@@ -54,6 +54,10 @@ interface DirectorUbo {
   created_at: string;
   updated_at: string;
   entity_links?: EntityLink[];
+  // Enrichment fields
+  avatar_url: string | null;
+  bio: string | null;
+  company: string | null;
 }
 
 const useDirectorsUbos = () => {
@@ -484,6 +488,9 @@ const DirectorsUboSection = ({ entityFilter }: DirectorsUboSectionProps) => {
                         name={item.name}
                         size="md"
                         linkedinUrl={item.linkedin_url}
+                        storedAvatarUrl={item.avatar_url}
+                        recordId={item.id}
+                        tableName="directors_ubos"
                         fallbackIcon={
                           item.role_type === "ubo" ? (
                             <Crown className="w-5 h-5 text-purple-400" />
