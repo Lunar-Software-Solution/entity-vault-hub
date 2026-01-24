@@ -10,15 +10,32 @@ import {
   subMonths,
   startOfWeek,
   endOfWeek,
-  isToday
+  isToday,
+  setMonth,
+  setYear
 } from "date-fns";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 import { EntityFiling, Entity } from "@/hooks/usePortalData";
 import { getFilingDisplayStatus, STATUS_COLORS, FILING_CATEGORY_COLORS } from "@/lib/filingUtils";
 import CalendarDayPopover from "./CalendarDayPopover";
+
+const MONTHS = [
+  "January", "February", "March", "April", "May", "June",
+  "July", "August", "September", "October", "November", "December"
+];
+
+// Generate years from 2020 to 2035
+const YEARS = Array.from({ length: 16 }, (_, i) => 2020 + i);
 
 interface FilingsCalendarProps {
   filings: EntityFiling[];
@@ -82,24 +99,55 @@ const FilingsCalendar = ({
     setCurrentMonth(new Date());
   };
 
+  const handleMonthChange = (monthIndex: string) => {
+    setCurrentMonth(prev => setMonth(prev, parseInt(monthIndex)));
+  };
+
+  const handleYearChange = (year: string) => {
+    setCurrentMonth(prev => setYear(prev, parseInt(year)));
+  };
+
   return (
     <div className="glass-card rounded-xl p-6">
       {/* Calendar Header */}
       <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center gap-4">
-          <h2 className="text-xl font-semibold text-foreground">
-            {format(currentMonth, "MMMM yyyy")}
-          </h2>
-          <Button variant="outline" size="sm" onClick={goToToday} className="text-foreground">
-            Today
-          </Button>
-        </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-3">
           <Button variant="ghost" size="icon" onClick={() => navigateMonth("prev")} className="text-foreground hover:text-primary">
             <ChevronLeft className="w-4 h-4" />
           </Button>
+          
+          <Select value={currentMonth.getMonth().toString()} onValueChange={handleMonthChange}>
+            <SelectTrigger className="w-[130px] text-foreground">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {MONTHS.map((month, index) => (
+                <SelectItem key={month} value={index.toString()}>
+                  {month}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+
+          <Select value={currentMonth.getFullYear().toString()} onValueChange={handleYearChange}>
+            <SelectTrigger className="w-[90px] text-foreground">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {YEARS.map(year => (
+                <SelectItem key={year} value={year.toString()}>
+                  {year}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+
           <Button variant="ghost" size="icon" onClick={() => navigateMonth("next")} className="text-foreground hover:text-primary">
             <ChevronRight className="w-4 h-4" />
+          </Button>
+
+          <Button variant="outline" size="sm" onClick={goToToday} className="text-foreground ml-2">
+            Today
           </Button>
         </div>
       </div>
