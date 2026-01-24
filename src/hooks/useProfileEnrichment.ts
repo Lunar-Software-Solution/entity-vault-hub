@@ -41,7 +41,8 @@ export const useProfileEnrichment = ({
   const queryClient = useQueryClient();
 
   return useQuery({
-    queryKey: ["profile-enrichment", email, linkedin_url, name],
+    // Include recordId so cache invalidates per-record for auto-save
+    queryKey: ["profile-enrichment", email, linkedin_url, name, recordId],
     queryFn: async (): Promise<EnrichedProfile | null> => {
       if (!email && !linkedin_url) return null;
 
