@@ -710,12 +710,10 @@ export type Database = {
           nationality: string | null
           notes: string | null
           ownership_percentage: number | null
-          passport_number: string | null
           pep_details: string | null
           phone: string | null
           resignation_date: string | null
           role_type: string
-          tax_id: string | null
           title: string | null
           updated_at: string
         }
@@ -742,12 +740,10 @@ export type Database = {
           nationality?: string | null
           notes?: string | null
           ownership_percentage?: number | null
-          passport_number?: string | null
           pep_details?: string | null
           phone?: string | null
           resignation_date?: string | null
           role_type?: string
-          tax_id?: string | null
           title?: string | null
           updated_at?: string
         }
@@ -774,12 +770,10 @@ export type Database = {
           nationality?: string | null
           notes?: string | null
           ownership_percentage?: number | null
-          passport_number?: string | null
           pep_details?: string | null
           phone?: string | null
           resignation_date?: string | null
           role_type?: string
-          tax_id?: string | null
           title?: string | null
           updated_at?: string
         }
