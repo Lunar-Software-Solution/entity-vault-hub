@@ -18,24 +18,40 @@ async function getUnavatarUrl(linkedinUrl: string): Promise<string | null> {
   const username = extractLinkedInUsername(linkedinUrl);
   if (!username) return null;
   
-  const avatarUrl = `https://unavatar.io/linkedin/${username}`;
+  // Use unavatar with fallback=false to get null if not found
+  const avatarUrl = `https://unavatar.io/linkedin/${username}?fallback=false`;
   
   try {
-    // Check if the avatar exists (unavatar returns a fallback, so we check headers)
-    const response = await fetch(avatarUrl, { method: "HEAD" });
-    if (response.ok) {
-      // Check if it's not a fallback by looking at content-type or size
-      const contentType = response.headers.get("content-type");
-      if (contentType?.startsWith("image/")) {
-        return avatarUrl;
-      }
+    // Check if the avatar actually exists
+    const response = await fetch(avatarUrl, { method: "GET", redirect: "follow" });
+    
+    // If status is not 200, unavatar couldn't find a real avatar
+    if (!response.ok) {
+      console.log("Unavatar returned non-OK status:", response.status);
+      return null;
     }
+    
+    // Check content type
+    const contentType = response.headers.get("content-type");
+    if (!contentType?.startsWith("image/")) {
+      console.log("Unavatar returned non-image content type:", contentType);
+      return null;
+    }
+    
+    // Check for x-fallback header (unavatar sets this when returning default)
+    const isFallback = response.headers.get("x-fallback");
+    if (isFallback === "true") {
+      console.log("Unavatar returned fallback avatar");
+      return null;
+    }
+    
+    console.log("Unavatar found valid avatar for:", username);
+    // Return URL without fallback=false for actual use (cleaner URL)
+    return `https://unavatar.io/linkedin/${username}`;
   } catch (error) {
     console.log("Unavatar check failed:", error);
+    return null;
   }
-  
-  // Return the URL anyway - unavatar handles fallbacks gracefully
-  return avatarUrl;
 }
 
 serve(async (req) => {
