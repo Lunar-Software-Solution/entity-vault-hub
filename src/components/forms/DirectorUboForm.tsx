@@ -115,7 +115,12 @@ export const DirectorUboForm = ({
   const [isDeletingAvatar, setIsDeletingAvatar] = useState(false);
   const [enrichedAvatarUrl, setEnrichedAvatarUrl] = useState<string | null>(null);
 
-  const handleDeleteAvatar = async () => {
+  const handleDeleteAvatar = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    console.log("handleDeleteAvatar called", { itemId: item?.id, avatarUrl: item?.avatar_url, enrichedAvatarUrl });
+    
     // If only local enriched avatar (no saved record yet), just clear it
     if (!item?.id) {
       setEnrichedAvatarUrl(null);
@@ -369,7 +374,7 @@ export const DirectorUboForm = ({
                 variant="destructive"
                 size="icon"
                 className="absolute -top-2 -right-2 h-5 w-5 rounded-full"
-                onClick={handleDeleteAvatar}
+                onClick={(e) => handleDeleteAvatar(e)}
                 disabled={isDeletingAvatar}
                 title="Remove avatar"
               >
