@@ -35,6 +35,8 @@ interface DirectorUbo {
   pep_details: string | null;
   is_active: boolean;
   notes: string | null;
+  avatar_url: string | null;
+  suppress_avatar: boolean;
 }
 
 interface LinkedDirectorsUbosProps {
@@ -239,6 +241,10 @@ const LinkedDirectorsUbos = ({ directorsUbos, entityId, entityName }: LinkedDire
                     name={item.name}
                     size="md"
                     linkedinUrl={item.linkedin_url}
+                    storedAvatarUrl={item.avatar_url}
+                    recordId={item.id}
+                    tableName="directors_ubos"
+                    suppressAvatar={item.suppress_avatar}
                     fallbackIcon={
                       item.role_type === "ubo" ? (
                         <Crown className="w-5 h-5 text-purple-400" />
