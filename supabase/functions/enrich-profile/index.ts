@@ -54,17 +54,29 @@ async function fetchLinkdAPIProfile(linkedinUrl: string): Promise<{
       return null;
     }
 
-    const data = await response.json();
-    console.log("LinkdAPI response keys:", Object.keys(data));
+    const responseData = await response.json();
+    console.log("LinkdAPI response keys:", Object.keys(responseData));
+    
+    // The actual profile data is nested inside responseData.data
+    const data = responseData.data;
+    
+    if (!data) {
+      console.error("LinkdAPI returned no data object");
+      return null;
+    }
+    
+    console.log("LinkdAPI data keys:", Object.keys(data));
     
     // Log available fields for debugging
-    console.log("LinkdAPI profilePicture:", data.profilePicture || data.profile_picture || "NOT FOUND");
+    console.log("LinkdAPI profilePicture:", data.profilePicture || data.profile_picture || data.profilePictureUrl || "NOT FOUND");
     console.log("LinkdAPI headline:", data.headline || "NOT FOUND");
     console.log("LinkdAPI summary:", data.summary || data.about || "NOT FOUND");
     console.log("LinkdAPI location:", data.location || data.geoLocationName || "NOT FOUND");
+    console.log("LinkdAPI firstName:", data.firstName || "NOT FOUND");
+    console.log("LinkdAPI lastName:", data.lastName || "NOT FOUND");
 
     // Check if avatar is LinkedIn's default placeholder (skip it)
-    let avatarUrl = data.profilePicture || data.profile_picture || data.avatar || null;
+    let avatarUrl = data.profilePictureUrl || data.profilePicture || data.profile_picture || data.avatar || null;
     if (avatarUrl && avatarUrl.includes("static.licdn.com/aero-v1/sc/h/")) {
       console.log("Detected LinkedIn default placeholder, skipping avatar");
       avatarUrl = null;
