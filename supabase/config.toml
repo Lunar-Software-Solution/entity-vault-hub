@@ -11,3 +11,6 @@ verify_jwt = false
 
 [functions.enrich-profile]
 verify_jwt = false
+
+[functions.generate-recurring-tasks]
+verify_jwt = false
