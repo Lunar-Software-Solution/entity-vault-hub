@@ -93,14 +93,18 @@ const GravatarAvatar = ({
     avatarUrls.push(enrichedProfile.avatar_url);
   }
   
-  // 3. Unavatar LinkedIn fallback (works when LinkedIn CDN URLs are blocked)
-  if (linkedinUsername) {
-    avatarUrls.push(`https://unavatar.io/linkedin/${linkedinUsername}?fallback=false`);
-  }
-  
-  // 4. Gravatar fallback
-  if (gravatarUrl) {
-    avatarUrls.push(gravatarUrl);
+  // Only try fallback sources if enrichment is enabled (not in forms)
+  // This prevents unwanted network requests when opening edit forms
+  if (enableEnrichment) {
+    // 3. Unavatar LinkedIn fallback (works when LinkedIn CDN URLs are blocked)
+    if (linkedinUsername) {
+      avatarUrls.push(`https://unavatar.io/linkedin/${linkedinUsername}?fallback=false`);
+    }
+    
+    // 4. Gravatar fallback
+    if (gravatarUrl) {
+      avatarUrls.push(gravatarUrl);
+    }
   }
 
   const currentUrl = avatarUrls[currentUrlIndex];
