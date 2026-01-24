@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
-import { Sparkles, Loader2, Building2, ExternalLink } from "lucide-react";
+import { Sparkles, Loader2, Building2, ExternalLink, X } from "lucide-react";
 import { toast } from "sonner";
 import GravatarAvatar from "@/components/shared/GravatarAvatar";
 import { Link } from "react-router-dom";
@@ -109,6 +109,30 @@ export const DirectorUboForm = ({
     item?.id_documents || []
   );
   const [isEnriching, setIsEnriching] = useState(false);
+  const [avatarDeleted, setAvatarDeleted] = useState(false);
+  const [isDeletingAvatar, setIsDeletingAvatar] = useState(false);
+
+  const handleDeleteAvatar = async () => {
+    if (!item?.id || !item?.avatar_url) return;
+    
+    setIsDeletingAvatar(true);
+    try {
+      const { error } = await supabase
+        .from("directors_ubos")
+        .update({ avatar_url: null })
+        .eq("id", item.id);
+      
+      if (error) throw error;
+      
+      setAvatarDeleted(true);
+      toast.success("Avatar removed");
+    } catch (error) {
+      console.error("Failed to delete avatar:", error);
+      toast.error("Failed to remove avatar");
+    } finally {
+      setIsDeletingAvatar(false);
+    }
+  };
 
   // Fetch existing ID documents when editing
   useEffect(() => {
@@ -286,14 +310,32 @@ export const DirectorUboForm = ({
 
         {/* Avatar Preview + Basic Info */}
         <div className="flex items-start gap-4">
-          <GravatarAvatar
-            email={email}
-            name={name || ""}
-            size="lg"
-            linkedinUrl={linkedinUrl}
-            storedAvatarUrl={item?.avatar_url}
-            className="mt-6"
-          />
+          <div className="relative mt-6">
+            <GravatarAvatar
+              email={email}
+              name={name || ""}
+              size="lg"
+              linkedinUrl={linkedinUrl}
+              storedAvatarUrl={avatarDeleted ? null : item?.avatar_url}
+            />
+            {item?.avatar_url && !avatarDeleted && (
+              <Button
+                type="button"
+                variant="destructive"
+                size="icon"
+                className="absolute -top-2 -right-2 h-5 w-5 rounded-full"
+                onClick={handleDeleteAvatar}
+                disabled={isDeletingAvatar}
+                title="Remove avatar"
+              >
+                {isDeletingAvatar ? (
+                  <Loader2 className="h-3 w-3 animate-spin" />
+                ) : (
+                  <X className="h-3 w-3" />
+                )}
+              </Button>
+            )}
+          </div>
           <div className="flex-1 grid grid-cols-2 gap-4">
             <FormField
               control={form.control}
