@@ -1,5 +1,5 @@
-import { useState, useMemo } from "react";
-import { Plus, Calendar, List, CheckSquare, Search, Filter, Square, SquareCheck, SquarePen, SquareX, PlaySquare, Trash2, Mail, Loader2 } from "lucide-react";
+import { useState, useMemo, useCallback } from "react";
+import { Plus, Calendar, List, CheckSquare, Search, Filter, Square, SquareCheck, SquarePen, SquareX, PlaySquare, Trash2, Mail, Loader2, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -46,6 +46,7 @@ import FilingsCalendar from "@/components/filings/FilingsCalendar";
 import { useUserRole } from "@/hooks/useUserRole";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import ColumnMultiFilter, { FilterOption } from "@/components/shared/ColumnMultiFilter";
 import { format } from "date-fns";
 import { 
   getFilingDisplayStatus, 
@@ -75,6 +76,13 @@ const FilingsSection = ({ entityFilter }: FilingsSectionProps) => {
   const [preselectedDate, setPreselectedDate] = useState<string>("");
   const [sendingReminders, setSendingReminders] = useState(false);
   const { toast } = useToast();
+
+  // Multi-select column filters for Tasks
+  const [taskEntityFilter, setTaskEntityFilter] = useState<string[]>([]);
+  const [taskPriorityFilter, setTaskPriorityFilter] = useState<string[]>([]);
+  const [taskStatusFilter, setTaskStatusFilter] = useState<string[]>([]);
+  const [taskAssigneeFilter, setTaskAssigneeFilter] = useState<string[]>([]);
+  const [taskSearchQuery, setTaskSearchQuery] = useState("");
 
   const { data: filings, isLoading: filingsLoading } = useEntityFilings();
   const { data: tasks, isLoading: tasksLoading } = useFilingTasks();
@@ -117,14 +125,31 @@ const FilingsSection = ({ entityFilter }: FilingsSectionProps) => {
     });
   }, [filings, entityFilter, statusFilter, searchQuery, entities, filingTypes]);
 
-  // Filter tasks by entity and search
+  // Filter tasks with advanced multi-select column filters
   const filteredTasks = useMemo(() => {
     if (!tasks) return [];
     return tasks.filter(task => {
+      // Global entity filter from header
       if (entityFilter && task.entity_id !== entityFilter) return false;
-      if (statusFilter !== "all" && task.status !== statusFilter) return false;
-      if (searchQuery) {
-        const query = searchQuery.toLowerCase();
+      
+      // Multi-select entity filter
+      if (taskEntityFilter.length > 0 && !taskEntityFilter.includes(task.entity_id)) return false;
+      
+      // Multi-select priority filter
+      if (taskPriorityFilter.length > 0 && !taskPriorityFilter.includes(task.priority)) return false;
+      
+      // Multi-select status filter
+      if (taskStatusFilter.length > 0 && !taskStatusFilter.includes(task.status)) return false;
+      
+      // Multi-select assignee filter
+      if (taskAssigneeFilter.length > 0) {
+        const assignee = task.assigned_to || "__unassigned__";
+        if (!taskAssigneeFilter.includes(assignee)) return false;
+      }
+      
+      // Text search
+      if (taskSearchQuery) {
+        const query = taskSearchQuery.toLowerCase();
         const entity = entities?.find(e => e.id === task.entity_id);
         return (
           task.title.toLowerCase().includes(query) ||
@@ -134,7 +159,70 @@ const FilingsSection = ({ entityFilter }: FilingsSectionProps) => {
       }
       return true;
     });
-  }, [tasks, entityFilter, statusFilter, searchQuery, entities]);
+  }, [tasks, entityFilter, taskEntityFilter, taskPriorityFilter, taskStatusFilter, taskAssigneeFilter, taskSearchQuery, entities]);
+
+  // Generate filter options from data
+  const taskFilterOptions = useMemo(() => {
+    if (!tasks || !entities) return { entities: [], priorities: [], statuses: [], assignees: [] };
+    
+    const entitySet = new Set<string>();
+    const prioritySet = new Set<string>();
+    const statusSet = new Set<string>();
+    const assigneeSet = new Set<string>();
+    
+    tasks.forEach(task => {
+      entitySet.add(task.entity_id);
+      prioritySet.add(task.priority);
+      statusSet.add(task.status);
+      if (task.assigned_to) {
+        assigneeSet.add(task.assigned_to);
+      } else {
+        assigneeSet.add("__unassigned__");
+      }
+    });
+    
+    const priorityOrder = ["urgent", "high", "medium", "low"];
+    const statusOrder = ["pending", "in_progress", "completed", "cancelled"];
+    
+    return {
+      entities: Array.from(entitySet).map(id => ({
+        value: id,
+        label: entities.find(e => e.id === id)?.name || "Unknown"
+      })).sort((a, b) => a.label.localeCompare(b.label)),
+      priorities: priorityOrder
+        .filter(p => prioritySet.has(p))
+        .map(p => ({
+          value: p,
+          label: getPriorityLabel(p),
+          color: p === "urgent" ? "bg-red-500" : p === "high" ? "bg-orange-500" : p === "medium" ? "bg-yellow-500" : "bg-green-500"
+        })),
+      statuses: statusOrder
+        .filter(s => statusSet.has(s))
+        .map(s => ({
+          value: s,
+          label: getStatusLabel(s),
+          color: s === "pending" ? "bg-blue-500" : s === "in_progress" ? "bg-yellow-500" : s === "completed" ? "bg-green-500" : "bg-zinc-500"
+        })),
+      assignees: Array.from(assigneeSet).map(a => ({
+        value: a,
+        label: a === "__unassigned__" ? "Unassigned" : a
+      })).sort((a, b) => {
+        if (a.value === "__unassigned__") return 1;
+        if (b.value === "__unassigned__") return -1;
+        return a.label.localeCompare(b.label);
+      })
+    };
+  }, [tasks, entities]);
+
+  const clearAllTaskFilters = useCallback(() => {
+    setTaskEntityFilter([]);
+    setTaskPriorityFilter([]);
+    setTaskStatusFilter([]);
+    setTaskAssigneeFilter([]);
+    setTaskSearchQuery("");
+  }, []);
+
+  const hasActiveTaskFilters = taskEntityFilter.length > 0 || taskPriorityFilter.length > 0 || taskStatusFilter.length > 0 || taskAssigneeFilter.length > 0 || taskSearchQuery !== "";
 
   const getEntityName = (entityId: string) => {
     return entities?.find(e => e.id === entityId)?.name || "Unknown";
@@ -472,17 +560,72 @@ const FilingsSection = ({ entityFilter }: FilingsSectionProps) => {
 
         {/* Tasks Tab */}
         <TabsContent value="tasks" className="mt-0">
+          {/* Task Filters Bar */}
+          <div className="flex items-center gap-2 mb-4 flex-wrap">
+            <div className="relative flex-1 min-w-[200px] max-w-[300px]">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+              <Input
+                placeholder="Search tasks..."
+                value={taskSearchQuery}
+                onChange={(e) => setTaskSearchQuery(e.target.value)}
+                className="pl-9"
+              />
+            </div>
+            {hasActiveTaskFilters && (
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={clearAllTaskFilters}
+                className="text-muted-foreground hover:text-foreground gap-1"
+              >
+                <X className="h-4 w-4" />
+                Clear filters
+              </Button>
+            )}
+            <div className="text-sm text-muted-foreground ml-auto">
+              {filteredTasks.length} of {tasks?.length || 0} tasks
+            </div>
+          </div>
+
           <div className="glass-card rounded-xl overflow-hidden">
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Task</TableHead>
-                  <TableHead>Entity</TableHead>
-                  <TableHead>Due Date</TableHead>
-                  <TableHead>Priority</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Assigned To</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
+                  <TableHead className="text-foreground">Task</TableHead>
+                  <TableHead className="p-0">
+                    <ColumnMultiFilter
+                      title="Entity"
+                      options={taskFilterOptions.entities}
+                      selectedValues={taskEntityFilter}
+                      onSelectionChange={setTaskEntityFilter}
+                    />
+                  </TableHead>
+                  <TableHead className="text-foreground">Due Date</TableHead>
+                  <TableHead className="p-0">
+                    <ColumnMultiFilter
+                      title="Priority"
+                      options={taskFilterOptions.priorities}
+                      selectedValues={taskPriorityFilter}
+                      onSelectionChange={setTaskPriorityFilter}
+                    />
+                  </TableHead>
+                  <TableHead className="p-0">
+                    <ColumnMultiFilter
+                      title="Status"
+                      options={taskFilterOptions.statuses}
+                      selectedValues={taskStatusFilter}
+                      onSelectionChange={setTaskStatusFilter}
+                    />
+                  </TableHead>
+                  <TableHead className="p-0">
+                    <ColumnMultiFilter
+                      title="Assigned To"
+                      options={taskFilterOptions.assignees}
+                      selectedValues={taskAssigneeFilter}
+                      onSelectionChange={setTaskAssigneeFilter}
+                    />
+                  </TableHead>
+                  <TableHead className="text-right text-foreground">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
