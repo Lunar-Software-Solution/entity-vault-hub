@@ -59,6 +59,7 @@ interface DirectorUbo {
   avatar_url: string | null;
   bio: string | null;
   company: string | null;
+  suppress_avatar: boolean;
 }
 
 const useDirectorsUbos = () => {
@@ -523,6 +524,7 @@ const DirectorsUboSection = ({ entityFilter }: DirectorsUboSectionProps) => {
                         storedAvatarUrl={item.avatar_url}
                         recordId={item.id}
                         tableName="directors_ubos"
+                        suppressAvatar={item.suppress_avatar}
                         fallbackIcon={
                           item.role_type === "ubo" ? (
                             <Crown className="w-5 h-5 text-purple-400" />

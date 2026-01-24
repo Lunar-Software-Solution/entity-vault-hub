@@ -130,13 +130,12 @@ export const DirectorUboForm = ({
     // Always clear the enriched avatar first
     setEnrichedAvatarUrl(null);
 
-    // Always try to clear from DB when we have a record ID
-    // (avatars are now auto-saved from fallback sources)
+    // Clear avatar_url and set suppress_avatar flag in DB
     setIsDeletingAvatar(true);
     try {
       const { error } = await supabase
         .from("directors_ubos")
-        .update({ avatar_url: null })
+        .update({ avatar_url: null, suppress_avatar: true })
         .eq("id", item.id);
       
       if (error) throw error;

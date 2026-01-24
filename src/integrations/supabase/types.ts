@@ -717,6 +717,7 @@ export type Database = {
           phone: string | null
           resignation_date: string | null
           role_type: string
+          suppress_avatar: boolean
           title: string | null
           updated_at: string
         }
@@ -750,6 +751,7 @@ export type Database = {
           phone?: string | null
           resignation_date?: string | null
           role_type?: string
+          suppress_avatar?: boolean
           title?: string | null
           updated_at?: string
         }
@@ -783,6 +785,7 @@ export type Database = {
           phone?: string | null
           resignation_date?: string | null
           role_type?: string
+          suppress_avatar?: boolean
           title?: string | null
           updated_at?: string
         }
@@ -2009,6 +2012,7 @@ export type Database = {
           notes: string | null
           phone: string | null
           shareholder_type: string
+          suppress_avatar: boolean
           tax_id: string | null
           updated_at: string
         }
@@ -2028,6 +2032,7 @@ export type Database = {
           notes?: string | null
           phone?: string | null
           shareholder_type?: string
+          suppress_avatar?: boolean
           tax_id?: string | null
           updated_at?: string
         }
@@ -2047,6 +2052,7 @@ export type Database = {
           notes?: string | null
           phone?: string | null
           shareholder_type?: string
+          suppress_avatar?: boolean
           tax_id?: string | null
           updated_at?: string
         }

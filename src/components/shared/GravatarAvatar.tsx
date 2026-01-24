@@ -18,6 +18,8 @@ interface GravatarAvatarProps {
   // Optional: for auto-saving enriched data to database
   recordId?: string;
   tableName?: "directors_ubos" | "shareholders";
+  // Optional: when true, skip all avatar loading and show initials
+  suppressAvatar?: boolean;
 }
 
 const sizeClasses = {
@@ -49,6 +51,7 @@ const GravatarAvatar = ({
   storedAvatarUrl,
   recordId,
   tableName,
+  suppressAvatar = false,
 }: GravatarAvatarProps) => {
   const [imageStatus, setImageStatus] = useState<"loading" | "loaded" | "error">("loading");
   const [currentUrlIndex, setCurrentUrlIndex] = useState(0);
@@ -185,6 +188,32 @@ const GravatarAvatar = ({
     }
   }, [imageStatus, currentUrl, handleError]);
 
+  // Helper to render initials fallback
+  const renderInitialsFallback = () => (
+    <div
+      className={cn(
+        sizeClasses[size],
+        "rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0",
+        className
+      )}
+    >
+      {fallbackIcon || (
+        initials ? (
+          <span className={cn("font-medium text-primary", textSizes[size])}>
+            {initials}
+          </span>
+        ) : (
+          <User className="w-1/2 h-1/2 text-primary" />
+        )
+      )}
+    </div>
+  );
+
+  // If avatar is suppressed, always show initials
+  if (suppressAvatar) {
+    return renderInitialsFallback();
+  }
+
   // Show loading state while enriching
   if (isEnriching && enableEnrichment) {
     return (
@@ -200,25 +229,7 @@ const GravatarAvatar = ({
 
   // If no URLs available, all failed, or no current URL, show initials fallback
   if (avatarUrls.length === 0 || imageStatus === "error" || !currentUrl) {
-    return (
-      <div
-        className={cn(
-          sizeClasses[size],
-          "rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0",
-          className
-        )}
-      >
-        {fallbackIcon || (
-          initials ? (
-            <span className={cn("font-medium text-primary", textSizes[size])}>
-              {initials}
-            </span>
-          ) : (
-            <User className="w-1/2 h-1/2 text-primary" />
-          )
-        )}
-      </div>
-    );
+    return renderInitialsFallback();
   }
 
   return (
