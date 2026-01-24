@@ -317,6 +317,7 @@ export const DirectorUboForm = ({
               size="lg"
               linkedinUrl={linkedinUrl}
               storedAvatarUrl={avatarDeleted ? null : item?.avatar_url}
+              enableEnrichment={false}
             />
             {item?.avatar_url && !avatarDeleted && (
               <Button
