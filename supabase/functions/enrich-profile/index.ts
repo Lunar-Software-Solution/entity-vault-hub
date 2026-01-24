@@ -6,6 +6,38 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
+// Extract LinkedIn username from URL
+function extractLinkedInUsername(url: string): string | null {
+  if (!url) return null;
+  const match = url.match(/linkedin\.com\/in\/([^\/\?]+)/i);
+  return match ? match[1] : null;
+}
+
+// Try to fetch avatar from unavatar.io using LinkedIn username
+async function getUnavatarUrl(linkedinUrl: string): Promise<string | null> {
+  const username = extractLinkedInUsername(linkedinUrl);
+  if (!username) return null;
+  
+  const avatarUrl = `https://unavatar.io/linkedin/${username}`;
+  
+  try {
+    // Check if the avatar exists (unavatar returns a fallback, so we check headers)
+    const response = await fetch(avatarUrl, { method: "HEAD" });
+    if (response.ok) {
+      // Check if it's not a fallback by looking at content-type or size
+      const contentType = response.headers.get("content-type");
+      if (contentType?.startsWith("image/")) {
+        return avatarUrl;
+      }
+    }
+  } catch (error) {
+    console.log("Unavatar check failed:", error);
+  }
+  
+  // Return the URL anyway - unavatar handles fallbacks gracefully
+  return avatarUrl;
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -49,12 +81,20 @@ serve(async (req) => {
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) {
       console.error("LOVABLE_API_KEY is not configured");
+      
+      // Try unavatar fallback for LinkedIn
+      let avatarUrl = null;
+      if (linkedin_url) {
+        avatarUrl = await getUnavatarUrl(linkedin_url);
+        console.log("Using unavatar fallback for LinkedIn:", avatarUrl);
+      }
+      
       return new Response(
         JSON.stringify({ 
           success: false, 
           fallback: true,
           message: "AI enrichment not configured",
-          data: { name: name || null, email: email || null, linkedin_url: linkedin_url || null, avatar_url: null }
+          data: { name: name || null, email: email || null, linkedin_url: linkedin_url || null, avatar_url: avatarUrl }
         }),
         { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
@@ -118,12 +158,18 @@ Important: Only include information you are confident about. For avatar_url, onl
         );
       }
       
+      // Try unavatar fallback
+      let avatarUrl = null;
+      if (linkedin_url) {
+        avatarUrl = await getUnavatarUrl(linkedin_url);
+      }
+      
       return new Response(
         JSON.stringify({
           success: false,
           fallback: true,
           message: "AI enrichment unavailable",
-          data: { name: name || null, email: email || null, linkedin_url: linkedin_url || null, avatar_url: null }
+          data: { name: name || null, email: email || null, linkedin_url: linkedin_url || null, avatar_url: avatarUrl }
         }),
         { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
@@ -155,6 +201,17 @@ Important: Only include information you are confident about. For avatar_url, onl
       };
     }
 
+    // If AI didn't return an avatar, try unavatar.io fallback for LinkedIn
+    let finalAvatarUrl = enrichedData.avatar_url || null;
+    const finalLinkedInUrl = linkedin_url || enrichedData.linkedin_url;
+    
+    if (!finalAvatarUrl && finalLinkedInUrl) {
+      finalAvatarUrl = await getUnavatarUrl(finalLinkedInUrl);
+      if (finalAvatarUrl) {
+        console.log("Using unavatar.io fallback for avatar:", finalAvatarUrl);
+      }
+    }
+
     // Merge with input data (input takes precedence for email/linkedin_url)
     const result = {
       success: true,
@@ -162,8 +219,8 @@ Important: Only include information you are confident about. For avatar_url, onl
       data: {
         name: enrichedData.name || name || null,
         email: email || enrichedData.email || null,
-        linkedin_url: linkedin_url || enrichedData.linkedin_url || null,
-        avatar_url: enrichedData.avatar_url || null,
+        linkedin_url: finalLinkedInUrl || null,
+        avatar_url: finalAvatarUrl,
         title: enrichedData.title || null,
         company: enrichedData.company || null,
         location: enrichedData.location || null,
