@@ -28,7 +28,7 @@ import AuditorForm from "@/components/forms/AuditorForm";
 import AdvisorForm from "@/components/forms/AdvisorForm";
 import ConsultantForm from "@/components/forms/ConsultantForm";
 import RegistrationAgentForm from "@/components/forms/RegistrationAgentForm";
-import { Plus, Edit, Trash2, Search, Scale, Calculator, ClipboardCheck, Lightbulb, Briefcase, UserCheck, ExternalLink } from "lucide-react";
+import { Plus, Edit, Trash2, Search, Scale, Calculator, ClipboardCheck, Lightbulb, Briefcase, UserCheck, ExternalLink, Linkedin } from "lucide-react";
 import { useUserRole } from "@/hooks/useUserRole";
 
 type ProviderType = "law_firms" | "accountants" | "auditors" | "advisors" | "consultants" | "registration_agents";
@@ -387,7 +387,22 @@ const ServiceProvidersSection = () => {
                         {item.is_active ? "Active" : "Inactive"}
                       </Badge>
                     </TableCell>
-                    <TableCell className="text-muted-foreground">{item.email || "—"}</TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-2">
+                        <span className="text-muted-foreground">{item.email || "—"}</span>
+                        {item.linkedin_url && (
+                          <a
+                            href={item.linkedin_url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-[#0A66C2] hover:text-[#0A66C2]/80"
+                            title="View LinkedIn"
+                          >
+                            <Linkedin className="w-4 h-4" />
+                          </a>
+                        )}
+                      </div>
+                    </TableCell>
                     <TableCell>
                       {canWrite && (
                         <div className="flex gap-1">

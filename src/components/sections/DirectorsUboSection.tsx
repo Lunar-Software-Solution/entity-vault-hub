@@ -2,7 +2,7 @@ import { useState, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Plus, Search, Building2, User, Users, Crown, MoreVertical, Mail, Phone, Calendar, Percent, Shield, AlertTriangle, Pencil, Trash2 } from "lucide-react";
+import { Plus, Search, Building2, User, Users, Crown, MoreVertical, Mail, Phone, Calendar, Percent, Shield, AlertTriangle, Pencil, Trash2, Linkedin } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -44,6 +44,7 @@ interface DirectorUbo {
   address: string | null;
   email: string | null;
   phone: string | null;
+  linkedin_url: string | null;
   passport_number: string | null;
   id_document_type: string | null;
   id_document_number: string | null;
@@ -572,6 +573,20 @@ const DirectorsUboSection = ({ entityFilter }: DirectorsUboSectionProps) => {
                       <div className="flex items-center gap-2 text-muted-foreground">
                         <Phone className="w-4 h-4" />
                         <span>{item.phone}</span>
+                      </div>
+                    )}
+
+                    {item.linkedin_url && (
+                      <div className="flex items-center gap-2">
+                        <a
+                          href={item.linkedin_url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center gap-2 text-[#0A66C2] hover:underline"
+                        >
+                          <Linkedin className="w-4 h-4" />
+                          <span className="text-sm">LinkedIn</span>
+                        </a>
                       </div>
                     )}
 

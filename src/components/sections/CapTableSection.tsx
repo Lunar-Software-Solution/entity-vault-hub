@@ -16,7 +16,7 @@ import { toast } from "sonner";
 import { format } from "date-fns";
 import { 
   Plus, SquarePen, Trash2, Search, PieChart, Users, Layers, ArrowRightLeft, 
-  TrendingUp, DollarSign, Percent
+  TrendingUp, DollarSign, Percent, Linkedin
 } from "lucide-react";
 import ShareClassForm from "@/components/captable/ShareClassForm";
 import ShareholderForm from "@/components/captable/ShareholderForm";
@@ -57,6 +57,7 @@ interface Shareholder {
   shareholder_type: string;
   email: string | null;
   phone: string | null;
+  linkedin_url: string | null;
   address: string | null;
   tax_id: string | null;
   is_founder: boolean;
@@ -414,7 +415,22 @@ const CapTableSection = () => {
                           : getEntityName(shareholder.entity_id)}
                       </span>
                     </TableCell>
-                    <TableCell className="text-muted-foreground">{shareholder.email || "—"}</TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-2">
+                        <span className="text-muted-foreground">{shareholder.email || "—"}</span>
+                        {shareholder.linkedin_url && (
+                          <a
+                            href={shareholder.linkedin_url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-[#0A66C2] hover:text-[#0A66C2]/80"
+                            title="View LinkedIn"
+                          >
+                            <Linkedin className="w-4 h-4" />
+                          </a>
+                        )}
+                      </div>
+                    </TableCell>
                     <TableCell>
                       <div className="flex gap-1">
                         {shareholder.is_founder && (
