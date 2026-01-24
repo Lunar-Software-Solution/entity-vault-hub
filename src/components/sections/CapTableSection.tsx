@@ -408,23 +408,21 @@ const CapTableSection = () => {
                       <Badge variant="secondary">{shareholder.shareholder_type}</Badge>
                     </TableCell>
                     <TableCell>
-                      <div className="flex flex-wrap gap-1">
-                        {shareholder.entity_links && shareholder.entity_links.length > 0 ? (
-                          shareholder.entity_links.map((link) => (
-                            <Badge key={link.id} variant="outline" className="text-xs bg-muted/50">
-                              {link.entity?.name || "Unknown"}
-                            </Badge>
-                          ))
-                        ) : (
-                          <span className="text-muted-foreground">{getEntityName(shareholder.entity_id)}</span>
-                        )}
-                      </div>
+                      <span className="text-foreground">
+                        {shareholder.entity_links && shareholder.entity_links.length > 0 
+                          ? shareholder.entity_links.map(link => link.entity?.name || "Unknown").join(", ")
+                          : getEntityName(shareholder.entity_id)}
+                      </span>
                     </TableCell>
                     <TableCell className="text-muted-foreground">{shareholder.email || "—"}</TableCell>
                     <TableCell>
                       <div className="flex gap-1">
-                        {shareholder.is_founder && <Badge variant="default">Founder</Badge>}
-                        {shareholder.is_board_member && <Badge variant="outline">Board</Badge>}
+                        {shareholder.is_founder && (
+                          <Badge className="bg-green-600 hover:bg-green-600 text-white border-0">Founder</Badge>
+                        )}
+                        {shareholder.is_board_member && (
+                          <Badge variant="secondary" className="bg-muted text-foreground border border-border">Board</Badge>
+                        )}
                       </div>
                     </TableCell>
                     <TableCell>
