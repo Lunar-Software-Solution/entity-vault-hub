@@ -68,48 +68,64 @@ async function fetchLinkdAPIProfile(linkedinUrl: string): Promise<{
     console.log("LinkdAPI data keys:", Object.keys(data));
     
     // Log available fields for debugging
-    console.log("LinkdAPI profilePicture:", data.profilePicture || data.profile_picture || data.profilePictureUrl || "NOT FOUND");
+    console.log("LinkdAPI profilePictureURL:", data.profilePictureURL || "NOT FOUND");
     console.log("LinkdAPI headline:", data.headline || "NOT FOUND");
     console.log("LinkdAPI summary:", data.summary || data.about || "NOT FOUND");
-    console.log("LinkdAPI location:", data.location || data.geoLocationName || "NOT FOUND");
+    console.log("LinkdAPI location:", data.location || "NOT FOUND");
     console.log("LinkdAPI firstName:", data.firstName || "NOT FOUND");
     console.log("LinkdAPI lastName:", data.lastName || "NOT FOUND");
+    console.log("LinkdAPI CurrentPositions:", data.CurrentPositions || "NOT FOUND");
 
     // Check if avatar is LinkedIn's default placeholder (skip it)
-    let avatarUrl = data.profilePictureUrl || data.profilePicture || data.profile_picture || data.avatar || null;
+    let avatarUrl = data.profilePictureURL || data.profilePictureUrl || data.profilePicture || null;
     if (avatarUrl && avatarUrl.includes("static.licdn.com/aero-v1/sc/h/")) {
       console.log("Detected LinkedIn default placeholder, skipping avatar");
       avatarUrl = null;
     }
 
-    // Extract title and company from headline or current position
+    // Extract title and company from CurrentPositions (LinkdAPI uses this field name)
     let title: string | null = null;
     let company: string | null = null;
 
-    // Try to get current position from experiences
-    const experiences = data.experiences || data.experience || data.positions || [];
-    const currentJob = experiences.find((exp: any) => !exp.end_date && !exp.endDate && !exp.end) || experiences[0];
-    
-    if (currentJob) {
+    // Try to get current position from CurrentPositions array
+    const positions = data.CurrentPositions || data.currentPositions || data.experiences || [];
+    if (positions.length > 0) {
+      const currentJob = positions[0];
       title = currentJob.title || currentJob.position || currentJob.role || null;
-      company = currentJob.company || currentJob.company_name || currentJob.companyName || null;
+      company = currentJob.companyName || currentJob.company || currentJob.company_name || null;
     }
 
-    // Fallback: parse from headline (e.g., "CEO at Secure Group")
+    // Fallback: parse from headline (e.g., "CEO at Secure Group" or "Title | Company")
     if ((!title || !company) && data.headline) {
-      const headlineMatch = data.headline.match(/^([^|]+?)\s+at\s+([^|]+)/i);
-      if (headlineMatch) {
-        title = title || headlineMatch[1].trim();
-        company = company || headlineMatch[2].trim();
+      // Try "at" pattern first
+      const atMatch = data.headline.match(/^([^|]+?)\s+at\s+([^|]+)/i);
+      if (atMatch) {
+        title = title || atMatch[1].trim();
+        company = company || atMatch[2].trim();
+      } else {
+        // Try pipe pattern "Title | Company"
+        const pipeMatch = data.headline.match(/\|\s*(?:Founder of|CEO of|Owner of)?\s*(.+)$/i);
+        if (pipeMatch) {
+          company = company || pipeMatch[1].trim();
+        }
       }
-      // If no "at" pattern, use headline as title
+      // If still no title, use the first part of headline before any pipe
       if (!title && data.headline) {
-        title = data.headline;
+        title = data.headline.split('|')[0].trim();
       }
     }
 
-    // Build location
-    const location = data.location || data.geoLocationName || data.geo_location || null;
+    // Build location - handle object structure
+    let location: string | null = null;
+    if (data.location) {
+      if (typeof data.location === 'string') {
+        location = data.location;
+      } else if (data.location.fullLocation) {
+        location = data.location.fullLocation;
+      } else if (data.location.city && data.location.countryName) {
+        location = `${data.location.city}, ${data.location.countryName}`;
+      }
+    }
 
     // Get bio/summary
     const bio = data.summary || data.about || data.description || null;
@@ -118,9 +134,7 @@ async function fetchLinkdAPIProfile(linkedinUrl: string): Promise<{
     const fullName = data.fullName || data.full_name || data.name ||
                      (data.firstName && data.lastName 
                        ? `${data.firstName} ${data.lastName}` 
-                       : data.first_name && data.last_name
-                         ? `${data.first_name} ${data.last_name}`
-                         : null);
+                       : null);
 
     return {
       avatar_url: avatarUrl,
