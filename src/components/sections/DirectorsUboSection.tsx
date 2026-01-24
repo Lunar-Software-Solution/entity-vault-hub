@@ -230,8 +230,9 @@ const DirectorsUboSection = ({ entityFilter }: DirectorsUboSectionProps) => {
   const enrichMutation = useEnrichAndSaveProfile();
 
   const handleReEnrich = async (item: DirectorUbo) => {
-    if (!item.email && !item.linkedin_url) {
-      toast.error("No email or LinkedIn URL to enrich from");
+    // LinkedIn URL is required for Coresignal enrichment
+    if (!item.linkedin_url) {
+      toast.error("LinkedIn URL is required for profile enrichment");
       return;
     }
     
@@ -559,7 +560,7 @@ const DirectorsUboSection = ({ entityFilter }: DirectorsUboSectionProps) => {
                           </DropdownMenuItem>
                           <DropdownMenuItem 
                             onClick={() => handleReEnrich(item)}
-                            disabled={enrichingId === item.id || (!item.email && !item.linkedin_url)}
+                            disabled={enrichingId === item.id || !item.linkedin_url}
                           >
                             <RefreshCw className={`h-4 w-4 mr-2 ${enrichingId === item.id ? 'animate-spin' : ''}`} />
                             {enrichingId === item.id ? 'Enriching...' : 'Re-enrich Profile'}
