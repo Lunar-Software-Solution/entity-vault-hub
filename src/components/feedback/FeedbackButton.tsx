@@ -14,8 +14,7 @@ import {
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
-
-const PLANE_INTAKE_URL = "https://projects.lunr.tech/api/v1/intake/9ec06cc8e1f749f8b13a1c87a29e191c/";
+import { supabase } from "@/integrations/supabase/client";
 
 const FeedbackButton = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -42,16 +41,12 @@ const FeedbackButton = () => {
         email: user?.email || undefined,
       };
 
-      const response = await fetch(PLANE_INTAKE_URL, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(payload),
+      const { data, error } = await supabase.functions.invoke("submit-feedback", {
+        body: payload,
       });
 
-      if (!response.ok) {
-        throw new Error("Failed to submit feedback");
+      if (error) {
+        throw error;
       }
 
       toast.success("Thank you for your feedback!");
