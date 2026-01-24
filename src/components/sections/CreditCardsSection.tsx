@@ -227,9 +227,9 @@ const CreditCardsSection = ({ entityFilter }: CreditCardsSectionProps) => {
                         {canWrite && (
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>
-                              <button className="p-1 hover:bg-white/20 rounded transition-colors">
-                                <MoreVertical className="w-5 h-5" />
-                              </button>
+                              <Button variant="ghost" size="icon" className="h-8 w-8 text-foreground">
+                                <MoreVertical className="h-4 w-4" />
+                              </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end">
                               <DropdownMenuItem onClick={() => handleEdit(card)}>
