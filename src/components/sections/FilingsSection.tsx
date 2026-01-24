@@ -226,7 +226,7 @@ const FilingsSection = ({ entityFilter }: FilingsSectionProps) => {
         </div>
         {canWrite && (
           <div className="flex items-center gap-2">
-            <Button variant="outline" onClick={() => setShowTaskForm(true)}>
+            <Button variant="outline" className="text-foreground" onClick={() => setShowTaskForm(true)}>
               <CheckSquare className="w-4 h-4 mr-2" />
               Add Task
             </Button>
