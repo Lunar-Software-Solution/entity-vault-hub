@@ -55,20 +55,36 @@ async function fetchCoresignalProfile(linkedinUrl: string): Promise<{
     }
 
     const data = await response.json();
-    console.log("Coresignal response preview:", JSON.stringify(data).slice(0, 500));
+    console.log("Coresignal response keys:", Object.keys(data));
     console.log("Coresignal picture_url:", data.picture_url || "NOT FOUND");
+    console.log("Coresignal headline:", data.headline || "NOT FOUND");
+    console.log("Coresignal summary:", data.summary || "NOT FOUND");
+    console.log("Coresignal location:", data.location || "NOT FOUND");
 
     // Extract the most recent experience for title/company
     const experiences = data.member_experience_collection || [];
     const currentJob = experiences.find((exp: any) => !exp.date_to) || experiences[0];
+    
+    // Parse title and company from headline if not in experiences
+    let title = currentJob?.title || null;
+    let company = currentJob?.company_name || null;
+    
+    // If no experience data, try to parse from headline (e.g., "CEO at Secure Group")
+    if ((!title || !company) && data.headline) {
+      const headlineMatch = data.headline.match(/^([^|]+?)\s+at\s+([^|]+)/i);
+      if (headlineMatch) {
+        title = title || headlineMatch[1].trim();
+        company = company || headlineMatch[2].trim();
+      }
+    }
 
     return {
       avatar_url: data.picture_url || null,
       name: data.full_name || null,
-      title: currentJob?.title || data.title || null,
-      company: currentJob?.company_name || data.company || null,
+      title: title,
+      company: company,
       location: data.location || null,
-      bio: data.summary || null,
+      bio: data.summary || data.generated_headline || null,
     };
   } catch (error) {
     console.error("Coresignal fetch error:", error);
