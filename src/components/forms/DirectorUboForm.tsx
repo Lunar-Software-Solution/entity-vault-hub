@@ -253,11 +253,20 @@ export const DirectorUboForm = ({
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(handleFormSubmit)} className="space-y-6">
-        {/* Parent Entity Link */}
-        {entityName && (
+        {/* Entity Affiliations - shown at top for existing directors */}
+        {item?.id && (
+          <EntityAffiliationsManager
+            directorId={item.id}
+            currentEntityId={entityId}
+            currentEntityName={entityName}
+          />
+        )}
+
+        {/* Parent Entity Link - only shown for new directors */}
+        {!item?.id && entityName && (
           <div className="flex items-center gap-2 p-3 bg-muted/50 rounded-lg border">
             <Building2 className="h-4 w-4 text-muted-foreground" />
-            <span className="text-sm text-muted-foreground">Linked to:</span>
+            <span className="text-sm text-muted-foreground">Will be linked to:</span>
             <Link
               to={`/entity/${entityId}`}
               className="text-sm font-medium text-primary hover:underline inline-flex items-center gap-1"
@@ -578,12 +587,14 @@ export const DirectorUboForm = ({
           />
         </div>
 
-        {/* Entity Affiliations */}
-        <EntityAffiliationsManager
-          directorId={item?.id || null}
-          currentEntityId={entityId}
-          currentEntityName={entityName}
-        />
+        {/* Entity Affiliations - for new directors only (existing directors show it at top) */}
+        {!item?.id && (
+          <EntityAffiliationsManager
+            directorId={null}
+            currentEntityId={entityId}
+            currentEntityName={entityName}
+          />
+        )}
 
         {/* PEP Status */}
         <div className="space-y-4">
