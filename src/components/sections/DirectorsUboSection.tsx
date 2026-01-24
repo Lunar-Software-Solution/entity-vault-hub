@@ -16,6 +16,17 @@ import DeleteConfirmDialog from "@/components/shared/DeleteConfirmDialog";
 import GravatarAvatar from "@/components/shared/GravatarAvatar";
 import DirectorUboForm, { DirectorUboFormData } from "@/components/forms/DirectorUboForm";
 
+interface EntityLink {
+  id: string;
+  entity_id: string;
+  role_type: string;
+  entity: {
+    id: string;
+    name: string;
+    website: string | null;
+  } | null;
+}
+
 interface DirectorUbo {
   id: string;
   entity_id: string;
@@ -43,18 +54,46 @@ interface DirectorUbo {
   notes: string | null;
   created_at: string;
   updated_at: string;
+  entity_links?: EntityLink[];
 }
 
 const useDirectorsUbos = () => {
   return useQuery({
     queryKey: ["directors_ubos"],
     queryFn: async () => {
-      const { data, error } = await supabase
+      // Fetch directors
+      const { data: directors, error } = await supabase
         .from("directors_ubos")
         .select("*")
         .order("name");
       if (error) throw error;
-      return data as DirectorUbo[];
+
+      // Fetch all entity links
+      const { data: links, error: linksError } = await supabase
+        .from("director_entity_links")
+        .select(`
+          id,
+          director_id,
+          entity_id,
+          role_type,
+          entity:entities(id, name, website)
+        `);
+      if (linksError) console.error("Error fetching entity links:", linksError);
+
+      // Merge links into directors
+      const directorsWithLinks = directors.map(director => ({
+        ...director,
+        entity_links: (links || [])
+          .filter(link => link.director_id === director.id)
+          .map(link => ({
+            id: link.id,
+            entity_id: link.entity_id,
+            role_type: link.role_type,
+            entity: link.entity as { id: string; name: string; website: string | null } | null,
+          })),
+      }));
+
+      return directorsWithLinks as DirectorUbo[];
     },
   });
 };
@@ -502,9 +541,24 @@ const DirectorsUboSection = ({ entityFilter }: DirectorsUboSectionProps) => {
                   </div>
 
                   <div className="space-y-2 text-sm">
-                    <div className="flex items-center gap-2 text-muted-foreground">
-                      <Building2 className="w-4 h-4" />
-                      <span>{getEntityName(item.entity_id)}</span>
+                    {/* Entity Affiliations */}
+                    <div className="flex items-start gap-2 text-muted-foreground">
+                      <Building2 className="w-4 h-4 mt-0.5 flex-shrink-0" />
+                      <div className="flex flex-wrap gap-1">
+                        {item.entity_links && item.entity_links.length > 0 ? (
+                          item.entity_links.map((link) => (
+                            <Badge 
+                              key={link.id} 
+                              variant="outline" 
+                              className="text-xs bg-muted/50"
+                            >
+                              {link.entity?.name || "Unknown"}
+                            </Badge>
+                          ))
+                        ) : (
+                          <span>{getEntityName(item.entity_id)}</span>
+                        )}
+                      </div>
                     </div>
                     
                     {item.email && (
