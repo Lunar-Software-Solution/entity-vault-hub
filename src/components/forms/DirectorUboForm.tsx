@@ -244,7 +244,7 @@ export const DirectorUboForm = ({
           console.log("Saving avatar_url to database:", enriched.avatar_url, "for id:", item.id);
           const { data: updateData, error: avatarError } = await supabase
             .from("directors_ubos")
-            .update({ avatar_url: enriched.avatar_url })
+            .update({ avatar_url: enriched.avatar_url, suppress_avatar: false })
             .eq("id", item.id)
             .select("avatar_url")
             .single();
