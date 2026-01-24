@@ -454,7 +454,7 @@ const EntityDetail = () => {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <LinkedBankAccounts accounts={linkedBankAccounts} />
         <LinkedCreditCards cards={linkedCreditCards} />
-        <LinkedDirectorsUbos directorsUbos={linkedDirectorsUbos} entityId={id!} />
+        <LinkedDirectorsUbos directorsUbos={linkedDirectorsUbos} entityId={id!} entityName={entity.name} />
         <LinkedPhoneNumbers phones={linkedPhoneNumbers} entityId={id!} />
         <LinkedTaxIds taxIds={linkedTaxIds} entityId={id!} />
         <LinkedAddresses addresses={linkedAddresses} />

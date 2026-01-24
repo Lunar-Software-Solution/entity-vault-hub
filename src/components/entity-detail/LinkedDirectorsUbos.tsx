@@ -41,9 +41,10 @@ interface DirectorUbo {
 interface LinkedDirectorsUbosProps {
   directorsUbos: DirectorUbo[];
   entityId: string;
+  entityName?: string;
 }
 
-const LinkedDirectorsUbos = ({ directorsUbos, entityId }: LinkedDirectorsUbosProps) => {
+const LinkedDirectorsUbos = ({ directorsUbos, entityId, entityName }: LinkedDirectorsUbosProps) => {
   const [showForm, setShowForm] = useState(false);
   const [editingItem, setEditingItem] = useState<DirectorUbo | null>(null);
   const [deletingItem, setDeletingItem] = useState<DirectorUbo | null>(null);
@@ -327,6 +328,7 @@ const LinkedDirectorsUbos = ({ directorsUbos, entityId }: LinkedDirectorsUbosPro
           <DirectorUboForm
             item={editingItem}
             entityId={entityId}
+            entityName={entityName}
             onSubmit={handleSubmit}
             onCancel={handleCloseForm}
             isLoading={createMutation.isPending || updateMutation.isPending}
