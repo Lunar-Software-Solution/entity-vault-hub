@@ -66,6 +66,8 @@ interface Shareholder {
   is_board_member: boolean;
   notes: string | null;
   created_at: string;
+  avatar_url: string | null;
+  suppress_avatar: boolean;
   entity_links?: ShareholderEntityLink[];
 }
 
@@ -433,8 +435,13 @@ const CapTableSection = () => {
                         <GravatarAvatar
                           email={shareholder.email}
                           name={shareholder.name}
-                          size="sm"
+                          size="xl"
                           linkedinUrl={shareholder.linkedin_url}
+                          storedAvatarUrl={shareholder.avatar_url}
+                          suppressAvatar={shareholder.suppress_avatar}
+                          enableEnrichment={true}
+                          recordId={shareholder.id}
+                          tableName="shareholders"
                         />
                         <span className="font-medium text-foreground">{shareholder.name}</span>
                       </div>

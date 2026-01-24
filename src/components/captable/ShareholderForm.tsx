@@ -6,7 +6,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Sparkles, Loader2 } from "lucide-react";
+import { Sparkles, Loader2, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import ShareholderEntityAffiliationsManager from "./ShareholderEntityAffiliationsManager";
@@ -35,6 +35,8 @@ interface ShareholderFormProps {
 
 const ShareholderForm = ({ item, entities, onSubmit, onCancel }: ShareholderFormProps) => {
   const [isEnriching, setIsEnriching] = useState(false);
+  const [enrichedAvatarUrl, setEnrichedAvatarUrl] = useState<string | null>(null);
+  const [avatarDeleted, setAvatarDeleted] = useState(false);
   
   const form = useForm<ShareholderFormData>({
     defaultValues: {
@@ -59,12 +61,14 @@ const ShareholderForm = ({ item, entities, onSubmit, onCancel }: ShareholderForm
 
   // Enrich profile using Lovable AI
   const handleEnrichProfile = async () => {
-    if (!email && !name) {
-      toast.error("Please enter an email or name first");
+    if (!linkedinUrl) {
+      toast.error("Please enter a LinkedIn URL first");
       return;
     }
 
     setIsEnriching(true);
+    setAvatarDeleted(false); // Reset deletion flag when re-enriching
+    
     try {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session?.access_token) {
@@ -73,7 +77,12 @@ const ShareholderForm = ({ item, entities, onSubmit, onCancel }: ShareholderForm
       }
 
       const { data, error } = await supabase.functions.invoke("enrich-profile", {
-        body: { email, linkedin_url: linkedinUrl, name },
+        body: { 
+          email, 
+          linkedin_url: linkedinUrl, 
+          name,
+          record_id: item?.id,
+        },
         headers: {
           Authorization: `Bearer ${session.access_token}`,
         },
@@ -89,6 +98,10 @@ const ShareholderForm = ({ item, entities, onSubmit, onCancel }: ShareholderForm
         const enriched = data.data;
         let fieldsUpdated = 0;
 
+        if (enriched.avatar_url) {
+          setEnrichedAvatarUrl(enriched.avatar_url);
+          fieldsUpdated++;
+        }
         if (enriched.name && !form.getValues("name")) {
           form.setValue("name", enriched.name);
           fieldsUpdated++;
@@ -127,6 +140,37 @@ const ShareholderForm = ({ item, entities, onSubmit, onCancel }: ShareholderForm
       toast.error("Failed to enrich profile");
     } finally {
       setIsEnriching(false);
+    }
+  };
+
+  // Handle avatar deletion
+  const handleDeleteAvatar = async () => {
+    if (!item?.id) {
+      toast.error("Cannot delete avatar for unsaved record");
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from("shareholders")
+        .update({ 
+          avatar_url: null, 
+          suppress_avatar: true 
+        })
+        .eq("id", item.id);
+
+      if (error) {
+        console.error("Failed to delete avatar:", error);
+        toast.error("Failed to delete avatar");
+        return;
+      }
+
+      setAvatarDeleted(true);
+      setEnrichedAvatarUrl(null);
+      toast.success("Avatar removed");
+    } catch (err) {
+      console.error("Error deleting avatar:", err);
+      toast.error("Failed to delete avatar");
     }
   };
 
@@ -176,13 +220,30 @@ const ShareholderForm = ({ item, entities, onSubmit, onCancel }: ShareholderForm
         )} />
 
         <div className="flex items-start gap-4">
-          <GravatarAvatar
-            email={email}
-            name={name || ""}
-            size="lg"
-            linkedinUrl={linkedinUrl}
-            className="mt-6"
-          />
+          <div className="flex flex-col items-center gap-2 mt-6">
+            <GravatarAvatar
+              key={`avatar-${avatarDeleted ? 'deleted' : 'active'}`}
+              email={email}
+              name={name || ""}
+              size="xl"
+              linkedinUrl={linkedinUrl}
+              storedAvatarUrl={avatarDeleted ? null : (enrichedAvatarUrl || item?.avatar_url)}
+              suppressAvatar={avatarDeleted || item?.suppress_avatar}
+              enableEnrichment={false}
+            />
+            {item?.id && (item?.avatar_url || enrichedAvatarUrl) && !avatarDeleted && (
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={handleDeleteAvatar}
+                className="text-destructive hover:text-destructive hover:bg-destructive/10 h-7 px-2"
+              >
+                <Trash2 className="h-3 w-3 mr-1" />
+                Remove
+              </Button>
+            )}
+          </div>
           <div className="flex-1 grid grid-cols-2 gap-4">
             <FormField control={form.control} name="name" render={({ field }) => (
               <FormItem>
@@ -216,24 +277,7 @@ const ShareholderForm = ({ item, entities, onSubmit, onCancel }: ShareholderForm
           <FormField control={form.control} name="email" render={({ field }) => (
             <FormItem>
               <FormLabel>Email</FormLabel>
-              <div className="flex gap-2">
-                <FormControl><Input type="email" placeholder="john@example.com" {...field} /></FormControl>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="icon"
-                  onClick={handleEnrichProfile}
-                  disabled={isEnriching || (!email && !name)}
-                  title="Enrich profile with AI"
-                  className="flex-shrink-0"
-                >
-                  {isEnriching ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                  ) : (
-                    <Sparkles className="h-4 w-4 text-primary" />
-                  )}
-                </Button>
-              </div>
+              <FormControl><Input type="email" placeholder="john@example.com" {...field} /></FormControl>
               <FormMessage />
             </FormItem>
           )} />
@@ -249,7 +293,24 @@ const ShareholderForm = ({ item, entities, onSubmit, onCancel }: ShareholderForm
         <FormField control={form.control} name="linkedin_url" render={({ field }) => (
           <FormItem>
             <FormLabel>LinkedIn URL</FormLabel>
-            <FormControl><Input placeholder="https://linkedin.com/in/username" {...field} /></FormControl>
+            <div className="flex gap-2">
+              <FormControl><Input placeholder="https://linkedin.com/in/username" {...field} /></FormControl>
+              <Button
+                type="button"
+                variant="outline"
+                size="icon"
+                onClick={handleEnrichProfile}
+                disabled={isEnriching || !linkedinUrl}
+                title="Enrich profile from LinkedIn"
+                className="flex-shrink-0"
+              >
+                {isEnriching ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Sparkles className="h-4 w-4 text-primary" />
+                )}
+              </Button>
+            </div>
             <FormMessage />
           </FormItem>
         )} />
