@@ -26,6 +26,7 @@ import {
 } from "@/components/ui/select";
 import { countries } from "@/lib/countries";
 import MultipleIdDocuments, { type IdDocument } from "./MultipleIdDocuments";
+import EntityAffiliationsManager from "./EntityAffiliationsManager";
 import { supabase } from "@/integrations/supabase/client";
 
 const directorUboSchema = z.object({
@@ -576,6 +577,13 @@ export const DirectorUboForm = ({
             )}
           />
         </div>
+
+        {/* Entity Affiliations */}
+        <EntityAffiliationsManager
+          directorId={item?.id || null}
+          currentEntityId={entityId}
+          currentEntityName={entityName}
+        />
 
         {/* PEP Status */}
         <div className="space-y-4">
