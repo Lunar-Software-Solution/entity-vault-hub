@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-import { Plus, Calendar, List, CheckSquare, Search, Filter, SquareCheck, SquarePen, Trash2 } from "lucide-react";
+import { Plus, Calendar, List, CheckSquare, Search, Filter, Square, SquareCheck, SquarePen, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -386,7 +386,7 @@ const FilingsSection = ({ entityFilter }: FilingsSectionProps) => {
                                 onClick={() => markFiled.mutate({ id: filing.id })}
                                 title="Mark Filed"
                               >
-                                <SquareCheck className="h-4 w-4" />
+                                <Square className="h-4 w-4" />
                               </Button>
                             )}
                             {canWrite && (
@@ -480,7 +480,7 @@ const FilingsSection = ({ entityFilter }: FilingsSectionProps) => {
                               onClick={() => completeTask.mutate(task.id)}
                               title="Complete"
                             >
-                              <SquareCheck className="h-4 w-4" />
+                              <Square className="h-4 w-4" />
                             </Button>
                           )}
                           {canWrite && (
