@@ -3,6 +3,7 @@ import { getGravatarUrl, getInitials } from "@/lib/gravatar";
 import { cn } from "@/lib/utils";
 import { User } from "lucide-react";
 import { useProfileEnrichment } from "@/hooks/useProfileEnrichment";
+import { supabase } from "@/integrations/supabase/client";
 
 interface GravatarAvatarProps {
   email?: string | null;
@@ -137,12 +138,38 @@ const GravatarAvatar = ({
     }
   }, [currentUrl, currentUrlIndex, avatarUrls.length]);
 
-  const handleLoad = useCallback(() => {
+  const handleLoad = useCallback(async () => {
     if (timeoutRef.current) {
       clearTimeout(timeoutRef.current);
     }
     setImageStatus("loaded");
-  }, []);
+
+    // Save the successfully loaded avatar to database if:
+    // 1. We have recordId and tableName
+    // 2. Current URL is from a fallback source (not already stored)
+    // 3. Current URL is not a Gravatar URL (those can change)
+    if (
+      recordId &&
+      tableName &&
+      currentUrl &&
+      !storedAvatarUrl &&
+      !currentUrl.includes("gravatar.com")
+    ) {
+      try {
+        console.log(`Saving avatar to ${tableName}:`, currentUrl);
+        const { error } = await supabase
+          .from(tableName)
+          .update({ avatar_url: currentUrl })
+          .eq("id", recordId);
+
+        if (error) {
+          console.error("Failed to save avatar URL:", error);
+        }
+      } catch (err) {
+        console.error("Error saving avatar:", err);
+      }
+    }
+  }, [currentUrl, recordId, tableName, storedAvatarUrl]);
 
   // Timeout fallback - if image doesn't load in 5 seconds, treat as error
   useEffect(() => {
