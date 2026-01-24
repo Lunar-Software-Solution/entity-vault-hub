@@ -159,8 +159,9 @@ serve(async (req) => {
       }
     }
 
-    // If Coresignal returned data with avatar, return immediately
-    if (coresignalData?.avatar_url) {
+    // Check if Coresignal has complete data (avatar + bio)
+    // If bio is missing, continue to AI enrichment to fill gaps
+    if (coresignalData && coresignalData.avatar_url && coresignalData.bio) {
       const result = {
         success: true,
         fallback: false,
@@ -181,6 +182,8 @@ serve(async (req) => {
         { headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
+    
+    console.log("Coresignal data incomplete, continuing to AI enrichment for missing fields");
 
     // PRIORITY 2: Try Lovable AI for additional enrichment
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
