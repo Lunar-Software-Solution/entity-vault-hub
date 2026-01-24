@@ -243,12 +243,18 @@ export const DirectorUboForm = ({
 
         // Save avatar to database if we have one and this is an existing record
         if (enriched.avatar_url && item?.id) {
-          const { error: avatarError } = await supabase
+          console.log("Saving avatar_url to database:", enriched.avatar_url, "for id:", item.id);
+          const { data: updateData, error: avatarError } = await supabase
             .from("directors_ubos")
             .update({ avatar_url: enriched.avatar_url })
-            .eq("id", item.id);
+            .eq("id", item.id)
+            .select("avatar_url")
+            .single();
           
-          if (!avatarError) {
+          if (avatarError) {
+            console.error("Failed to save avatar:", avatarError);
+          } else {
+            console.log("Avatar saved successfully:", updateData);
             setEnrichedAvatarUrl(enriched.avatar_url);
             setAvatarDeleted(false);
             fieldsUpdated++;
