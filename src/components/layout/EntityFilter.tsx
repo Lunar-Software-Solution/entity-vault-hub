@@ -23,7 +23,7 @@ const EntityFilter = ({ selectedEntityId, onEntityChange }: EntityFilterProps) =
         value={selectedEntityId || "__all__"} 
         onValueChange={(value) => onEntityChange(value === "__all__" ? null : value)}
       >
-        <SelectTrigger className="w-[200px]">
+        <SelectTrigger className="w-[200px] text-foreground">
           <SelectValue placeholder="All entities" />
         </SelectTrigger>
         <SelectContent>
