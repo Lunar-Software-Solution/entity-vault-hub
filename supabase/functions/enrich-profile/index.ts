@@ -55,7 +55,8 @@ async function fetchCoresignalProfile(linkedinUrl: string): Promise<{
     }
 
     const data = await response.json();
-    console.log("Coresignal response:", JSON.stringify(data).slice(0, 500));
+    console.log("Coresignal response preview:", JSON.stringify(data).slice(0, 500));
+    console.log("Coresignal picture_url:", data.picture_url || "NOT FOUND");
 
     // Extract the most recent experience for title/company
     const experiences = data.member_experience_collection || [];
