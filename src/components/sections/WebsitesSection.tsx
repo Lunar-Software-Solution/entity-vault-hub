@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-import { Plus, ExternalLink, MoreVertical, Edit2, Trash2, Building2, Calendar, ShieldCheck, AlertTriangle } from "lucide-react";
+import { Plus, ExternalLink, MoreVertical, Pencil, Trash2, Building2, Calendar, ShieldCheck, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useEntityWebsites, useEntities, type EntityWebsite } from "@/hooks/usePortalData";
 import { useCreateEntityWebsite, useUpdateEntityWebsite, useDeleteEntityWebsite } from "@/hooks/usePortalMutations";
@@ -184,7 +184,8 @@ const WebsitesSection = ({ entityFilter }: WebsitesSectionProps) => {
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end" className="bg-popover border border-border">
                         <DropdownMenuItem onClick={() => handleEdit(website)}>
-                          <Edit2 className="w-4 h-4 mr-2" /> Edit
+                          <Pencil className="h-4 w-4 mr-2" />
+                          Edit
                         </DropdownMenuItem>
                         <DropdownMenuItem 
                           onClick={() => setDeletingId(website.id)}

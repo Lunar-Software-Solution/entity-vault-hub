@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Plus, MapPin, Home, Building2, Package, Edit2, Trash2, Copy, ExternalLink } from "lucide-react";
+import { Plus, MapPin, Home, Building2, Package, Pencil, Trash2, Copy, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAddresses, useEntities } from "@/hooks/usePortalData";
 import { useCreateAddress, useUpdateAddress, useDeleteAddress } from "@/hooks/usePortalMutations";
@@ -196,7 +196,7 @@ const AddressesSection = ({ entityFilter }: AddressesSectionProps) => {
                         className="p-2 hover:bg-muted rounded-lg transition-colors"
                         onClick={() => handleEdit(address)}
                       >
-                        <Edit2 className="w-4 h-4 text-muted-foreground" />
+                        <Pencil className="h-4 w-4 text-muted-foreground" />
                       </button>
                       <button 
                         className="p-2 hover:bg-destructive/10 rounded-lg transition-colors"

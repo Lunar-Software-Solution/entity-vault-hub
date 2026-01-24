@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Plus, CheckSquare, Edit2, Trash2, Check, Clock, User } from "lucide-react";
+import { Plus, CheckSquare, Pencil, Trash2, Check, Clock, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -139,7 +139,7 @@ const LinkedFilingTasks = ({ entityId }: LinkedFilingTasksProps) => {
                       setShowForm(true);
                     }}
                   >
-                    <Edit2 className="w-3 h-3" />
+                    <Pencil className="h-4 w-4" />
                   </Button>
                   <Button 
                     variant="ghost" 

@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-import { Plus, FileText, Download, Eye, Calendar, AlertCircle, CheckCircle2, Edit2, Trash2, Building2, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
+import { Plus, FileText, Download, Eye, Calendar, AlertCircle, CheckCircle2, Pencil, Trash2, Building2, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useContracts, useEntities } from "@/hooks/usePortalData";
@@ -340,7 +340,7 @@ const ContractsSection = ({ entityFilter }: ContractsSectionProps) => {
                                 className="p-2 hover:bg-muted rounded-lg transition-colors"
                                 onClick={() => handleEdit(contract)}
                               >
-                                <Edit2 className="w-4 h-4 text-muted-foreground" />
+                                <Pencil className="h-4 w-4 text-muted-foreground" />
                               </button>
                               <button 
                                 className="p-2 hover:bg-destructive/10 rounded-lg transition-colors"
