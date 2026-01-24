@@ -373,17 +373,17 @@ export const DirectorUboForm = ({
                   </FormControl>
                   <Button
                     type="button"
-                    variant="outline"
+                    variant="default"
                     size="icon"
                     onClick={handleEnrichProfile}
-                    disabled={isEnriching || (!email && !name)}
-                    title="Enrich profile with Clay"
+                    disabled={isEnriching || (!email && !name && !linkedinUrl)}
+                    title="Enrich profile with AI"
                     className="flex-shrink-0"
                   >
                     {isEnriching ? (
                       <Loader2 className="h-4 w-4 animate-spin" />
                     ) : (
-                      <Sparkles className="h-4 w-4 text-primary" />
+                      <Sparkles className="h-4 w-4" />
                     )}
                   </Button>
                 </div>
