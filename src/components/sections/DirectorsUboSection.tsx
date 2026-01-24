@@ -499,7 +499,7 @@ const DirectorsUboSection = ({ entityFilter }: DirectorsUboSectionProps) => {
                           )
                         }
                       />
-                      <div>
+                      <div className="min-w-0 flex-1">
                         <h3 className="font-medium text-foreground flex items-center gap-2">
                           {item.name}
                           {item.is_pep && (
@@ -509,6 +509,9 @@ const DirectorsUboSection = ({ entityFilter }: DirectorsUboSectionProps) => {
                           )}
                         </h3>
                         <p className="text-sm text-muted-foreground">{item.title || "No title"}</p>
+                        {item.bio && (
+                          <p className="text-xs text-muted-foreground/80 mt-1 line-clamp-2">{item.bio}</p>
+                        )}
                       </div>
                     </div>
                     {canWrite && (
