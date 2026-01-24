@@ -95,7 +95,7 @@ serve(async (req) => {
   try {
     // Verify authentication
     const authHeader = req.headers.get("Authorization");
-    if (!authHeader) {
+    if (!authHeader?.startsWith("Bearer ")) {
       return new Response(
         JSON.stringify({ error: "Unauthorized - No authorization header" }),
         { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -111,8 +111,11 @@ serve(async (req) => {
       global: { headers: { Authorization: authHeader } }
     });
 
-    const { data: { user }, error: authError } = await supabaseAuth.auth.getUser();
-    if (authError || !user) {
+    // Use getClaims() instead of getUser() for signing-keys compatibility
+    const token = authHeader.replace("Bearer ", "");
+    const { data, error: authError } = await supabaseAuth.auth.getClaims(token);
+    if (authError || !data?.claims) {
+      console.error("Auth error:", authError);
       return new Response(
         JSON.stringify({ error: "Unauthorized - Invalid token" }),
         { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -249,7 +252,7 @@ serve(async (req) => {
   } catch (error) {
     console.error("Error in generate-recurring-tasks:", error);
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ error: error instanceof Error ? error.message : "Unknown error" }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }
