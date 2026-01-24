@@ -13,8 +13,8 @@ function extractLinkedInUsername(url: string): string | null {
   return match ? match[1] : null;
 }
 
-// Fetch profile data from Coresignal Clean Employee API
-async function fetchCoresignalProfile(linkedinUrl: string): Promise<{
+// Fetch profile data from RapidAPI LinkedIn Profile Data API
+async function fetchRapidAPIProfile(linkedinUrl: string): Promise<{
   avatar_url: string | null;
   name: string | null;
   title: string | null;
@@ -22,9 +22,9 @@ async function fetchCoresignalProfile(linkedinUrl: string): Promise<{
   location: string | null;
   bio: string | null;
 } | null> {
-  const CORESIGNAL_API_KEY = Deno.env.get("CORESIGNAL_API_KEY");
-  if (!CORESIGNAL_API_KEY) {
-    console.log("CORESIGNAL_API_KEY not configured");
+  const RAPIDAPI_KEY = Deno.env.get("RAPIDAPI_KEY");
+  if (!RAPIDAPI_KEY) {
+    console.log("RAPIDAPI_KEY not configured");
     return null;
   }
 
@@ -35,72 +35,91 @@ async function fetchCoresignalProfile(linkedinUrl: string): Promise<{
   }
 
   try {
-    console.log("Fetching Coresignal profile for:", username);
+    console.log("Fetching RapidAPI LinkedIn profile for:", username);
     
     const response = await fetch(
-      `https://api.coresignal.com/cdapi/v2/employee_clean/collect/${encodeURIComponent(username)}`,
+      `https://linkedin-profile-data.p.rapidapi.com/linkedin-profile-data?username=${encodeURIComponent(username)}`,
       {
         method: "GET",
         headers: {
-          "accept": "application/json",
-          "apikey": CORESIGNAL_API_KEY,
+          "x-rapidapi-host": "linkedin-profile-data.p.rapidapi.com",
+          "x-rapidapi-key": RAPIDAPI_KEY,
         },
       }
     );
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error("Coresignal API error:", response.status, errorText);
+      console.error("RapidAPI error:", response.status, errorText);
       return null;
     }
 
     const data = await response.json();
-    console.log("Coresignal response keys:", Object.keys(data));
-    console.log("Coresignal picture_url:", data.picture_url || "NOT FOUND");
-    console.log("Coresignal job_title:", data.job_title || "NOT FOUND");
-    console.log("Coresignal description:", data.description || "NOT FOUND");
-    console.log("Coresignal location_raw_address:", data.location_raw_address || "NOT FOUND");
+    console.log("RapidAPI response keys:", Object.keys(data));
+    
+    // Log available fields for debugging
+    console.log("RapidAPI profile_picture:", data.profile_picture || data.profilePicture || "NOT FOUND");
+    console.log("RapidAPI headline:", data.headline || "NOT FOUND");
+    console.log("RapidAPI summary:", data.summary || data.about || "NOT FOUND");
+    console.log("RapidAPI location:", data.location || "NOT FOUND");
 
-    // Check if picture_url is LinkedIn's default placeholder (skip it)
-    let avatarUrl = data.picture_url || null;
+    // Check if avatar is LinkedIn's default placeholder (skip it)
+    let avatarUrl = data.profile_picture || data.profilePicture || null;
     if (avatarUrl && avatarUrl.includes("static.licdn.com/aero-v1/sc/h/")) {
       console.log("Detected LinkedIn default placeholder, skipping avatar");
       avatarUrl = null;
     }
 
-    // Use job_title directly from Coresignal if available
-    let title = data.job_title || null;
+    // Extract title and company from headline or current position
+    let title: string | null = null;
+    let company: string | null = null;
+
+    // Try to get current position from experiences
+    const experiences = data.experiences || data.experience || [];
+    const currentJob = experiences.find((exp: any) => !exp.end_date && !exp.endDate) || experiences[0];
     
-    // Get company from experience if available
-    const experiences = data.experience || data.member_experience_collection || [];
-    const currentJob = experiences.find((exp: any) => !exp.date_to) || experiences[0];
-    let company = currentJob?.company_name || null;
-    
-    // If no direct fields, try to parse from headline (e.g., "CEO at Secure Group")
+    if (currentJob) {
+      title = currentJob.title || currentJob.position || null;
+      company = currentJob.company || currentJob.company_name || null;
+    }
+
+    // Fallback: parse from headline (e.g., "CEO at Secure Group")
     if ((!title || !company) && data.headline) {
       const headlineMatch = data.headline.match(/^([^|]+?)\s+at\s+([^|]+)/i);
       if (headlineMatch) {
         title = title || headlineMatch[1].trim();
         company = company || headlineMatch[2].trim();
       }
+      // If no "at" pattern, use headline as title
+      if (!title && data.headline) {
+        title = data.headline;
+      }
     }
 
-    // Build location from available fields
-    const location = data.location_raw_address || 
-                     (data.location_city && data.location_country 
-                       ? `${data.location_city}, ${data.location_country}` 
-                       : data.location_country || null);
+    // Build location
+    const location = data.location || null;
+
+    // Get bio/summary
+    const bio = data.summary || data.about || null;
+
+    // Get full name
+    const fullName = data.full_name || data.fullName || 
+                     (data.first_name && data.last_name 
+                       ? `${data.first_name} ${data.last_name}` 
+                       : data.firstName && data.lastName
+                         ? `${data.firstName} ${data.lastName}`
+                         : null);
 
     return {
       avatar_url: avatarUrl,
-      name: data.full_name || null,
+      name: fullName,
       title: title,
       company: company,
       location: location,
-      bio: data.description || data.summary || data.generated_headline || null,
+      bio: bio,
     };
   } catch (error) {
-    console.error("Coresignal fetch error:", error);
+    console.error("RapidAPI fetch error:", error);
     return null;
   }
 }
@@ -179,10 +198,10 @@ serve(async (req) => {
       );
     }
 
-    // Fetch profile from Coresignal
-    const coresignalData = await fetchCoresignalProfile(linkedin_url);
+    // Fetch profile from RapidAPI
+    const rapidApiData = await fetchRapidAPIProfile(linkedin_url);
     
-    if (!coresignalData) {
+    if (!rapidApiData) {
       // Try unavatar as fallback for avatar only
       const avatarUrl = await getUnavatarUrl(linkedin_url);
       
@@ -190,7 +209,7 @@ serve(async (req) => {
         JSON.stringify({
           success: false,
           fallback: true,
-          message: "Could not fetch profile from Coresignal",
+          message: "Could not fetch profile from RapidAPI",
           data: {
             name: name || null,
             email: email || null,
@@ -206,8 +225,8 @@ serve(async (req) => {
       );
     }
 
-    // If Coresignal didn't return avatar, try unavatar
-    let finalAvatarUrl = coresignalData.avatar_url;
+    // If RapidAPI didn't return avatar, try unavatar
+    let finalAvatarUrl = rapidApiData.avatar_url;
     if (!finalAvatarUrl) {
       finalAvatarUrl = await getUnavatarUrl(linkedin_url);
     }
@@ -215,16 +234,16 @@ serve(async (req) => {
     const result = {
       success: true,
       fallback: false,
-      source: "coresignal",
+      source: "rapidapi",
       data: {
-        name: coresignalData.name || name || null,
+        name: rapidApiData.name || name || null,
         email: email || null,
         linkedin_url: linkedin_url,
         avatar_url: finalAvatarUrl,
-        title: coresignalData.title || null,
-        company: coresignalData.company || null,
-        location: coresignalData.location || null,
-        bio: coresignalData.bio || null,
+        title: rapidApiData.title || null,
+        company: rapidApiData.company || null,
+        location: rapidApiData.location || null,
+        bio: rapidApiData.bio || null,
       }
     };
 
