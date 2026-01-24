@@ -128,7 +128,8 @@ async function fetchLinkdAPIProfile(linkedinUrl: string): Promise<{
     }
 
     // Get bio/summary
-    const bio = data.summary || data.about || data.description || null;
+    // Get bio/summary - fallback to headline if no summary available
+    const bio = data.summary || data.about || data.description || data.headline || null;
 
     // Get full name
     const fullName = data.fullName || data.full_name || data.name ||
