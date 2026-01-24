@@ -558,13 +558,6 @@ const DirectorsUboSection = ({ entityFilter }: DirectorsUboSectionProps) => {
                             <Pencil className="h-4 w-4 mr-2" />
                             Edit
                           </DropdownMenuItem>
-                          <DropdownMenuItem 
-                            onClick={() => handleReEnrich(item)}
-                            disabled={enrichingId === item.id || !item.linkedin_url}
-                          >
-                            <RefreshCw className={`h-4 w-4 mr-2 ${enrichingId === item.id ? 'animate-spin' : ''}`} />
-                            {enrichingId === item.id ? 'Enriching...' : 'Re-enrich Profile'}
-                          </DropdownMenuItem>
                           <DropdownMenuItem
                             onClick={() => setDeletingItem(item)}
                             className="text-destructive"
