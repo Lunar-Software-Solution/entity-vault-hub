@@ -2,7 +2,6 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useState, useEffect } from "react";
-import { useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -106,7 +105,6 @@ export const DirectorUboForm = ({
   onCancel,
   isLoading,
 }: DirectorUboFormProps) => {
-  const queryClient = useQueryClient();
   const [idDocuments, setIdDocuments] = useState<IdDocument[]>(
     item?.id_documents || []
   );
@@ -150,8 +148,6 @@ export const DirectorUboForm = ({
       if (error) throw error;
       
       setAvatarDeleted(true);
-      // Invalidate queries to refresh the data
-      queryClient.invalidateQueries({ queryKey: ["directors"] });
       toast.success("Avatar removed");
     } catch (error) {
       console.error("Failed to delete avatar:", error);
