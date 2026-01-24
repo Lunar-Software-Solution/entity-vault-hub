@@ -364,46 +364,51 @@ const FilingsSection = ({ entityFilter }: FilingsSectionProps) => {
                             </div>
                           </div>
                         </TableCell>
-                        <TableCell>{getEntityName(filing.entity_id)}</TableCell>
+                        <TableCell className="text-foreground">{getEntityName(filing.entity_id)}</TableCell>
                         <TableCell>
-                          <span className={displayStatus === "overdue" ? "text-red-400" : ""}>
+                          <span className={displayStatus === "overdue" ? "text-red-400" : "text-foreground"}>
                             {formatDueDate(filing.due_date)}
                           </span>
                         </TableCell>
-                        <TableCell>{formatCurrency(Number(filing.amount))}</TableCell>
+                        <TableCell className="text-foreground">{formatCurrency(Number(filing.amount))}</TableCell>
                         <TableCell>
                           <Badge variant="outline" className={STATUS_COLORS[displayStatus]}>
                             {getStatusLabel(displayStatus)}
                           </Badge>
                         </TableCell>
-                        <TableCell className="text-right">
+                        <TableCell>
                           <div className="flex items-center justify-end gap-1">
                             {canWrite && filing.status !== "filed" && (
                               <Button 
                                 variant="ghost" 
-                                size="sm"
+                                size="icon"
+                                className="h-8 w-8 text-green-500 hover:text-green-500"
                                 onClick={() => markFiled.mutate({ id: filing.id })}
+                                title="Mark Filed"
                               >
-                                Mark Filed
+                                <Check className="h-4 w-4" />
                               </Button>
                             )}
                             {canWrite && (
                               <Button 
                                 variant="ghost" 
-                                size="sm"
+                                size="icon"
+                                className="h-8 w-8 text-primary hover:text-primary"
                                 onClick={() => handleFilingClick(filing)}
+                                title="Edit"
                               >
-                                Edit
+                                <Pencil className="h-4 w-4" />
                               </Button>
                             )}
                             {canWrite && (
                               <Button 
                                 variant="ghost" 
-                                size="sm"
-                                className="text-destructive hover:text-destructive"
+                                size="icon"
+                                className="h-8 w-8 text-destructive hover:text-destructive"
                                 onClick={() => setDeletingFiling(filing)}
+                                title="Delete"
                               >
-                                Delete
+                                <Trash2 className="h-4 w-4" />
                               </Button>
                             )}
                           </div>
