@@ -690,6 +690,9 @@ export type Database = {
         Row: {
           address: string | null
           appointment_date: string | null
+          avatar_url: string | null
+          bio: string | null
+          company: string | null
           control_type: string | null
           country_of_residence: string | null
           created_at: string
@@ -720,6 +723,9 @@ export type Database = {
         Insert: {
           address?: string | null
           appointment_date?: string | null
+          avatar_url?: string | null
+          bio?: string | null
+          company?: string | null
           control_type?: string | null
           country_of_residence?: string | null
           created_at?: string
@@ -750,6 +756,9 @@ export type Database = {
         Update: {
           address?: string | null
           appointment_date?: string | null
+          avatar_url?: string | null
+          bio?: string | null
+          company?: string | null
           control_type?: string | null
           country_of_residence?: string | null
           created_at?: string
@@ -1986,6 +1995,9 @@ export type Database = {
       shareholders: {
         Row: {
           address: string | null
+          avatar_url: string | null
+          bio: string | null
+          company: string | null
           created_at: string
           email: string | null
           entity_id: string
@@ -2002,6 +2014,9 @@ export type Database = {
         }
         Insert: {
           address?: string | null
+          avatar_url?: string | null
+          bio?: string | null
+          company?: string | null
           created_at?: string
           email?: string | null
           entity_id: string
@@ -2018,6 +2033,9 @@ export type Database = {
         }
         Update: {
           address?: string | null
+          avatar_url?: string | null
+          bio?: string | null
+          company?: string | null
           created_at?: string
           email?: string | null
           entity_id?: string

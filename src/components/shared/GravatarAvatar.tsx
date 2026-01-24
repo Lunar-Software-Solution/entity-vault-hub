@@ -12,6 +12,11 @@ interface GravatarAvatarProps {
   fallbackIcon?: React.ReactNode;
   linkedinUrl?: string | null;
   enableEnrichment?: boolean;
+  // Optional: stored avatar URL from database (highest priority)
+  storedAvatarUrl?: string | null;
+  // Optional: for auto-saving enriched data to database
+  recordId?: string;
+  tableName?: "directors_ubos" | "shareholders";
 }
 
 const sizeClasses = {
@@ -40,17 +45,23 @@ const GravatarAvatar = ({
   fallbackIcon,
   linkedinUrl,
   enableEnrichment = true,
+  storedAvatarUrl,
+  recordId,
+  tableName,
 }: GravatarAvatarProps) => {
   const [imageStatus, setImageStatus] = useState<"loading" | "loaded" | "error">("loading");
   const [currentUrlIndex, setCurrentUrlIndex] = useState(0);
   const triedUrls = useRef<Set<string>>(new Set());
 
   // Use profile enrichment when enabled and we have email or LinkedIn URL
+  // Pass recordId/tableName to auto-save enriched data
   const { data: enrichedProfile, isLoading: isEnriching } = useProfileEnrichment({
     email,
     linkedin_url: linkedinUrl,
     name,
-    enabled: enableEnrichment && !!(email || linkedinUrl),
+    enabled: enableEnrichment && !!(email || linkedinUrl) && !storedAvatarUrl,
+    recordId,
+    tableName,
   });
 
   const gravatarUrl = getGravatarUrl(email, pixelSizes[size] * 2, "404");
@@ -59,12 +70,17 @@ const GravatarAvatar = ({
   // Build ordered list of avatar URLs to try
   const avatarUrls: string[] = [];
   
-  // 1. Enrichment avatar (highest priority)
-  if (enrichedProfile?.avatar_url) {
+  // 1. Stored avatar from database (highest priority - already saved)
+  if (storedAvatarUrl) {
+    avatarUrls.push(storedAvatarUrl);
+  }
+  
+  // 2. Enrichment avatar (from API)
+  if (enrichedProfile?.avatar_url && !storedAvatarUrl) {
     avatarUrls.push(enrichedProfile.avatar_url);
   }
   
-  // 2. Gravatar fallback
+  // 3. Gravatar fallback
   if (gravatarUrl) {
     avatarUrls.push(gravatarUrl);
   }
@@ -76,7 +92,7 @@ const GravatarAvatar = ({
     triedUrls.current.clear();
     setCurrentUrlIndex(0);
     setImageStatus("loading");
-  }, [enrichedProfile?.avatar_url, gravatarUrl]);
+  }, [storedAvatarUrl, enrichedProfile?.avatar_url, gravatarUrl]);
 
   const handleError = () => {
     if (currentUrl) {
