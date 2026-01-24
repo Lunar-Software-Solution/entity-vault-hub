@@ -365,7 +365,7 @@ export const DirectorUboForm = ({
               storedAvatarUrl={avatarDeleted ? null : (enrichedAvatarUrl || item?.avatar_url)}
               enableEnrichment={false}
             />
-            {(item?.avatar_url || enrichedAvatarUrl) && !avatarDeleted && (
+            {((item?.avatar_url || enrichedAvatarUrl) && !avatarDeleted) && (
               <Button
                 type="button"
                 variant="destructive"
