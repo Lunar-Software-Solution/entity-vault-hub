@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { getGravatarUrl, getInitials } from "@/lib/gravatar";
 import { cn } from "@/lib/utils";
 import { User } from "lucide-react";
@@ -52,6 +52,7 @@ const GravatarAvatar = ({
   const [imageStatus, setImageStatus] = useState<"loading" | "loaded" | "error">("loading");
   const [currentUrlIndex, setCurrentUrlIndex] = useState(0);
   const triedUrls = useRef<Set<string>>(new Set());
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // Use profile enrichment when enabled and we have email or LinkedIn URL
   // Pass recordId/tableName to auto-save enriched data
@@ -92,9 +93,24 @@ const GravatarAvatar = ({
     triedUrls.current.clear();
     setCurrentUrlIndex(0);
     setImageStatus("loading");
+    
+    // Clear any existing timeout
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+    }
+    
+    return () => {
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+    };
   }, [storedAvatarUrl, enrichedProfile?.avatar_url, gravatarUrl]);
 
-  const handleError = () => {
+  const handleError = useCallback(() => {
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+    }
+    
     if (currentUrl) {
       triedUrls.current.add(currentUrl);
     }
@@ -106,11 +122,30 @@ const GravatarAvatar = ({
     } else {
       setImageStatus("error");
     }
-  };
+  }, [currentUrl, currentUrlIndex, avatarUrls.length]);
 
-  const handleLoad = () => {
+  const handleLoad = useCallback(() => {
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+    }
     setImageStatus("loaded");
-  };
+  }, []);
+
+  // Timeout fallback - if image doesn't load in 5 seconds, treat as error
+  useEffect(() => {
+    if (imageStatus === "loading" && currentUrl) {
+      timeoutRef.current = setTimeout(() => {
+        console.log("Image load timeout for:", currentUrl);
+        handleError();
+      }, 5000);
+      
+      return () => {
+        if (timeoutRef.current) {
+          clearTimeout(timeoutRef.current);
+        }
+      };
+    }
+  }, [imageStatus, currentUrl, handleError]);
 
   // Show loading state while enriching
   if (isEnriching && enableEnrichment) {
