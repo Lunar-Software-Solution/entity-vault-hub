@@ -23,6 +23,7 @@ interface ShareholderFormData {
   tax_id?: string;
   is_founder: boolean;
   is_board_member: boolean;
+  bio?: string;
   notes?: string;
 }
 
@@ -50,6 +51,7 @@ const ShareholderForm = ({ item, entities, onSubmit, onCancel }: ShareholderForm
       tax_id: item?.tax_id || "",
       is_founder: item?.is_founder || false,
       is_board_member: item?.is_board_member || false,
+      bio: item?.bio || "",
       notes: item?.notes || "",
     },
   });
@@ -118,8 +120,8 @@ const ShareholderForm = ({ item, entities, onSubmit, onCancel }: ShareholderForm
           form.setValue("linkedin_url", enriched.linkedin_url);
           fieldsUpdated++;
         }
-        if (enriched.bio && !form.getValues("notes")) {
-          form.setValue("notes", enriched.bio);
+        if (enriched.bio && !form.getValues("bio")) {
+          form.setValue("bio", enriched.bio);
           fieldsUpdated++;
         }
 
@@ -182,6 +184,7 @@ const ShareholderForm = ({ item, entities, onSubmit, onCancel }: ShareholderForm
       linkedin_url: data.linkedin_url || null,
       address: data.address || null,
       tax_id: data.tax_id || null,
+      bio: data.bio || null,
       notes: data.notes || null,
     } as any);
   };
@@ -353,6 +356,14 @@ const ShareholderForm = ({ item, entities, onSubmit, onCancel }: ShareholderForm
             </FormItem>
           )} />
         </div>
+
+        <FormField control={form.control} name="bio" render={({ field }) => (
+          <FormItem>
+            <FormLabel>Bio</FormLabel>
+            <FormControl><Textarea rows={2} placeholder="Professional bio or description..." {...field} /></FormControl>
+            <FormMessage />
+          </FormItem>
+        )} />
 
         <FormField control={form.control} name="notes" render={({ field }) => (
           <FormItem>
