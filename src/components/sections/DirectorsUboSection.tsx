@@ -2,7 +2,7 @@ import { useState, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Plus, Search, Building2, User, Users, Crown, MoreVertical, Mail, Phone, Calendar, Percent, Shield, AlertTriangle, Pencil, Trash2, Linkedin } from "lucide-react";
+import { Plus, Search, Building2, User, Users, Crown, MoreVertical, Mail, Phone, Calendar, Percent, Shield, AlertTriangle, Pencil, Trash2, Linkedin, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -12,6 +12,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useEntities } from "@/hooks/usePortalData";
 import { useUserRole } from "@/hooks/useUserRole";
+import { useEnrichAndSaveProfile } from "@/hooks/useProfileEnrichment";
 import DeleteConfirmDialog from "@/components/shared/DeleteConfirmDialog";
 import GravatarAvatar from "@/components/shared/GravatarAvatar";
 import DirectorUboForm, { DirectorUboFormData } from "@/components/forms/DirectorUboForm";
@@ -218,6 +219,7 @@ const DirectorsUboSection = ({ entityFilter }: DirectorsUboSectionProps) => {
   const [showForm, setShowForm] = useState(false);
   const [editingItem, setEditingItem] = useState<DirectorUbo | null>(null);
   const [deletingItem, setDeletingItem] = useState<DirectorUbo | null>(null);
+  const [enrichingId, setEnrichingId] = useState<string | null>(null);
 
   const { data: directorsUbos = [], isLoading } = useDirectorsUbos();
   const { data: entities = [] } = useEntities();
@@ -225,6 +227,35 @@ const DirectorsUboSection = ({ entityFilter }: DirectorsUboSectionProps) => {
   const createMutation = useCreateDirectorUbo();
   const updateMutation = useUpdateDirectorUbo();
   const deleteMutation = useDeleteDirectorUbo();
+  const enrichMutation = useEnrichAndSaveProfile();
+
+  const handleReEnrich = async (item: DirectorUbo) => {
+    if (!item.email && !item.linkedin_url) {
+      toast.error("No email or LinkedIn URL to enrich from");
+      return;
+    }
+    
+    setEnrichingId(item.id);
+    try {
+      const result = await enrichMutation.mutateAsync({
+        email: item.email,
+        linkedin_url: item.linkedin_url,
+        name: item.name,
+        recordId: item.id,
+        tableName: "directors_ubos",
+      });
+      
+      if (result?.avatar_url) {
+        toast.success("Profile enriched successfully!");
+      } else {
+        toast.info("Enrichment completed, but no avatar found");
+      }
+    } catch (error) {
+      toast.error("Failed to enrich profile");
+    } finally {
+      setEnrichingId(null);
+    }
+  };
 
   const filteredData = useMemo(() => {
     return directorsUbos.filter((item) => {
@@ -525,6 +556,13 @@ const DirectorsUboSection = ({ entityFilter }: DirectorsUboSectionProps) => {
                           <DropdownMenuItem onClick={() => handleEdit(item)}>
                             <Pencil className="h-4 w-4 mr-2" />
                             Edit
+                          </DropdownMenuItem>
+                          <DropdownMenuItem 
+                            onClick={() => handleReEnrich(item)}
+                            disabled={enrichingId === item.id || (!item.email && !item.linkedin_url)}
+                          >
+                            <RefreshCw className={`h-4 w-4 mr-2 ${enrichingId === item.id ? 'animate-spin' : ''}`} />
+                            {enrichingId === item.id ? 'Enriching...' : 'Re-enrich Profile'}
                           </DropdownMenuItem>
                           <DropdownMenuItem
                             onClick={() => setDeletingItem(item)}
