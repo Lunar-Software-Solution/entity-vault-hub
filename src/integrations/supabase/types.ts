@@ -1938,6 +1938,54 @@ export type Database = {
           },
         ]
       }
+      shareholder_entity_links: {
+        Row: {
+          created_at: string
+          entity_id: string
+          id: string
+          is_active: boolean | null
+          notes: string | null
+          ownership_percentage: number | null
+          shareholder_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          entity_id: string
+          id?: string
+          is_active?: boolean | null
+          notes?: string | null
+          ownership_percentage?: number | null
+          shareholder_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          entity_id?: string
+          id?: string
+          is_active?: boolean | null
+          notes?: string | null
+          ownership_percentage?: number | null
+          shareholder_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "shareholder_entity_links_entity_id_fkey"
+            columns: ["entity_id"]
+            isOneToOne: false
+            referencedRelation: "entities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "shareholder_entity_links_shareholder_id_fkey"
+            columns: ["shareholder_id"]
+            isOneToOne: false
+            referencedRelation: "shareholders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       shareholders: {
         Row: {
           address: string | null

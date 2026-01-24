@@ -40,6 +40,16 @@ interface ShareClass {
   created_at: string;
 }
 
+interface ShareholderEntityLink {
+  id: string;
+  entity_id: string;
+  entity: {
+    id: string;
+    name: string;
+    website: string | null;
+  } | null;
+}
+
 interface Shareholder {
   id: string;
   entity_id: string;
@@ -53,6 +63,7 @@ interface Shareholder {
   is_board_member: boolean;
   notes: string | null;
   created_at: string;
+  entity_links?: ShareholderEntityLink[];
 }
 
 interface EquityTransaction {
@@ -90,9 +101,33 @@ const useShareholders = (entityId?: string) => {
     queryFn: async () => {
       let query = supabase.from("shareholders").select("*").order("name");
       if (entityId) query = query.eq("entity_id", entityId);
-      const { data, error } = await query;
+      const { data: shareholders, error } = await query;
       if (error) throw error;
-      return data as Shareholder[];
+
+      // Fetch all entity links for shareholders
+      const { data: links, error: linksError } = await supabase
+        .from("shareholder_entity_links")
+        .select(`
+          id,
+          shareholder_id,
+          entity_id,
+          entity:entities(id, name, website)
+        `);
+      if (linksError) console.error("Error fetching shareholder entity links:", linksError);
+
+      // Merge links into shareholders
+      const shareholdersWithLinks = shareholders.map(shareholder => ({
+        ...shareholder,
+        entity_links: (links || [])
+          .filter(link => link.shareholder_id === shareholder.id)
+          .map(link => ({
+            id: link.id,
+            entity_id: link.entity_id,
+            entity: link.entity as { id: string; name: string; website: string | null } | null,
+          })),
+      }));
+
+      return shareholdersWithLinks as Shareholder[];
     },
   });
 };
@@ -372,7 +407,19 @@ const CapTableSection = () => {
                     <TableCell>
                       <Badge variant="secondary">{shareholder.shareholder_type}</Badge>
                     </TableCell>
-                    <TableCell className="text-muted-foreground">{getEntityName(shareholder.entity_id)}</TableCell>
+                    <TableCell>
+                      <div className="flex flex-wrap gap-1">
+                        {shareholder.entity_links && shareholder.entity_links.length > 0 ? (
+                          shareholder.entity_links.map((link) => (
+                            <Badge key={link.id} variant="outline" className="text-xs bg-muted/50">
+                              {link.entity?.name || "Unknown"}
+                            </Badge>
+                          ))
+                        ) : (
+                          <span className="text-muted-foreground">{getEntityName(shareholder.entity_id)}</span>
+                        )}
+                      </div>
+                    </TableCell>
                     <TableCell className="text-muted-foreground">{shareholder.email || "—"}</TableCell>
                     <TableCell>
                       <div className="flex gap-1">
