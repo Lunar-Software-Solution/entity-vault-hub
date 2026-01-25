@@ -165,7 +165,10 @@ const FeedbackButton = () => {
 
       {/* Feedback Panel */}
       {isOpen && (
-        <div data-feedback-panel className="fixed bottom-24 right-6 w-[600px] max-h-[90vh] bg-background border border-border rounded-2xl shadow-2xl z-50 flex flex-col overflow-hidden">
+        <div data-feedback-panel className={cn(
+          "fixed bottom-24 right-6 max-h-[90vh] bg-background border border-border rounded-2xl shadow-2xl z-50 flex flex-col overflow-hidden transition-all duration-200",
+          isAnnotating ? "w-[600px]" : "w-[380px]"
+        )}>
           {/* Header */}
           <div className="flex items-center justify-between p-4 border-b border-border bg-muted/30">
             <div className="flex items-center gap-3">
