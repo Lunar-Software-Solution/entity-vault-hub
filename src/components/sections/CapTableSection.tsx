@@ -658,7 +658,7 @@ const CapTableSection = () => {
       </Dialog>
 
       <Dialog open={showShareholderForm} onOpenChange={(open) => { if (!open) { setShowShareholderForm(false); setEditingShareholder(null); } }}>
-        <DialogContent className="max-w-lg bg-background">
+        <DialogContent className="max-w-xl bg-background">
           <DialogHeader>
             <DialogTitle>{editingShareholder ? "Edit Shareholder" : "Add Shareholder"}</DialogTitle>
           </DialogHeader>
