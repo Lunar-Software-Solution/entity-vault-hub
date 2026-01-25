@@ -201,7 +201,7 @@ const Sidebar = ({
             <div className="w-8 h-8 rounded-lg overflow-hidden flex-shrink-0 bg-white p-1">
               <img src={braxLogo} alt="Entity Hub" className="w-full h-full object-contain" />
             </div>
-            {!collapsed && <p className="text-xs text-muted-foreground text-center">Corporate Entities Managemental</p>}
+            {!collapsed && <p className="text-xs text-muted-foreground text-center">Corporate Entities Management</p>}
           </div>
         </div>
 
