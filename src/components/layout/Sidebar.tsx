@@ -7,7 +7,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
-import braxLogo from "@/assets/brax-logo.svg";
+import BraxLogo from "@/components/shared/BraxLogo";
 import { 
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, 
   DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger 
@@ -218,8 +218,8 @@ const Sidebar = ({
         {/* Header */}
         <div className={cn("p-3 border-b border-sidebar-border", collapsed && "px-2")}>
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg overflow-hidden flex-shrink-0 bg-white p-1">
-              <img src={braxLogo} alt="Entity Hub" className="w-full h-full object-contain" />
+            <div className="w-8 h-8 rounded-lg overflow-hidden flex-shrink-0 flex items-center justify-center text-foreground">
+              <BraxLogo className="h-5 w-auto" />
             </div>
             {!collapsed && (
               <div className="min-w-0 flex-1">

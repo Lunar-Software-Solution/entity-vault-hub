@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import braxLogo from "@/assets/brax-logo.svg";
+import BraxLogo from "@/components/shared/BraxLogo";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
 
 interface Invitation {
@@ -473,8 +473,8 @@ const Auth = () => {
         <div className="glass-card rounded-2xl p-8 space-y-6">
           {/* Logo and Title */}
           <div className="text-center space-y-4">
-            <div className="mx-auto flex items-center justify-center">
-              <img src={braxLogo} alt="Entity Hub" className="h-10 w-auto" />
+            <div className="mx-auto flex items-center justify-center text-foreground">
+              <BraxLogo className="h-8 w-auto" />
             </div>
             <div>
               {needs2FA ? (
