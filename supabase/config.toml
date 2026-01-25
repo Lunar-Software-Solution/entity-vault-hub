@@ -10,7 +10,7 @@ verify_jwt = true
 verify_jwt = true
 
 [functions.enrich-profile]
-verify_jwt = true
+verify_jwt = false
 
 [functions.generate-recurring-tasks]
 verify_jwt = true
