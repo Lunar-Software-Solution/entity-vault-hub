@@ -91,10 +91,9 @@ const Auth = () => {
     console.log("Looking up invitation with token:", token);
     
     try {
+      // Use secure RPC function to validate token without exposing table data
       const { data, error } = await supabase
-        .from("team_invitations")
-        .select("id, email, role, status, expires_at")
-        .eq("token", token)
+        .rpc("validate_invitation_token", { invite_token: token })
         .single();
 
       console.log("Invitation lookup result:", { data, error });
@@ -115,7 +114,10 @@ const Auth = () => {
         return;
       }
 
-      setInvitation(data);
+      setInvitation({
+        ...data,
+        role: data.role as "admin" | "viewer"
+      });
       setEmail(data.email);
       setIsLogin(false); // Default to signup for new invitations
     } catch (err) {
