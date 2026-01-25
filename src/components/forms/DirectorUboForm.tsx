@@ -6,9 +6,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
-import { Sparkles, Loader2, Building2, ExternalLink, X } from "lucide-react";
+import { Sparkles, Loader2, Building2, ExternalLink, Pencil } from "lucide-react";
 import { toast } from "sonner";
 import GravatarAvatar from "@/components/shared/GravatarAvatar";
+import AvatarEditDialog from "@/components/shared/AvatarEditDialog";
 import { Link } from "react-router-dom";
 import {
   Form,
@@ -110,43 +111,16 @@ export const DirectorUboForm = ({
   );
   const [isEnriching, setIsEnriching] = useState(false);
   const [avatarDeleted, setAvatarDeleted] = useState(false);
-  const [isDeletingAvatar, setIsDeletingAvatar] = useState(false);
   const [enrichedAvatarUrl, setEnrichedAvatarUrl] = useState<string | null>(null);
+  const [showAvatarDialog, setShowAvatarDialog] = useState(false);
 
-  const handleDeleteAvatar = async (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    
-    console.log("handleDeleteAvatar called", { itemId: item?.id, avatarUrl: item?.avatar_url, enrichedAvatarUrl });
-    
-    // If only local enriched avatar (no saved record yet), just clear it
-    if (!item?.id) {
+  const handleAvatarChange = (newUrl: string | null, deleted: boolean) => {
+    if (deleted) {
+      setAvatarDeleted(true);
       setEnrichedAvatarUrl(null);
-      setAvatarDeleted(true);
-      toast.success("Avatar removed");
-      return;
-    }
-
-    // Always clear the enriched avatar first
-    setEnrichedAvatarUrl(null);
-
-    // Clear avatar_url and set suppress_avatar flag in DB
-    setIsDeletingAvatar(true);
-    try {
-      const { error } = await supabase
-        .from("directors_ubos")
-        .update({ avatar_url: null, suppress_avatar: true })
-        .eq("id", item.id);
-      
-      if (error) throw error;
-      
-      setAvatarDeleted(true);
-      toast.success("Avatar removed - showing initials");
-    } catch (error) {
-      console.error("Failed to delete avatar:", error);
-      toast.error("Failed to remove avatar");
-    } finally {
-      setIsDeletingAvatar(false);
+    } else if (newUrl) {
+      setEnrichedAvatarUrl(newUrl);
+      setAvatarDeleted(false);
     }
   };
 
@@ -346,9 +320,9 @@ export const DirectorUboForm = ({
 
         {/* Avatar Preview + Basic Info */}
         <div className="flex items-start gap-4">
-          <div className="relative mt-6">
+          <div className="relative mt-6 group cursor-pointer" onClick={() => setShowAvatarDialog(true)}>
             <GravatarAvatar
-              key={`avatar-${avatarDeleted ? 'deleted' : 'active'}`}
+              key={`avatar-${avatarDeleted ? 'deleted' : 'active'}-${enrichedAvatarUrl || ''}`}
               email={avatarDeleted ? undefined : email}
               name={name || ""}
               size="xl"
@@ -356,24 +330,22 @@ export const DirectorUboForm = ({
               storedAvatarUrl={avatarDeleted ? null : (enrichedAvatarUrl || item?.avatar_url)}
               enableEnrichment={false}
             />
-            {!avatarDeleted && (email || linkedinUrl || item?.avatar_url || enrichedAvatarUrl) && (
-              <Button
-                type="button"
-                variant="destructive"
-                size="icon"
-                className="absolute -top-2 -right-2 h-5 w-5 rounded-full"
-                onClick={(e) => handleDeleteAvatar(e)}
-                disabled={isDeletingAvatar}
-                title="Remove avatar"
-              >
-                {isDeletingAvatar ? (
-                  <Loader2 className="h-3 w-3 animate-spin" />
-                ) : (
-                  <X className="h-3 w-3" />
-                )}
-              </Button>
-            )}
+            <div className="absolute inset-0 bg-black/50 rounded-full opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+              <Pencil className="h-5 w-5 text-white" />
+            </div>
           </div>
+
+          <AvatarEditDialog
+            open={showAvatarDialog}
+            onOpenChange={setShowAvatarDialog}
+            name={name || ""}
+            email={email}
+            linkedinUrl={linkedinUrl}
+            currentAvatarUrl={avatarDeleted ? null : (enrichedAvatarUrl || item?.avatar_url)}
+            recordId={item?.id}
+            tableName="directors_ubos"
+            onAvatarChange={handleAvatarChange}
+          />
           <div className="flex-1 grid grid-cols-2 gap-4">
             <FormField
               control={form.control}
