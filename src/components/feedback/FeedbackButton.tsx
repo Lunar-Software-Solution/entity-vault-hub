@@ -235,7 +235,7 @@ const FeedbackButton = () => {
                 <Button
                   type="button"
                   variant="outline"
-                  className="w-full"
+                  className="w-full text-foreground border-border bg-muted/50 hover:bg-muted"
                   onClick={captureScreenshot}
                   disabled={isCapturing}
                 >
