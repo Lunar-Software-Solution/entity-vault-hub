@@ -17,7 +17,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Upload, X, Shield, Eye } from "lucide-react";
+import { Separator } from "@/components/ui/separator";
+import { Loader2, Upload, X, Shield, Eye, Smartphone } from "lucide-react";
+import TrustedDevicesSection from "@/components/settings/TrustedDevicesSection";
 
 interface ProfileDialogProps {
   open: boolean;
@@ -186,7 +188,7 @@ const ProfileDialog = ({ open, onOpenChange }: ProfileDialogProps) => {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="sm:max-w-[500px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Edit Profile</DialogTitle>
           <DialogDescription>
@@ -290,6 +292,16 @@ const ProfileDialog = ({ open, onOpenChange }: ProfileDialogProps) => {
               onChange={(e) => setFullName(e.target.value)}
               placeholder="Enter your full name"
             />
+          </div>
+
+          {/* Trusted Devices Section */}
+          <Separator className="my-4" />
+          <div className="space-y-3">
+            <div className="flex items-center gap-2">
+              <Smartphone className="h-4 w-4 text-muted-foreground" />
+              <Label>Trusted Devices</Label>
+            </div>
+            <TrustedDevicesSection />
           </div>
         </div>
 
