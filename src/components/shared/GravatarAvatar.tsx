@@ -8,7 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 interface GravatarAvatarProps {
   email?: string | null;
   name: string;
-  size?: "sm" | "md" | "lg" | "xl";
+  size?: "sm" | "md" | "lg" | "xl" | "2xl";
   className?: string;
   fallbackIcon?: React.ReactNode;
   linkedinUrl?: string | null;
@@ -27,6 +27,7 @@ const sizeClasses = {
   md: "w-10 h-10",
   lg: "w-12 h-12",
   xl: "w-16 h-16",
+  "2xl": "w-20 h-20",
 };
 
 const textSizes = {
@@ -34,6 +35,7 @@ const textSizes = {
   md: "text-sm",
   lg: "text-base",
   xl: "text-lg",
+  "2xl": "text-xl",
 };
 
 const pixelSizes = {
@@ -41,6 +43,7 @@ const pixelSizes = {
   md: 40,
   lg: 48,
   xl: 64,
+  "2xl": 80,
 };
 
 const GravatarAvatar = ({
