@@ -311,8 +311,8 @@ const Auth = () => {
     );
   }
 
-  // Redirect authenticated users (but not during 2FA flow)
-  if (user && !needs2FA) {
+  // Redirect authenticated users (but not during 2FA flow or while processing login)
+  if (user && !needs2FA && !loading) {
     return <Navigate to="/" replace />;
   }
 
