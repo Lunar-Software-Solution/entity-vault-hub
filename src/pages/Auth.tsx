@@ -473,8 +473,8 @@ const Auth = () => {
         <div className="glass-card rounded-2xl p-8 space-y-6">
           {/* Logo and Title */}
           <div className="text-center space-y-4">
-            <div className="w-16 h-16 mx-auto rounded-xl overflow-hidden bg-primary/10 flex items-center justify-center">
-              <img src={braxLogo} alt="Entity Hub" className="w-12 h-12 object-contain" />
+            <div className="mx-auto flex items-center justify-center">
+              <img src={braxLogo} alt="Entity Hub" className="h-10 w-auto" />
             </div>
             <div>
               {needs2FA ? (
