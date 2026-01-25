@@ -6,11 +6,6 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-interface TwoFARequest {
-  userId: string;
-  email: string;
-}
-
 const generateCode = (): string => {
   return Math.floor(100000 + Math.random() * 900000).toString();
 };
@@ -21,19 +16,52 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
-    const supabase = createClient(
+    // Validate Authorization header
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader?.startsWith("Bearer ")) {
+      console.error("Missing or invalid Authorization header");
+      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+        status: 401,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // Create authenticated client to validate the JWT
+    const supabaseAuth = createClient(
       Deno.env.get("SUPABASE_URL")!,
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
+      Deno.env.get("SUPABASE_ANON_KEY")!,
+      { global: { headers: { Authorization: authHeader } } }
     );
 
-    const { userId, email }: TwoFARequest = await req.json();
+    // Validate the JWT and get user claims
+    const token = authHeader.replace("Bearer ", "");
+    const { data: claimsData, error: claimsError } = await supabaseAuth.auth.getClaims(token);
+    
+    if (claimsError || !claimsData?.claims) {
+      console.error("Invalid JWT:", claimsError);
+      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+        status: 401,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
 
-    if (!userId || !email) {
-      return new Response(JSON.stringify({ error: "Missing required fields" }), {
+    // Extract user ID and email from the validated JWT
+    const userId = claimsData.claims.sub as string;
+    const userEmail = claimsData.claims.email as string;
+
+    if (!userId || !userEmail) {
+      console.error("Missing user ID or email in JWT claims");
+      return new Response(JSON.stringify({ error: "Invalid token claims" }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
+
+    // Create service role client for database operations
+    const supabase = createClient(
+      Deno.env.get("SUPABASE_URL")!,
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
+    );
 
     // Generate 6-digit code
     const code = generateCode();
@@ -50,7 +78,7 @@ const handler = async (req: Request): Promise<Response> => {
       .from("email_2fa_codes")
       .insert({
         user_id: userId,
-        email: email,
+        email: userEmail,
         code: code,
         expires_at: expiresAt.toISOString(),
       });
@@ -85,7 +113,7 @@ const handler = async (req: Request): Promise<Response> => {
           name: "Entity Hub",
           email: "noreply@braxtech.com",
         },
-        to: [{ email }],
+        to: [{ email: userEmail }],
         subject: `Your Entity Hub verification code: ${code}`,
         htmlContent: `
           <!DOCTYPE html>
@@ -126,7 +154,7 @@ const handler = async (req: Request): Promise<Response> => {
       });
     }
 
-    console.log("2FA code sent successfully to:", email);
+    console.log("2FA code sent successfully to:", userEmail);
 
     return new Response(JSON.stringify({ success: true }), {
       status: 200,
