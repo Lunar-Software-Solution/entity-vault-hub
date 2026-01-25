@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { MessageSquarePlus, X, Send, Loader2 } from "lucide-react";
+import { useState, useRef } from "react";
+import { MessageSquarePlus, X, Send, Loader2, Camera, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
@@ -15,14 +15,55 @@ import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
+import html2canvas from "html2canvas";
 
 const FeedbackButton = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isCapturing, setIsCapturing] = useState(false);
   const [feedbackType, setFeedbackType] = useState<string>("");
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
+  const [screenshot, setScreenshot] = useState<string | null>(null);
+  const [screenshotBlob, setScreenshotBlob] = useState<Blob | null>(null);
   const { user } = useAuth();
+
+  const captureScreenshot = async () => {
+    setIsCapturing(true);
+    // Temporarily hide the feedback panel
+    const feedbackPanel = document.querySelector('[data-feedback-panel]') as HTMLElement;
+    if (feedbackPanel) feedbackPanel.style.visibility = 'hidden';
+
+    try {
+      const canvas = await html2canvas(document.body, {
+        useCORS: true,
+        allowTaint: true,
+        logging: false,
+        scale: 0.5, // Reduce size for faster upload
+      });
+      
+      const dataUrl = canvas.toDataURL('image/png');
+      setScreenshot(dataUrl);
+      
+      // Convert to blob for upload
+      canvas.toBlob((blob) => {
+        if (blob) setScreenshotBlob(blob);
+      }, 'image/png', 0.8);
+      
+      toast.success("Screenshot captured!");
+    } catch (error) {
+      console.error("Screenshot capture error:", error);
+      toast.error("Failed to capture screenshot");
+    } finally {
+      if (feedbackPanel) feedbackPanel.style.visibility = 'visible';
+      setIsCapturing(false);
+    }
+  };
+
+  const removeScreenshot = () => {
+    setScreenshot(null);
+    setScreenshotBlob(null);
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -35,10 +76,32 @@ const FeedbackButton = () => {
     setIsSubmitting(true);
 
     try {
+      let screenshotUrl: string | undefined;
+
+      // Upload screenshot if present
+      if (screenshotBlob && user) {
+        const fileName = `${user.id}/${Date.now()}.png`;
+        const { error: uploadError } = await supabase.storage
+          .from('feedback-screenshots')
+          .upload(fileName, screenshotBlob, {
+            contentType: 'image/png',
+          });
+
+        if (uploadError) {
+          console.error("Screenshot upload error:", uploadError);
+        } else {
+          const { data: urlData } = supabase.storage
+            .from('feedback-screenshots')
+            .getPublicUrl(fileName);
+          screenshotUrl = urlData.publicUrl;
+        }
+      }
+
       const payload = {
         name: `[${feedbackType}] ${title.trim()}`,
         description: description.trim() || undefined,
         email: user?.email || undefined,
+        screenshotUrl,
       };
 
       const { data, error } = await supabase.functions.invoke("submit-feedback", {
@@ -53,6 +116,8 @@ const FeedbackButton = () => {
       setTitle("");
       setDescription("");
       setFeedbackType("");
+      setScreenshot(null);
+      setScreenshotBlob(null);
       setIsOpen(false);
     } catch (error) {
       console.error("Feedback submission error:", error);
@@ -81,7 +146,7 @@ const FeedbackButton = () => {
 
       {/* Feedback Panel */}
       {isOpen && (
-        <div className="fixed bottom-24 right-6 w-[380px] bg-background border border-border rounded-2xl shadow-2xl z-50 flex flex-col overflow-hidden">
+        <div data-feedback-panel className="fixed bottom-24 right-6 w-[380px] max-h-[80vh] bg-background border border-border rounded-2xl shadow-2xl z-50 flex flex-col overflow-hidden">
           {/* Header */}
           <div className="flex items-center justify-between p-4 border-b border-border bg-muted/30">
             <div className="flex items-center gap-3">
@@ -104,7 +169,7 @@ const FeedbackButton = () => {
           </div>
 
           {/* Form */}
-          <form onSubmit={handleSubmit} className="p-4 space-y-4">
+          <form onSubmit={handleSubmit} className="p-4 space-y-4 overflow-y-auto">
             <div className="space-y-2">
               <Label htmlFor="feedback-type" className="text-foreground">Type *</Label>
               <Select value={feedbackType} onValueChange={setFeedbackType}>
@@ -140,10 +205,53 @@ const FeedbackButton = () => {
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
                 placeholder="Provide more details (optional)"
-                rows={4}
+                rows={3}
                 maxLength={2000}
                 className="text-foreground"
               />
+            </div>
+
+            {/* Screenshot Section */}
+            <div className="space-y-2">
+              <Label className="text-foreground">Screenshot</Label>
+              {screenshot ? (
+                <div className="relative rounded-lg border border-border overflow-hidden">
+                  <img 
+                    src={screenshot} 
+                    alt="Screenshot preview" 
+                    className="w-full h-32 object-cover"
+                  />
+                  <Button
+                    type="button"
+                    variant="destructive"
+                    size="icon"
+                    className="absolute top-2 right-2 h-7 w-7"
+                    onClick={removeScreenshot}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
+              ) : (
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="w-full"
+                  onClick={captureScreenshot}
+                  disabled={isCapturing}
+                >
+                  {isCapturing ? (
+                    <>
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      Capturing...
+                    </>
+                  ) : (
+                    <>
+                      <Camera className="h-4 w-4 mr-2" />
+                      Capture Screenshot
+                    </>
+                  )}
+                </Button>
+              )}
             </div>
 
             <Button

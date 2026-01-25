@@ -24,7 +24,7 @@ serve(async (req) => {
       );
     }
 
-    const { name, description, email } = await req.json();
+    const { name, description, email, screenshotUrl } = await req.json();
 
     if (!name) {
       return new Response(
@@ -33,17 +33,29 @@ serve(async (req) => {
       );
     }
 
-    // Build description with email if provided
+    // Build description with email and screenshot if provided
     let fullDescription = description || "";
     if (email) {
       fullDescription = fullDescription ? `${fullDescription}\n\nSubmitted by: ${email}` : `Submitted by: ${email}`;
+    }
+    if (screenshotUrl) {
+      fullDescription = fullDescription ? `${fullDescription}\n\nScreenshot: ${screenshotUrl}` : `Screenshot: ${screenshotUrl}`;
+    }
+
+    // Build HTML description with screenshot image
+    let descriptionHtml = `<p>${(description || "").replace(/\n/g, "</p><p>")}</p>`;
+    if (email) {
+      descriptionHtml += `<p><strong>Submitted by:</strong> ${email}</p>`;
+    }
+    if (screenshotUrl) {
+      descriptionHtml += `<p><strong>Screenshot:</strong></p><p><img src="${screenshotUrl}" alt="Screenshot" style="max-width: 100%; border-radius: 8px;" /></p>`;
     }
 
     // Plane API expects issue wrapped in an "issue" object
     const payload = {
       issue: {
         name,
-        description_html: `<p>${fullDescription.replace(/\n/g, "</p><p>")}</p>`,
+        description_html: descriptionHtml,
       }
     };
 
