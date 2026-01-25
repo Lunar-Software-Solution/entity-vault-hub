@@ -193,198 +193,202 @@ const ShareholderForm = ({ item, entities, onSubmit, onCancel }: ShareholderForm
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4 max-h-[70vh] overflow-y-auto pr-2">
-        {/* Entity Affiliations - shown at top for existing shareholders */}
-        {item?.id && (
-          <ShareholderEntityAffiliationsManager
-            shareholderId={item.id}
-            currentEntityId={item.entity_id}
-            currentEntityName={currentEntityName}
-          />
-        )}
-
-        <FormField control={form.control} name="entity_id" render={({ field }) => (
-          <FormItem>
-            <FormLabel>Primary Entity *</FormLabel>
-            <Select onValueChange={field.onChange} value={field.value}>
-              <FormControl>
-                <SelectTrigger className="bg-background">
-                  <SelectValue placeholder="Select an entity" />
-                </SelectTrigger>
-              </FormControl>
-              <SelectContent className="bg-background">
-                {entities.map((entity) => (
-                  <SelectItem key={entity.id} value={entity.id}>{entity.name}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <FormMessage />
-          </FormItem>
-        )} />
-
-        <div className="flex items-start gap-4">
-          <div className="flex flex-col items-center gap-2 mt-6">
-            <GravatarAvatar
-              key={`avatar-${avatarDeleted ? 'deleted' : 'active'}`}
-              email={email}
-              name={name || ""}
-              size="xl"
-              linkedinUrl={linkedinUrl}
-              storedAvatarUrl={avatarDeleted ? null : (enrichedAvatarUrl || item?.avatar_url)}
-              suppressAvatar={avatarDeleted || item?.suppress_avatar}
-              enableEnrichment={false}
+      <form onSubmit={form.handleSubmit(handleSubmit)} className="flex flex-col max-h-[75vh]">
+        {/* Scrollable content area */}
+        <div className="flex-1 overflow-y-auto space-y-4 pr-2 pb-4">
+          {/* Entity Affiliations - shown at top for existing shareholders */}
+          {item?.id && (
+            <ShareholderEntityAffiliationsManager
+              shareholderId={item.id}
+              currentEntityId={item.entity_id}
+              currentEntityName={currentEntityName}
             />
-            {item?.id && (item?.avatar_url || enrichedAvatarUrl) && !avatarDeleted && (
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                onClick={handleDeleteAvatar}
-                className="text-destructive hover:text-destructive hover:bg-destructive/10 h-6 px-2 text-xs"
-              >
-                <Trash2 className="h-3 w-3 mr-1" />
-                Remove
-              </Button>
-            )}
-          </div>
-          <div className="flex-1 grid grid-cols-2 gap-3">
-            <FormField control={form.control} name="name" render={({ field }) => (
-              <FormItem>
-                <FormLabel>Name *</FormLabel>
-                <FormControl><Input placeholder="John Doe" {...field} /></FormControl>
-                <FormMessage />
-              </FormItem>
-            )} />
-            <FormField control={form.control} name="shareholder_type" render={({ field }) => (
-              <FormItem>
-                <FormLabel>Type *</FormLabel>
-                <Select onValueChange={field.onChange} value={field.value}>
-                  <FormControl>
-                    <SelectTrigger className="bg-background">
-                      <SelectValue />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent className="bg-background">
-                    {shareholderTypes.map((type) => (
-                      <SelectItem key={type} value={type}>{type.charAt(0).toUpperCase() + type.slice(1)}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
-            )} />
-          </div>
-        </div>
+          )}
 
-        <div className="grid grid-cols-2 gap-3">
-          <FormField control={form.control} name="email" render={({ field }) => (
+          <FormField control={form.control} name="entity_id" render={({ field }) => (
             <FormItem>
-              <FormLabel>Email</FormLabel>
-              <FormControl><Input type="email" placeholder="john@example.com" {...field} /></FormControl>
+              <FormLabel>Primary Entity *</FormLabel>
+              <Select onValueChange={field.onChange} value={field.value}>
+                <FormControl>
+                  <SelectTrigger className="bg-background">
+                    <SelectValue placeholder="Select an entity" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent className="bg-background">
+                  {entities.map((entity) => (
+                    <SelectItem key={entity.id} value={entity.id}>{entity.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
               <FormMessage />
             </FormItem>
           )} />
-          <FormField control={form.control} name="phone" render={({ field }) => (
-            <FormItem>
-              <FormLabel>Phone</FormLabel>
-              <FormControl><Input placeholder="+1 555-1234" {...field} /></FormControl>
-              <FormMessage />
-            </FormItem>
-          )} />
-        </div>
 
-        <FormField control={form.control} name="linkedin_url" render={({ field }) => (
-          <FormItem>
-            <FormLabel>LinkedIn URL</FormLabel>
-            <div className="flex gap-2">
-              <FormControl><Input placeholder="https://linkedin.com/in/username" {...field} /></FormControl>
-              <Button
-                type="button"
-                variant="outline"
-                size="icon"
-                onClick={handleEnrichProfile}
-                disabled={isEnriching || !linkedinUrl}
-                title="Enrich profile from LinkedIn"
-                className="flex-shrink-0"
-              >
-                {isEnriching ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                ) : (
-                  <Sparkles className="h-4 w-4 text-primary" />
-                )}
-              </Button>
+          <div className="flex items-start gap-4">
+            <div className="flex flex-col items-center gap-2 mt-6">
+              <GravatarAvatar
+                key={`avatar-${avatarDeleted ? 'deleted' : 'active'}`}
+                email={email}
+                name={name || ""}
+                size="xl"
+                linkedinUrl={linkedinUrl}
+                storedAvatarUrl={avatarDeleted ? null : (enrichedAvatarUrl || item?.avatar_url)}
+                suppressAvatar={avatarDeleted || item?.suppress_avatar}
+                enableEnrichment={false}
+              />
+              {item?.id && (item?.avatar_url || enrichedAvatarUrl) && !avatarDeleted && (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleDeleteAvatar}
+                  className="text-destructive hover:text-destructive hover:bg-destructive/10 h-6 px-2 text-xs"
+                >
+                  <Trash2 className="h-3 w-3 mr-1" />
+                  Remove
+                </Button>
+              )}
             </div>
-            <FormMessage />
-          </FormItem>
-        )} />
+            <div className="flex-1 grid grid-cols-2 gap-3">
+              <FormField control={form.control} name="name" render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Name *</FormLabel>
+                  <FormControl><Input placeholder="John Doe" {...field} /></FormControl>
+                  <FormMessage />
+                </FormItem>
+              )} />
+              <FormField control={form.control} name="shareholder_type" render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Type *</FormLabel>
+                  <Select onValueChange={field.onChange} value={field.value}>
+                    <FormControl>
+                      <SelectTrigger className="bg-background">
+                        <SelectValue />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent className="bg-background">
+                      {shareholderTypes.map((type) => (
+                        <SelectItem key={type} value={type}>{type.charAt(0).toUpperCase() + type.slice(1)}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )} />
+            </div>
+          </div>
 
-        <div className="grid grid-cols-2 gap-3">
-          <FormField control={form.control} name="address" render={({ field }) => (
-            <FormItem>
-              <FormLabel>Address</FormLabel>
-              <FormControl><Input placeholder="123 Main St, City, State" {...field} /></FormControl>
-              <FormMessage />
-            </FormItem>
-          )} />
-          <FormField control={form.control} name="tax_id" render={({ field }) => (
-            <FormItem>
-              <FormLabel>Tax ID / SSN</FormLabel>
-              <FormControl><Input placeholder="XXX-XX-XXXX" {...field} /></FormControl>
-              <FormMessage />
-            </FormItem>
-          )} />
-        </div>
+          <div className="grid grid-cols-2 gap-3">
+            <FormField control={form.control} name="email" render={({ field }) => (
+              <FormItem>
+                <FormLabel>Email</FormLabel>
+                <FormControl><Input type="email" placeholder="john@example.com" {...field} /></FormControl>
+                <FormMessage />
+              </FormItem>
+            )} />
+            <FormField control={form.control} name="phone" render={({ field }) => (
+              <FormItem>
+                <FormLabel>Phone</FormLabel>
+                <FormControl><Input placeholder="+1 555-1234" {...field} /></FormControl>
+                <FormMessage />
+              </FormItem>
+            )} />
+          </div>
 
-        <div className="flex gap-6">
-          <FormField control={form.control} name="is_founder" render={({ field }) => (
-            <FormItem className="flex flex-row items-start space-x-3 space-y-0">
-              <FormControl>
-                <Checkbox checked={field.value} onCheckedChange={field.onChange} />
-              </FormControl>
-              <div className="space-y-1 leading-none">
-                <FormLabel>Founder</FormLabel>
+          <FormField control={form.control} name="linkedin_url" render={({ field }) => (
+            <FormItem>
+              <FormLabel>LinkedIn URL</FormLabel>
+              <div className="flex gap-2">
+                <FormControl><Input placeholder="https://linkedin.com/in/username" {...field} /></FormControl>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="icon"
+                  onClick={handleEnrichProfile}
+                  disabled={isEnriching || !linkedinUrl}
+                  title="Enrich profile from LinkedIn"
+                  className="flex-shrink-0"
+                >
+                  {isEnriching ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <Sparkles className="h-4 w-4 text-primary" />
+                  )}
+                </Button>
               </div>
-            </FormItem>
-          )} />
-          <FormField control={form.control} name="is_board_member" render={({ field }) => (
-            <FormItem className="flex flex-row items-start space-x-3 space-y-0">
-              <FormControl>
-                <Checkbox checked={field.value} onCheckedChange={field.onChange} />
-              </FormControl>
-              <div className="space-y-1 leading-none">
-                <FormLabel>Board Member</FormLabel>
-              </div>
-            </FormItem>
-          )} />
-        </div>
-
-        <div className="grid grid-cols-2 gap-3">
-          <FormField control={form.control} name="bio" render={({ field }) => (
-            <FormItem>
-              <FormLabel>Bio</FormLabel>
-              <FormControl><Textarea rows={2} placeholder="Professional bio..." {...field} /></FormControl>
               <FormMessage />
             </FormItem>
           )} />
-          <FormField control={form.control} name="notes" render={({ field }) => (
-            <FormItem>
-              <FormLabel>Notes</FormLabel>
-              <FormControl><Textarea rows={2} {...field} /></FormControl>
-              <FormMessage />
-            </FormItem>
-          )} />
+
+          <div className="grid grid-cols-2 gap-3">
+            <FormField control={form.control} name="address" render={({ field }) => (
+              <FormItem>
+                <FormLabel>Address</FormLabel>
+                <FormControl><Input placeholder="123 Main St, City, State" {...field} /></FormControl>
+                <FormMessage />
+              </FormItem>
+            )} />
+            <FormField control={form.control} name="tax_id" render={({ field }) => (
+              <FormItem>
+                <FormLabel>Tax ID / SSN</FormLabel>
+                <FormControl><Input placeholder="XXX-XX-XXXX" {...field} /></FormControl>
+                <FormMessage />
+              </FormItem>
+            )} />
+          </div>
+
+          <div className="flex gap-6">
+            <FormField control={form.control} name="is_founder" render={({ field }) => (
+              <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                <FormControl>
+                  <Checkbox checked={field.value} onCheckedChange={field.onChange} />
+                </FormControl>
+                <div className="space-y-1 leading-none">
+                  <FormLabel>Founder</FormLabel>
+                </div>
+              </FormItem>
+            )} />
+            <FormField control={form.control} name="is_board_member" render={({ field }) => (
+              <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                <FormControl>
+                  <Checkbox checked={field.value} onCheckedChange={field.onChange} />
+                </FormControl>
+                <div className="space-y-1 leading-none">
+                  <FormLabel>Board Member</FormLabel>
+                </div>
+              </FormItem>
+            )} />
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <FormField control={form.control} name="bio" render={({ field }) => (
+              <FormItem>
+                <FormLabel>Bio</FormLabel>
+                <FormControl><Textarea rows={2} placeholder="Professional bio..." {...field} /></FormControl>
+                <FormMessage />
+              </FormItem>
+            )} />
+            <FormField control={form.control} name="notes" render={({ field }) => (
+              <FormItem>
+                <FormLabel>Notes</FormLabel>
+                <FormControl><Textarea rows={2} {...field} /></FormControl>
+                <FormMessage />
+              </FormItem>
+            )} />
+          </div>
+
+          {/* Entity Affiliations - for new shareholders only */}
+          {!item?.id && (
+            <ShareholderEntityAffiliationsManager
+              shareholderId={null}
+              currentEntityId={form.watch("entity_id")}
+              currentEntityName={currentEntityName}
+            />
+          )}
         </div>
 
-        {/* Entity Affiliations - for new shareholders only */}
-        {!item?.id && (
-          <ShareholderEntityAffiliationsManager
-            shareholderId={null}
-            currentEntityId={form.watch("entity_id")}
-            currentEntityName={currentEntityName}
-          />
-        )}
-
-        <div className="flex justify-end gap-3 pt-4 sticky bottom-0 bg-background pb-2">
+        {/* Fixed action buttons at bottom */}
+        <div className="flex justify-end gap-3 pt-4 border-t border-border mt-2 flex-shrink-0">
           <Button type="button" variant="outline" onClick={onCancel}>Cancel</Button>
           <Button type="submit">{item ? "Update" : "Create"}</Button>
         </div>
