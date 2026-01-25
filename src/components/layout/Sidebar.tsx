@@ -196,12 +196,21 @@ const Sidebar = ({
   return <TooltipProvider delayDuration={0}>
       <aside className={cn("fixed left-0 top-0 h-screen bg-sidebar border-r border-sidebar-border flex flex-col transition-all duration-300", collapsed ? "w-14" : "w-56")}>
         {/* Header */}
-        <div className={cn("p-3 border-b border-sidebar-border", collapsed && "px-2")}>
-          <div className={cn("flex", collapsed ? "justify-center" : "flex-col items-center gap-1")}>
-            <div className="w-8 h-8 rounded-lg overflow-hidden flex-shrink-0 bg-white p-1">
-              <img src={braxLogo} alt="Entity Hub" className="w-full h-full object-contain" />
+        <div className={cn("p-4 border-b border-sidebar-border", collapsed && "px-2 py-3")}>
+          <div className={cn("flex", collapsed ? "justify-center" : "flex-col items-center gap-2")}>
+            <div className={cn("flex items-center justify-center", collapsed ? "w-8 h-8" : "w-full py-2")}>
+              <img 
+                src={braxLogo} 
+                alt="Entity Hub" 
+                className={cn(
+                  "object-contain",
+                  collapsed ? "w-8 h-8 invert" : "h-6 invert"
+                )} 
+              />
             </div>
-            {!collapsed && <p className="text-xs text-muted-foreground text-center">Corporate Entities Management</p>}
+            {!collapsed && (
+              <p className="text-xs text-muted-foreground text-center">Corporate Entities Management</p>
+            )}
           </div>
         </div>
 
