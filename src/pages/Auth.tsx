@@ -4,6 +4,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import braxLogo from "@/assets/braxtech-logo.png";
@@ -16,6 +17,27 @@ interface Invitation {
   status: string;
   expires_at: string;
 }
+
+// Generate a unique device token for this browser
+const getDeviceToken = (): string => {
+  const STORAGE_KEY = "trusted_device_token";
+  let token = localStorage.getItem(STORAGE_KEY);
+  if (!token) {
+    token = crypto.randomUUID() + "-" + Date.now();
+    localStorage.setItem(STORAGE_KEY, token);
+  }
+  return token;
+};
+
+// Get a simple device name
+const getDeviceName = (): string => {
+  const ua = navigator.userAgent;
+  if (ua.includes("Chrome")) return "Chrome Browser";
+  if (ua.includes("Firefox")) return "Firefox Browser";
+  if (ua.includes("Safari")) return "Safari Browser";
+  if (ua.includes("Edge")) return "Edge Browser";
+  return "Web Browser";
+};
 
 const Auth = () => {
   const [searchParams] = useSearchParams();
@@ -61,8 +83,10 @@ const Auth = () => {
   // 2FA state
   const [needs2FA, setNeeds2FA] = useState(false);
   const [pending2FAUser, setPending2FAUser] = useState<{ id: string; email: string } | null>(null);
+  const [pendingAccessToken, setPendingAccessToken] = useState<string | null>(null);
   const [otpCode, setOtpCode] = useState("");
   const [verifying2FA, setVerifying2FA] = useState(false);
+  const [rememberDevice, setRememberDevice] = useState(false);
   
   const { user, signIn, signUp, signOut, loading: authLoading } = useAuth();
   const { toast } = useToast();
@@ -234,11 +258,50 @@ const Auth = () => {
     return <Navigate to="/" replace />;
   }
 
+  // Check if device is trusted
+  const checkTrustedDevice = async (userId: string): Promise<boolean> => {
+    try {
+      const deviceToken = getDeviceToken();
+      const { data, error } = await supabase.functions.invoke("check-trusted-device", {
+        body: { userId, deviceToken },
+      });
+      
+      if (error) {
+        console.error("Error checking trusted device:", error);
+        return false;
+      }
+      
+      return data?.trusted === true;
+    } catch (err) {
+      console.error("Error checking trusted device:", err);
+      return false;
+    }
+  };
+
+  // Register device as trusted
+  const registerTrustedDevice = async (accessToken: string): Promise<void> => {
+    try {
+      const deviceToken = getDeviceToken();
+      const deviceName = getDeviceName();
+      
+      const { error } = await supabase.functions.invoke("register-trusted-device", {
+        body: { deviceToken, deviceName },
+        headers: { Authorization: `Bearer ${accessToken}` },
+      });
+      
+      if (error) {
+        console.error("Error registering trusted device:", error);
+      }
+    } catch (err) {
+      console.error("Error registering trusted device:", err);
+    }
+  };
+
   // Send 2FA code
-  const send2FACode = async (userId: string, userEmail: string) => {
+  const send2FACode = async (accessToken: string) => {
     try {
       const { error } = await supabase.functions.invoke("send-2fa-code", {
-        body: { userId, email: userEmail },
+        headers: { Authorization: `Bearer ${accessToken}` },
       });
       
       if (error) throw error;
@@ -247,12 +310,12 @@ const Auth = () => {
         title: "Verification code sent",
         description: "Check your email for the 6-digit code.",
       });
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error("Error sending 2FA code:", err);
       toast({
         variant: "destructive",
         title: "Failed to send verification code",
-        description: err.message,
+        description: err instanceof Error ? err.message : "Unknown error",
       });
     }
   };
@@ -279,7 +342,7 @@ const Auth = () => {
       }
       
       // 2FA verified - complete the login by re-authenticating
-      const { error: loginError } = await supabase.auth.signInWithPassword({
+      const { data: loginData, error: loginError } = await supabase.auth.signInWithPassword({
         email: pending2FAUser.email,
         password,
       });
@@ -292,21 +355,33 @@ const Auth = () => {
         });
         setNeeds2FA(false);
         setPending2FAUser(null);
+        setPendingAccessToken(null);
         return;
+      }
+      
+      // Register trusted device if checkbox was checked
+      if (rememberDevice && loginData.session?.access_token) {
+        await registerTrustedDevice(loginData.session.access_token);
+        toast({
+          title: "Device remembered",
+          description: "You won't need 2FA on this device for 30 days.",
+        });
       }
       
       // Clear 2FA state - the auth listener will handle redirect
       setNeeds2FA(false);
       setPending2FAUser(null);
+      setPendingAccessToken(null);
+      setRememberDevice(false);
       toast({
         title: "Verified!",
         description: "You're now logged in.",
       });
-    } catch (err: any) {
+    } catch (err: unknown) {
       toast({
         variant: "destructive",
         title: "Verification failed",
-        description: err.message,
+        description: err instanceof Error ? err.message : "Unknown error",
       });
     } finally {
       setVerifying2FA(false);
@@ -349,13 +424,26 @@ const Auth = () => {
             title: "Login failed",
             description: error.message,
           });
-        } else if (data.user) {
-          // Set 2FA state BEFORE signing out to prevent race condition
-          setPending2FAUser({ id: data.user.id, email: data.user.email || email });
-          setNeeds2FA(true);
-          // Sign out to require 2FA verification
-          await supabase.auth.signOut();
-          await send2FACode(data.user.id, data.user.email || email);
+        } else if (data.user && data.session) {
+          // Check if this device is trusted
+          const isTrusted = await checkTrustedDevice(data.user.id);
+          
+          if (isTrusted) {
+            // Device is trusted, skip 2FA - user stays logged in
+            toast({
+              title: "Welcome back!",
+              description: "Logged in from a trusted device.",
+            });
+          } else {
+            // Set 2FA state BEFORE signing out to prevent race condition
+            setPending2FAUser({ id: data.user.id, email: data.user.email || email });
+            setPendingAccessToken(data.session.access_token);
+            setNeeds2FA(true);
+            // Send 2FA code before signing out
+            await send2FACode(data.session.access_token);
+            // Sign out to require 2FA verification
+            await supabase.auth.signOut();
+          }
         }
       } else {
         const { error } = await signUp(email, password);
@@ -471,6 +559,21 @@ const Auth = () => {
                 </InputOTP>
               </div>
               
+              {/* Remember this device checkbox */}
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  id="remember-device"
+                  checked={rememberDevice}
+                  onCheckedChange={(checked) => setRememberDevice(checked === true)}
+                />
+                <label
+                  htmlFor="remember-device"
+                  className="text-sm text-muted-foreground cursor-pointer"
+                >
+                  Remember this device for 30 days
+                </label>
+              </div>
+              
               <Button 
                 className="w-full h-11" 
                 onClick={verify2FACode}
@@ -482,7 +585,17 @@ const Auth = () => {
               <div className="text-center space-y-2">
                 <button
                   type="button"
-                  onClick={() => send2FACode(pending2FAUser!.id, pending2FAUser!.email)}
+                  onClick={async () => {
+                    // Re-authenticate to get fresh token for resending
+                    const { data } = await supabase.auth.signInWithPassword({
+                      email: pending2FAUser!.email,
+                      password,
+                    });
+                    if (data.session?.access_token) {
+                      await send2FACode(data.session.access_token);
+                      await supabase.auth.signOut();
+                    }
+                  }}
                   className="text-sm text-primary hover:underline"
                 >
                   Resend code
@@ -493,7 +606,9 @@ const Auth = () => {
                   onClick={() => {
                     setNeeds2FA(false);
                     setPending2FAUser(null);
+                    setPendingAccessToken(null);
                     setOtpCode("");
+                    setRememberDevice(false);
                   }}
                   className="text-sm text-muted-foreground hover:text-foreground"
                 >
