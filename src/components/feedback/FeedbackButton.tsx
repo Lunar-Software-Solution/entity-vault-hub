@@ -1,5 +1,5 @@
-import { useState, useRef } from "react";
-import { MessageSquarePlus, X, Send, Loader2, Camera, Trash2 } from "lucide-react";
+import { useState } from "react";
+import { MessageSquarePlus, X, Send, Loader2, Camera, Trash2, Edit3 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
@@ -16,21 +16,23 @@ import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import html2canvas from "html2canvas";
+import ScreenshotAnnotator from "./ScreenshotAnnotator";
 
 const FeedbackButton = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isCapturing, setIsCapturing] = useState(false);
+  const [isAnnotating, setIsAnnotating] = useState(false);
   const [feedbackType, setFeedbackType] = useState<string>("");
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [screenshot, setScreenshot] = useState<string | null>(null);
   const [screenshotBlob, setScreenshotBlob] = useState<Blob | null>(null);
+  const [rawScreenshot, setRawScreenshot] = useState<string | null>(null);
   const { user } = useAuth();
 
   const captureScreenshot = async () => {
     setIsCapturing(true);
-    // Temporarily hide the feedback panel
     const feedbackPanel = document.querySelector('[data-feedback-panel]') as HTMLElement;
     if (feedbackPanel) feedbackPanel.style.visibility = 'hidden';
 
@@ -39,18 +41,14 @@ const FeedbackButton = () => {
         useCORS: true,
         allowTaint: true,
         logging: false,
-        scale: 0.5, // Reduce size for faster upload
+        scale: 0.5,
       });
       
       const dataUrl = canvas.toDataURL('image/png');
-      setScreenshot(dataUrl);
+      setRawScreenshot(dataUrl);
+      setIsAnnotating(true);
       
-      // Convert to blob for upload
-      canvas.toBlob((blob) => {
-        if (blob) setScreenshotBlob(blob);
-      }, 'image/png', 0.8);
-      
-      toast.success("Screenshot captured!");
+      toast.success("Screenshot captured! Add annotations if needed.");
     } catch (error) {
       console.error("Screenshot capture error:", error);
       toast.error("Failed to capture screenshot");
@@ -60,9 +58,30 @@ const FeedbackButton = () => {
     }
   };
 
+  const handleAnnotationSave = (annotatedDataUrl: string, blob: Blob) => {
+    setScreenshot(annotatedDataUrl);
+    setScreenshotBlob(blob);
+    setIsAnnotating(false);
+    setRawScreenshot(null);
+  };
+
+  const handleAnnotationCancel = () => {
+    setIsAnnotating(false);
+    setRawScreenshot(null);
+  };
+
+  const startAnnotating = () => {
+    if (screenshot) {
+      setRawScreenshot(screenshot);
+      setIsAnnotating(true);
+    }
+  };
+
   const removeScreenshot = () => {
     setScreenshot(null);
     setScreenshotBlob(null);
+    setRawScreenshot(null);
+    setIsAnnotating(false);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -214,22 +233,41 @@ const FeedbackButton = () => {
             {/* Screenshot Section */}
             <div className="space-y-2">
               <Label className="text-foreground font-medium">Screenshot</Label>
-              {screenshot ? (
+              {isAnnotating && rawScreenshot ? (
+                <ScreenshotAnnotator
+                  screenshotDataUrl={rawScreenshot}
+                  onSave={handleAnnotationSave}
+                  onCancel={handleAnnotationCancel}
+                />
+              ) : screenshot ? (
                 <div className="relative rounded-lg border border-border overflow-hidden">
                   <img 
                     src={screenshot} 
                     alt="Screenshot preview" 
                     className="w-full h-32 object-cover"
                   />
-                  <Button
-                    type="button"
-                    variant="destructive"
-                    size="icon"
-                    className="absolute top-2 right-2 h-7 w-7"
-                    onClick={removeScreenshot}
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
+                  <div className="absolute top-2 right-2 flex gap-1">
+                    <Button
+                      type="button"
+                      variant="secondary"
+                      size="icon"
+                      className="h-7 w-7"
+                      onClick={startAnnotating}
+                      title="Edit annotations"
+                    >
+                      <Edit3 className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="destructive"
+                      size="icon"
+                      className="h-7 w-7"
+                      onClick={removeScreenshot}
+                      title="Remove screenshot"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
                 </div>
               ) : (
                 <Button
