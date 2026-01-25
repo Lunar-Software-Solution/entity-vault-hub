@@ -1,16 +1,29 @@
 project_id = "xxaynwfseusnxlpukwnq"
 
 [functions.summarize-contract]
-verify_jwt = false
+verify_jwt = true
 
 [functions.summarize-document]
-verify_jwt = false
+verify_jwt = true
 
 [functions.send-invitation]
-verify_jwt = false
+verify_jwt = true
 
 [functions.enrich-profile]
-verify_jwt = false
+verify_jwt = true
 
 [functions.generate-recurring-tasks]
+verify_jwt = true
+
+[functions.ai-assistant]
+verify_jwt = true
+
+[functions.fetch-social-profile]
+verify_jwt = true
+
+# 2FA functions need service role access, not user auth
+[functions.send-2fa-code]
+verify_jwt = false
+
+[functions.verify-2fa-code]
 verify_jwt = false
