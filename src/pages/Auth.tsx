@@ -80,13 +80,58 @@ const Auth = () => {
   const [inviteLoading, setInviteLoading] = useState(!!inviteToken);
   const [inviteError, setInviteError] = useState<string | null>(null);
   
-  // 2FA state
-  const [needs2FA, setNeeds2FA] = useState(false);
-  const [pending2FAUser, setPending2FAUser] = useState<{ id: string; email: string } | null>(null);
-  const [pendingAccessToken, setPendingAccessToken] = useState<string | null>(null);
+  // 2FA state - persisted in sessionStorage to survive auth state changes
+  const [needs2FA, setNeeds2FAState] = useState(() => {
+    return sessionStorage.getItem("needs2FA") === "true";
+  });
+  const [pending2FAUser, setPending2FAUserState] = useState<{ id: string; email: string } | null>(() => {
+    const stored = sessionStorage.getItem("pending2FAUser");
+    return stored ? JSON.parse(stored) : null;
+  });
+  const [pendingAccessToken, setPendingAccessTokenState] = useState<string | null>(() => {
+    return sessionStorage.getItem("pendingAccessToken");
+  });
   const [otpCode, setOtpCode] = useState("");
   const [verifying2FA, setVerifying2FA] = useState(false);
   const [rememberDevice, setRememberDevice] = useState(false);
+
+  // Wrapper functions to sync state with sessionStorage
+  const setNeeds2FA = (value: boolean) => {
+    setNeeds2FAState(value);
+    if (value) {
+      sessionStorage.setItem("needs2FA", "true");
+    } else {
+      sessionStorage.removeItem("needs2FA");
+    }
+  };
+
+  const setPending2FAUser = (user: { id: string; email: string } | null) => {
+    setPending2FAUserState(user);
+    if (user) {
+      sessionStorage.setItem("pending2FAUser", JSON.stringify(user));
+    } else {
+      sessionStorage.removeItem("pending2FAUser");
+    }
+  };
+
+  const setPendingAccessToken = (token: string | null) => {
+    setPendingAccessTokenState(token);
+    if (token) {
+      sessionStorage.setItem("pendingAccessToken", token);
+    } else {
+      sessionStorage.removeItem("pendingAccessToken");
+    }
+  };
+
+  // Clear all 2FA session data
+  const clear2FAState = () => {
+    setNeeds2FAState(false);
+    setPending2FAUserState(null);
+    setPendingAccessTokenState(null);
+    sessionStorage.removeItem("needs2FA");
+    sessionStorage.removeItem("pending2FAUser");
+    sessionStorage.removeItem("pendingAccessToken");
+  };
   
   const { user, signIn, signUp, signOut, loading: authLoading } = useAuth();
   const { toast } = useToast();
@@ -231,8 +276,7 @@ const Auth = () => {
         title: "Login failed",
         description: error.message,
       });
-      setNeeds2FA(false);
-      setPending2FAUser(null);
+      clear2FAState();
     }
   };
 
@@ -353,9 +397,7 @@ const Auth = () => {
           title: "Login failed",
           description: loginError.message,
         });
-        setNeeds2FA(false);
-        setPending2FAUser(null);
-        setPendingAccessToken(null);
+        clear2FAState();
         return;
       }
       
@@ -369,9 +411,7 @@ const Auth = () => {
       }
       
       // Clear 2FA state - the auth listener will handle redirect
-      setNeeds2FA(false);
-      setPending2FAUser(null);
-      setPendingAccessToken(null);
+      clear2FAState();
       setRememberDevice(false);
       toast({
         title: "Verified!",
