@@ -2326,6 +2326,36 @@ export type Database = {
         }
         Relationships: []
       }
+      trusted_devices: {
+        Row: {
+          created_at: string
+          device_name: string | null
+          device_token: string
+          expires_at: string
+          id: string
+          last_used_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          device_name?: string | null
+          device_token: string
+          expires_at: string
+          id?: string
+          last_used_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          device_name?: string | null
+          device_token?: string
+          expires_at?: string
+          id?: string
+          last_used_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_profiles: {
         Row: {
           avatar_url: string | null
@@ -2393,6 +2423,7 @@ export type Database = {
     Functions: {
       can_write: { Args: never; Returns: boolean }
       cleanup_expired_2fa_codes: { Args: never; Returns: undefined }
+      cleanup_expired_trusted_devices: { Args: never; Returns: undefined }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
