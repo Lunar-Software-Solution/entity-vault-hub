@@ -197,14 +197,11 @@ const Sidebar = ({
       <aside className={cn("fixed left-0 top-0 h-screen bg-sidebar border-r border-sidebar-border flex flex-col transition-all duration-300", collapsed ? "w-14" : "w-56")}>
         {/* Header */}
         <div className={cn("p-3 border-b border-sidebar-border", collapsed && "px-2")}>
-          <div className="flex items-center gap-2">
+          <div className={cn("flex", collapsed ? "justify-center" : "flex-col items-center gap-1")}>
             <div className="w-8 h-8 rounded-lg overflow-hidden flex-shrink-0 bg-white p-1">
               <img src={braxLogo} alt="Entity Hub" className="w-full h-full object-contain" />
             </div>
-            {!collapsed && <div className="min-w-0 flex-1">
-                
-                <p className="text-xs text-muted-foreground truncate">Corporate Entities Managemental</p>
-              </div>}
+            {!collapsed && <p className="text-xs text-muted-foreground text-center">Corporate Entities Managemental</p>}
           </div>
         </div>
 
