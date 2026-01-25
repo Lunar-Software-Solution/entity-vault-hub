@@ -7,11 +7,12 @@ import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Sparkles, Loader2, Trash2 } from "lucide-react";
+import { Sparkles, Loader2, Pencil } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import ShareholderEntityAffiliationsManager from "./ShareholderEntityAffiliationsManager";
 import GravatarAvatar from "@/components/shared/GravatarAvatar";
+import AvatarEditDialog from "@/components/shared/AvatarEditDialog";
 import IdDocumentsManager, { IdDocument } from "@/components/shared/IdDocumentsManager";
 
 interface ShareholderFormData {
@@ -41,7 +42,18 @@ const ShareholderForm = ({ item, entities, onSubmit, onCancel }: ShareholderForm
   const [enrichedAvatarUrl, setEnrichedAvatarUrl] = useState<string | null>(null);
   const [avatarDeleted, setAvatarDeleted] = useState(false);
   const [idDocuments, setIdDocuments] = useState<IdDocument[]>([]);
+  const [showAvatarDialog, setShowAvatarDialog] = useState(false);
   const queryClient = useQueryClient();
+
+  const handleAvatarChange = (newUrl: string | null, deleted: boolean) => {
+    if (deleted) {
+      setAvatarDeleted(true);
+      setEnrichedAvatarUrl(null);
+    } else if (newUrl) {
+      setEnrichedAvatarUrl(newUrl);
+      setAvatarDeleted(false);
+    }
+  };
 
   // Fetch existing ID documents for this shareholder
   const { data: existingIdDocs } = useQuery({
@@ -180,37 +192,6 @@ const ShareholderForm = ({ item, entities, onSubmit, onCancel }: ShareholderForm
     }
   };
 
-  // Handle avatar deletion
-  const handleDeleteAvatar = async () => {
-    if (!item?.id) {
-      toast.error("Cannot delete avatar for unsaved record");
-      return;
-    }
-
-    try {
-      const { error } = await supabase
-        .from("shareholders")
-        .update({ 
-          avatar_url: null, 
-          suppress_avatar: true 
-        })
-        .eq("id", item.id);
-
-      if (error) {
-        console.error("Failed to delete avatar:", error);
-        toast.error("Failed to delete avatar");
-        return;
-      }
-
-      setAvatarDeleted(true);
-      setEnrichedAvatarUrl(null);
-      toast.success("Avatar removed");
-    } catch (err) {
-      console.error("Error deleting avatar:", err);
-      toast.error("Failed to delete avatar");
-    }
-  };
-
   // Save ID documents to database
   const saveIdDocuments = async (shareholderId: string) => {
     // Delete removed documents
@@ -300,9 +281,9 @@ const ShareholderForm = ({ item, entities, onSubmit, onCancel }: ShareholderForm
           )} />
 
           <div className="flex items-start gap-4">
-            <div className="flex flex-col items-center gap-2 mt-6">
+            <div className="relative mt-6 group cursor-pointer" onClick={() => setShowAvatarDialog(true)}>
               <GravatarAvatar
-                key={`avatar-${avatarDeleted ? 'deleted' : 'active'}`}
+                key={`avatar-${avatarDeleted ? 'deleted' : 'active'}-${enrichedAvatarUrl || ''}`}
                 email={email}
                 name={name || ""}
                 size="xl"
@@ -311,19 +292,22 @@ const ShareholderForm = ({ item, entities, onSubmit, onCancel }: ShareholderForm
                 suppressAvatar={avatarDeleted || item?.suppress_avatar}
                 enableEnrichment={false}
               />
-              {item?.id && (item?.avatar_url || enrichedAvatarUrl) && !avatarDeleted && (
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  onClick={handleDeleteAvatar}
-                  className="text-destructive hover:text-destructive hover:bg-destructive/10 h-6 px-2 text-xs"
-                >
-                  <Trash2 className="h-3 w-3 mr-1" />
-                  Remove
-                </Button>
-              )}
+              <div className="absolute inset-0 bg-black/50 rounded-full opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                <Pencil className="h-5 w-5 text-white" />
+              </div>
             </div>
+
+            <AvatarEditDialog
+              open={showAvatarDialog}
+              onOpenChange={setShowAvatarDialog}
+              name={name || ""}
+              email={email}
+              linkedinUrl={linkedinUrl}
+              currentAvatarUrl={avatarDeleted ? null : (enrichedAvatarUrl || item?.avatar_url)}
+              recordId={item?.id}
+              tableName="shareholders"
+              onAvatarChange={handleAvatarChange}
+            />
             <div className="flex-1 grid grid-cols-2 gap-3">
               <FormField control={form.control} name="name" render={({ field }) => (
                 <FormItem>
