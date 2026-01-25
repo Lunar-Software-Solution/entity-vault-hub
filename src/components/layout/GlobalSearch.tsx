@@ -192,18 +192,18 @@ const GlobalSearch = ({ onNavigate }: GlobalSearchProps) => {
           <DialogHeader className="p-4 pb-0">
             <DialogTitle className="sr-only">Global Search</DialogTitle>
           </DialogHeader>
-          <div className="flex items-center gap-3 px-4 py-3 border-b border-border">
-            <Search className="w-5 h-5 text-muted-foreground" />
+          <div className="flex items-center gap-3 px-4 py-4 border-b border-border">
+            <Search className="w-5 h-5 text-muted-foreground flex-shrink-0" />
             <Input
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder="Search entities, accounts, cards, addresses..."
-              className="border-0 p-0 h-auto text-base focus-visible:ring-0 bg-transparent"
+              className="border-0 p-0 h-auto text-lg focus-visible:ring-0 bg-transparent"
               autoFocus
             />
             {query && (
-              <button onClick={() => setQuery("")} className="text-muted-foreground hover:text-foreground">
-                <X className="w-4 h-4" />
+              <button onClick={() => setQuery("")} className="text-muted-foreground hover:text-foreground flex-shrink-0">
+                <X className="w-5 h-5" />
               </button>
             )}
           </div>
