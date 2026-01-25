@@ -34,3 +34,9 @@ verify_jwt = false
 
 [functions.register-trusted-device]
 verify_jwt = false
+
+[functions.list-trusted-devices]
+verify_jwt = false
+
+[functions.revoke-trusted-device]
+verify_jwt = false
