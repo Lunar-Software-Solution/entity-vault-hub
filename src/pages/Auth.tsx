@@ -91,6 +91,9 @@ const Auth = () => {
   const [pendingAccessToken, setPendingAccessTokenState] = useState<string | null>(() => {
     return sessionStorage.getItem("pendingAccessToken");
   });
+  const [pending2FAPassword, setPending2FAPasswordState] = useState<string | null>(() => {
+    return sessionStorage.getItem("pending2FAPassword");
+  });
   const [otpCode, setOtpCode] = useState("");
   const [verifying2FA, setVerifying2FA] = useState(false);
   const [rememberDevice, setRememberDevice] = useState(false);
@@ -123,14 +126,25 @@ const Auth = () => {
     }
   };
 
+  const setPending2FAPassword = (pwd: string | null) => {
+    setPending2FAPasswordState(pwd);
+    if (pwd) {
+      sessionStorage.setItem("pending2FAPassword", pwd);
+    } else {
+      sessionStorage.removeItem("pending2FAPassword");
+    }
+  };
+
   // Clear all 2FA session data
   const clear2FAState = () => {
     setNeeds2FAState(false);
     setPending2FAUserState(null);
     setPendingAccessTokenState(null);
+    setPending2FAPasswordState(null);
     sessionStorage.removeItem("needs2FA");
     sessionStorage.removeItem("pending2FAUser");
     sessionStorage.removeItem("pendingAccessToken");
+    sessionStorage.removeItem("pending2FAPassword");
   };
   
   const { user, signIn, signUp, signOut, loading: authLoading } = useAuth();
@@ -386,9 +400,21 @@ const Auth = () => {
       }
       
       // 2FA verified - complete the login by re-authenticating
+      // Use stored password from sessionStorage (form state may be lost after signOut)
+      const storedPassword = pending2FAPassword || password;
+      if (!storedPassword) {
+        toast({
+          variant: "destructive",
+          title: "Session expired",
+          description: "Please try logging in again.",
+        });
+        clear2FAState();
+        return;
+      }
+      
       const { data: loginData, error: loginError } = await supabase.auth.signInWithPassword({
         email: pending2FAUser.email,
-        password,
+        password: storedPassword,
       });
       
       if (loginError) {
@@ -478,6 +504,7 @@ const Auth = () => {
             // Set 2FA state BEFORE signing out to prevent race condition
             setPending2FAUser({ id: data.user.id, email: data.user.email || email });
             setPendingAccessToken(data.session.access_token);
+            setPending2FAPassword(password); // Store password for re-auth after 2FA
             setNeeds2FA(true);
             // Send 2FA code before signing out
             await send2FACode(data.session.access_token);
