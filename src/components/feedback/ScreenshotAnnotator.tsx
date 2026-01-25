@@ -66,11 +66,11 @@ const ScreenshotAnnotator = ({
       const container = containerRef.current;
       if (container) {
         const maxWidth = container.clientWidth - 32;
-        const maxHeight = 300;
+        const maxHeight = 400;
         const ratio = Math.min(maxWidth / img.width, maxHeight / img.height);
         setCanvasSize({
-          width: img.width * ratio,
-          height: img.height * ratio,
+          width: Math.max(img.width * ratio, 300),
+          height: Math.max(img.height * ratio, 200),
         });
       }
       setImageLoaded(true);
