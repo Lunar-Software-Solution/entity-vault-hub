@@ -1995,6 +1995,53 @@ export type Database = {
           },
         ]
       }
+      shareholder_id_documents: {
+        Row: {
+          created_at: string
+          document_number: string | null
+          document_type: string
+          expiry_date: string | null
+          file_name: string | null
+          file_path: string | null
+          id: string
+          notes: string | null
+          shareholder_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          document_number?: string | null
+          document_type: string
+          expiry_date?: string | null
+          file_name?: string | null
+          file_path?: string | null
+          id?: string
+          notes?: string | null
+          shareholder_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          document_number?: string | null
+          document_type?: string
+          expiry_date?: string | null
+          file_name?: string | null
+          file_path?: string | null
+          id?: string
+          notes?: string | null
+          shareholder_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "shareholder_id_documents_shareholder_id_fkey"
+            columns: ["shareholder_id"]
+            isOneToOne: false
+            referencedRelation: "shareholders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       shareholders: {
         Row: {
           address: string | null
