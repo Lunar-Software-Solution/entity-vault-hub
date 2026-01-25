@@ -171,10 +171,10 @@ const FeedbackButton = () => {
           {/* Form */}
           <form onSubmit={handleSubmit} className="p-4 space-y-4 overflow-y-auto">
             <div className="space-y-2">
-              <Label htmlFor="feedback-type" className="text-foreground">Type *</Label>
+              <Label htmlFor="feedback-type" className="text-foreground font-medium">Type *</Label>
               <Select value={feedbackType} onValueChange={setFeedbackType}>
-                <SelectTrigger id="feedback-type" className="text-foreground">
-                  <SelectValue placeholder="Select feedback type" />
+                <SelectTrigger id="feedback-type" className="text-foreground bg-background border-border">
+                  <SelectValue placeholder="Select feedback type" className="text-muted-foreground" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="Bug">Bug Report</SelectItem>
@@ -187,19 +187,19 @@ const FeedbackButton = () => {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="feedback-title" className="text-foreground">Title *</Label>
+              <Label htmlFor="feedback-title" className="text-foreground font-medium">Title *</Label>
               <Input
                 id="feedback-title"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 placeholder="Brief summary of your feedback"
                 maxLength={100}
-                className="text-foreground"
+                className="text-foreground bg-background border-border placeholder:text-muted-foreground"
               />
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="feedback-description" className="text-foreground">Description</Label>
+              <Label htmlFor="feedback-description" className="text-foreground font-medium">Description</Label>
               <Textarea
                 id="feedback-description"
                 value={description}
@@ -207,13 +207,13 @@ const FeedbackButton = () => {
                 placeholder="Provide more details (optional)"
                 rows={3}
                 maxLength={2000}
-                className="text-foreground"
+                className="text-foreground bg-background border-border placeholder:text-muted-foreground"
               />
             </div>
 
             {/* Screenshot Section */}
             <div className="space-y-2">
-              <Label className="text-foreground">Screenshot</Label>
+              <Label className="text-foreground font-medium">Screenshot</Label>
               {screenshot ? (
                 <div className="relative rounded-lg border border-border overflow-hidden">
                   <img 
