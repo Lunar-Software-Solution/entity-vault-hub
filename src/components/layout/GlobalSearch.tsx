@@ -188,7 +188,7 @@ const GlobalSearch = ({ onNavigate }: GlobalSearchProps) => {
       </button>
 
       <Dialog open={isOpen} onOpenChange={setIsOpen}>
-        <DialogContent className="max-w-lg p-0 gap-0 overflow-hidden">
+        <DialogContent className="max-w-lg p-0 gap-0 overflow-hidden [&>button]:hidden">
           <DialogHeader className="p-4 pb-0">
             <DialogTitle className="sr-only">Global Search</DialogTitle>
           </DialogHeader>
