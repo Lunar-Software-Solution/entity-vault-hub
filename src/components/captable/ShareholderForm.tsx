@@ -193,7 +193,7 @@ const ShareholderForm = ({ item, entities, onSubmit, onCancel }: ShareholderForm
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
+      <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4 max-h-[70vh] overflow-y-auto pr-2">
         {/* Entity Affiliations - shown at top for existing shareholders */}
         {item?.id && (
           <ShareholderEntityAffiliationsManager
@@ -228,7 +228,7 @@ const ShareholderForm = ({ item, entities, onSubmit, onCancel }: ShareholderForm
               key={`avatar-${avatarDeleted ? 'deleted' : 'active'}`}
               email={email}
               name={name || ""}
-              size="2xl"
+              size="xl"
               linkedinUrl={linkedinUrl}
               storedAvatarUrl={avatarDeleted ? null : (enrichedAvatarUrl || item?.avatar_url)}
               suppressAvatar={avatarDeleted || item?.suppress_avatar}
@@ -240,14 +240,14 @@ const ShareholderForm = ({ item, entities, onSubmit, onCancel }: ShareholderForm
                 variant="ghost"
                 size="sm"
                 onClick={handleDeleteAvatar}
-                className="text-destructive hover:text-destructive hover:bg-destructive/10 h-7 px-2"
+                className="text-destructive hover:text-destructive hover:bg-destructive/10 h-6 px-2 text-xs"
               >
                 <Trash2 className="h-3 w-3 mr-1" />
                 Remove
               </Button>
             )}
           </div>
-          <div className="flex-1 grid grid-cols-2 gap-4">
+          <div className="flex-1 grid grid-cols-2 gap-3">
             <FormField control={form.control} name="name" render={({ field }) => (
               <FormItem>
                 <FormLabel>Name *</FormLabel>
@@ -276,7 +276,7 @@ const ShareholderForm = ({ item, entities, onSubmit, onCancel }: ShareholderForm
           </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-2 gap-3">
           <FormField control={form.control} name="email" render={({ field }) => (
             <FormItem>
               <FormLabel>Email</FormLabel>
@@ -318,21 +318,22 @@ const ShareholderForm = ({ item, entities, onSubmit, onCancel }: ShareholderForm
           </FormItem>
         )} />
 
-        <FormField control={form.control} name="address" render={({ field }) => (
-          <FormItem>
-            <FormLabel>Address</FormLabel>
-            <FormControl><Input placeholder="123 Main St, City, State" {...field} /></FormControl>
-            <FormMessage />
-          </FormItem>
-        )} />
-
-        <FormField control={form.control} name="tax_id" render={({ field }) => (
-          <FormItem>
-            <FormLabel>Tax ID / SSN</FormLabel>
-            <FormControl><Input placeholder="XXX-XX-XXXX" {...field} /></FormControl>
-            <FormMessage />
-          </FormItem>
-        )} />
+        <div className="grid grid-cols-2 gap-3">
+          <FormField control={form.control} name="address" render={({ field }) => (
+            <FormItem>
+              <FormLabel>Address</FormLabel>
+              <FormControl><Input placeholder="123 Main St, City, State" {...field} /></FormControl>
+              <FormMessage />
+            </FormItem>
+          )} />
+          <FormField control={form.control} name="tax_id" render={({ field }) => (
+            <FormItem>
+              <FormLabel>Tax ID / SSN</FormLabel>
+              <FormControl><Input placeholder="XXX-XX-XXXX" {...field} /></FormControl>
+              <FormMessage />
+            </FormItem>
+          )} />
+        </div>
 
         <div className="flex gap-6">
           <FormField control={form.control} name="is_founder" render={({ field }) => (
@@ -357,21 +358,22 @@ const ShareholderForm = ({ item, entities, onSubmit, onCancel }: ShareholderForm
           )} />
         </div>
 
-        <FormField control={form.control} name="bio" render={({ field }) => (
-          <FormItem>
-            <FormLabel>Bio</FormLabel>
-            <FormControl><Textarea rows={2} placeholder="Professional bio or description..." {...field} /></FormControl>
-            <FormMessage />
-          </FormItem>
-        )} />
-
-        <FormField control={form.control} name="notes" render={({ field }) => (
-          <FormItem>
-            <FormLabel>Notes</FormLabel>
-            <FormControl><Textarea rows={2} {...field} /></FormControl>
-            <FormMessage />
-          </FormItem>
-        )} />
+        <div className="grid grid-cols-2 gap-3">
+          <FormField control={form.control} name="bio" render={({ field }) => (
+            <FormItem>
+              <FormLabel>Bio</FormLabel>
+              <FormControl><Textarea rows={2} placeholder="Professional bio..." {...field} /></FormControl>
+              <FormMessage />
+            </FormItem>
+          )} />
+          <FormField control={form.control} name="notes" render={({ field }) => (
+            <FormItem>
+              <FormLabel>Notes</FormLabel>
+              <FormControl><Textarea rows={2} {...field} /></FormControl>
+              <FormMessage />
+            </FormItem>
+          )} />
+        </div>
 
         {/* Entity Affiliations - for new shareholders only */}
         {!item?.id && (
@@ -382,7 +384,7 @@ const ShareholderForm = ({ item, entities, onSubmit, onCancel }: ShareholderForm
           />
         )}
 
-        <div className="flex justify-end gap-3 pt-4">
+        <div className="flex justify-end gap-3 pt-4 sticky bottom-0 bg-background pb-2">
           <Button type="button" variant="outline" onClick={onCancel}>Cancel</Button>
           <Button type="submit">{item ? "Update" : "Create"}</Button>
         </div>
