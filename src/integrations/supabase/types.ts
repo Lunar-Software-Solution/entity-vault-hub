@@ -2401,6 +2401,16 @@ export type Database = {
         Returns: boolean
       }
       reset_recurring_filings: { Args: never; Returns: undefined }
+      validate_invitation_token: {
+        Args: { invite_token: string }
+        Returns: {
+          email: string
+          expires_at: string
+          id: string
+          role: string
+          status: string
+        }[]
+      }
     }
     Enums: {
       app_role: "admin" | "viewer"
