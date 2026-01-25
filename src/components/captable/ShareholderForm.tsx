@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -11,6 +12,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import ShareholderEntityAffiliationsManager from "./ShareholderEntityAffiliationsManager";
 import GravatarAvatar from "@/components/shared/GravatarAvatar";
+import IdDocumentsManager, { IdDocument } from "@/components/shared/IdDocumentsManager";
 
 interface ShareholderFormData {
   entity_id: string;
@@ -38,6 +40,39 @@ const ShareholderForm = ({ item, entities, onSubmit, onCancel }: ShareholderForm
   const [isEnriching, setIsEnriching] = useState(false);
   const [enrichedAvatarUrl, setEnrichedAvatarUrl] = useState<string | null>(null);
   const [avatarDeleted, setAvatarDeleted] = useState(false);
+  const [idDocuments, setIdDocuments] = useState<IdDocument[]>([]);
+  const queryClient = useQueryClient();
+
+  // Fetch existing ID documents for this shareholder
+  const { data: existingIdDocs } = useQuery({
+    queryKey: ["shareholder-id-documents", item?.id],
+    queryFn: async () => {
+      if (!item?.id) return [];
+      const { data, error } = await supabase
+        .from("shareholder_id_documents")
+        .select("*")
+        .eq("shareholder_id", item.id)
+        .order("created_at", { ascending: true });
+      if (error) throw error;
+      return data || [];
+    },
+    enabled: !!item?.id,
+  });
+
+  // Initialize ID documents from fetched data
+  useEffect(() => {
+    if (existingIdDocs) {
+      setIdDocuments(existingIdDocs.map((doc: any) => ({
+        id: doc.id,
+        document_type: doc.document_type || "",
+        document_number: doc.document_number || "",
+        expiry_date: doc.expiry_date || "",
+        file_path: doc.file_path || "",
+        file_name: doc.file_name || "",
+        notes: doc.notes || "",
+      })));
+    }
+  }, [existingIdDocs]);
   
   const form = useForm<ShareholderFormData>({
     defaultValues: {
@@ -176,7 +211,47 @@ const ShareholderForm = ({ item, entities, onSubmit, onCancel }: ShareholderForm
     }
   };
 
-  const handleSubmit = (data: ShareholderFormData) => {
+  // Save ID documents to database
+  const saveIdDocuments = async (shareholderId: string) => {
+    // Delete removed documents
+    if (existingIdDocs) {
+      const currentIds = idDocuments.filter(d => d.id).map(d => d.id);
+      const toDelete = existingIdDocs.filter((d: any) => !currentIds.includes(d.id));
+      for (const doc of toDelete) {
+        await supabase.from("shareholder_id_documents").delete().eq("id", doc.id);
+      }
+    }
+
+    // Upsert documents
+    for (const doc of idDocuments) {
+      if (!doc.document_type) continue; // Skip incomplete docs
+      
+      const docData = {
+        shareholder_id: shareholderId,
+        document_type: doc.document_type,
+        document_number: doc.document_number || null,
+        expiry_date: doc.expiry_date || null,
+        file_path: doc.file_path || null,
+        file_name: doc.file_name || null,
+        notes: doc.notes || null,
+      };
+
+      if (doc.id) {
+        await supabase.from("shareholder_id_documents").update(docData).eq("id", doc.id);
+      } else {
+        await supabase.from("shareholder_id_documents").insert(docData);
+      }
+    }
+
+    queryClient.invalidateQueries({ queryKey: ["shareholder-id-documents", shareholderId] });
+  };
+
+  const handleSubmit = async (data: ShareholderFormData) => {
+    // If editing, save ID documents first
+    if (item?.id) {
+      await saveIdDocuments(item.id);
+    }
+
     onSubmit({
       ...data,
       email: data.email || null,
@@ -376,6 +451,16 @@ const ShareholderForm = ({ item, entities, onSubmit, onCancel }: ShareholderForm
               </FormItem>
             )} />
           </div>
+
+          {/* ID Documents - only for existing shareholders */}
+          {item?.id && (
+            <IdDocumentsManager
+              recordId={item.id}
+              documents={idDocuments}
+              onChange={setIdDocuments}
+              storageFolder="shareholders"
+            />
+          )}
 
           {/* Entity Affiliations - for new shareholders only */}
           {!item?.id && (
