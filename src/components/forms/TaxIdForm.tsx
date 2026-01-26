@@ -34,6 +34,13 @@ const TAX_ID_FORMATS: Record<string, { placeholder: string; hint?: string }> = {
   BSN: { placeholder: "XXXXXXXXX", hint: "9-digit number" },
   CRN: { placeholder: "XXXXXXXX", hint: "Company Registration Number" },
   TIN: { placeholder: "Enter tax ID number", hint: "Tax Identification Number" },
+  // Canada
+  GST_CA: { placeholder: "XXXXXXXXX RT XXXX", hint: "BN + RT + 4 digits" },
+  PST: { placeholder: "PST-XXXX-XXXX", hint: "Format varies by province" },
+  QST: { placeholder: "XXXXXXXXXX TQ XXXX", hint: "10-digit QST number" },
+  // Bulgaria
+  EGN: { placeholder: "XXXXXXXXXX", hint: "10-digit personal ID" },
+  BG_VAT: { placeholder: "BG XXXXXXXXX", hint: "BG + EIK number" },
 };
 
 interface TaxIdFormProps {
