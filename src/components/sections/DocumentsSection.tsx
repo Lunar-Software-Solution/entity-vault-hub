@@ -158,8 +158,13 @@ const DocumentsSection = ({ entityFilter }: DocumentsSectionProps) => {
   };
 
   const handleSubmit = (data: EntityDocumentFormData) => {
+    // Use selectedEntityId from the parent selector if it was changed, otherwise fall back to form data
+    const effectiveEntityId = selectedEntityId !== "" 
+      ? selectedEntityId 
+      : data.entity_id;
+    
     // Handle entity_id: use null if empty, "__none__", or not provided
-    const entityId = data.entity_id && data.entity_id !== "__none__" ? data.entity_id : null;
+    const entityId = effectiveEntityId && effectiveEntityId !== "__none__" ? effectiveEntityId : null;
     
     const payload = {
       entity_id: entityId,
@@ -393,7 +398,7 @@ const DocumentsSection = ({ entityFilter }: DocumentsSectionProps) => {
                             className="h-8 w-8 text-primary hover:text-primary"
                             onClick={() => {
                               setEditingDocument(doc);
-                              setSelectedEntityId(doc.entity_id);
+                              setSelectedEntityId(doc.entity_id || "__none__");
                               setShowForm(true);
                             }}
                           >
