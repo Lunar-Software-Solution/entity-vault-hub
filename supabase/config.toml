@@ -4,7 +4,7 @@ project_id = "xxaynwfseusnxlpukwnq"
 verify_jwt = true
 
 [functions.summarize-document]
-verify_jwt = true
+verify_jwt = false
 
 [functions.send-invitation]
 verify_jwt = false
