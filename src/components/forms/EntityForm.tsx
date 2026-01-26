@@ -181,6 +181,7 @@ const EntityForm = ({ entity, onSubmit, onCancel, isLoading }: EntityFormProps) 
                   <SelectItem value="Active">Active</SelectItem>
                   <SelectItem value="Inactive">Inactive</SelectItem>
                   <SelectItem value="Pending">Pending</SelectItem>
+                  <SelectItem value="Delinquent">Delinquent</SelectItem>
                   <SelectItem value="Dissolved">Dissolved</SelectItem>
                 </SelectContent>
               </Select>
