@@ -216,20 +216,20 @@ const TaxIdForm = ({ taxId, defaultEntityId, onSubmit, onCancel, isLoading }: Ta
         <FormField control={form.control} name="country" render={({ field }) => (
           <FormItem>
             <FormLabel>Country *</FormLabel>
-            <FormControl>
-              <div>
-                <Input 
-                  list="countries" 
-                  placeholder="Select or type..."
-                  {...field} 
-                />
-                <datalist id="countries">
-                  {commonCountries.map((country) => (
-                    <option key={country} value={country} />
-                  ))}
-                </datalist>
-              </div>
-            </FormControl>
+            <Select onValueChange={field.onChange} defaultValue={field.value}>
+              <FormControl>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select country" />
+                </SelectTrigger>
+              </FormControl>
+              <SelectContent>
+                {commonCountries.map((country) => (
+                  <SelectItem key={country} value={country}>
+                    {country}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
             <FormMessage />
           </FormItem>
         )} />
