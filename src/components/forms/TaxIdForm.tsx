@@ -9,6 +9,32 @@ import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { useEntities, useTaxIdTypes } from "@/hooks/usePortalData";
 import type { TaxId } from "@/hooks/usePortalData";
+import { useMemo } from "react";
+
+// Dynamic placeholder and format hints based on tax ID type
+const TAX_ID_FORMATS: Record<string, { placeholder: string; hint?: string }> = {
+  EIN: { placeholder: "XX-XXXXXXX", hint: "Format: 12-3456789" },
+  SSN: { placeholder: "XXX-XX-XXXX", hint: "Format: 123-45-6789" },
+  ITIN: { placeholder: "9XX-XX-XXXX", hint: "Format: 9XX-XX-XXXX" },
+  VAT: { placeholder: "Country code + number", hint: "e.g., FR12345678901" },
+  GST: { placeholder: "XXAXXXXXX0X0XX", hint: "15-character alphanumeric" },
+  ABN: { placeholder: "XX XXX XXX XXX", hint: "11-digit number" },
+  ACN: { placeholder: "XXX XXX XXX", hint: "9-digit number" },
+  TFN: { placeholder: "XXX XXX XXX", hint: "8-9 digit number" },
+  UTR: { placeholder: "XXXXXXXXXX", hint: "10-digit number" },
+  NI: { placeholder: "XX XXXXXX X", hint: "e.g., AB 123456 C" },
+  SIN: { placeholder: "XXX-XXX-XXX", hint: "Format: 123-456-789" },
+  BN: { placeholder: "XXXXXXXXX RC XXXX", hint: "Business Number" },
+  SIRET: { placeholder: "XXX XXX XXX XXXXX", hint: "14-digit number" },
+  SIREN: { placeholder: "XXX XXX XXX", hint: "9-digit number" },
+  TVA: { placeholder: "FR XX XXXXXXXXX", hint: "FR + 11 characters" },
+  EIK: { placeholder: "XXXXXXXXX", hint: "9 or 13-digit number" },
+  KVK: { placeholder: "XXXXXXXX", hint: "8-digit number" },
+  BTW: { placeholder: "NL XXXXXXXXX B XX", hint: "Dutch VAT format" },
+  BSN: { placeholder: "XXXXXXXXX", hint: "9-digit number" },
+  CRN: { placeholder: "XXXXXXXX", hint: "Company Registration Number" },
+  TIN: { placeholder: "Enter tax ID number", hint: "Tax Identification Number" },
+};
 
 interface TaxIdFormProps {
   taxId?: TaxId | null;
@@ -60,6 +86,12 @@ const TaxIdForm = ({ taxId, defaultEntityId, onSubmit, onCancel, isLoading }: Ta
     },
   });
 
+  const selectedType = form.watch("type");
+  
+  const formatInfo = useMemo(() => {
+    return TAX_ID_FORMATS[selectedType] || { placeholder: "Enter tax ID number" };
+  }, [selectedType]);
+
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
@@ -109,8 +141,11 @@ const TaxIdForm = ({ taxId, defaultEntityId, onSubmit, onCancel, isLoading }: Ta
           <FormItem>
             <FormLabel>Tax ID Number *</FormLabel>
             <FormControl>
-              <Input placeholder="XX-XXXXXXX" {...field} />
+              <Input placeholder={formatInfo.placeholder} {...field} />
             </FormControl>
+            {formatInfo.hint && (
+              <p className="text-xs text-muted-foreground">{formatInfo.hint}</p>
+            )}
             <FormMessage />
           </FormItem>
         )} />
