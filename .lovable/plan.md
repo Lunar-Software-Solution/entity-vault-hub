@@ -1,143 +1,100 @@
 
 
-## Plan: Auto-Reset Recurring Filings After Due Date
+# Add US Secretary of State Issuing Authorities
 
-### Overview
-For recurring filings (non "one-time"), the system will automatically reset the filing status from "filed" back to "pending" once the current due date has passed. This creates a proper recurring workflow where each period's task completion marks the filing as "filed" for that cycle, then resets for the next cycle.
+## Overview
+Add all US Secretary of State offices that issue Certificates of Incorporation to the issuing authorities dropdown. This will populate the "Issuing Authority" field with state-by-state options for US corporate formation documents.
 
-### Implementation Approach
+## What Will Be Added
 
-There are two approaches to implement this:
+A total of **56 new issuing authorities** for the United States:
 
-**Option A: Database Trigger (Recommended)**
-Create a PostgreSQL trigger that automatically updates the filing status and advances the due_date when the current due date passes. This runs server-side and keeps the filing perpetually cycling.
+**All 50 States:**
+- Alabama Secretary of State
+- Alaska Department of Commerce (Division of Corporations)
+- Arizona Corporation Commission
+- Arkansas Secretary of State
+- California Secretary of State
+- Colorado Secretary of State
+- Connecticut Secretary of State
+- Delaware Division of Corporations
+- Florida Division of Corporations
+- Georgia Secretary of State
+- Hawaii Department of Commerce
+- Idaho Secretary of State
+- Illinois Secretary of State
+- Indiana Secretary of State
+- Iowa Secretary of State
+- Kansas Secretary of State
+- Kentucky Secretary of State
+- Louisiana Secretary of State
+- Maine Secretary of State
+- Maryland Department of Assessments and Taxation
+- Massachusetts Secretary of the Commonwealth
+- Michigan Department of Licensing and Regulatory Affairs
+- Minnesota Secretary of State
+- Mississippi Secretary of State
+- Missouri Secretary of State
+- Montana Secretary of State
+- Nebraska Secretary of State
+- Nevada Secretary of State
+- New Hampshire Secretary of State
+- New Jersey Division of Revenue
+- New Mexico Secretary of State
+- New York Department of State
+- North Carolina Secretary of State
+- North Dakota Secretary of State
+- Ohio Secretary of State
+- Oklahoma Secretary of State
+- Oregon Secretary of State
+- Pennsylvania Department of State
+- Rhode Island Secretary of State
+- South Carolina Secretary of State
+- South Dakota Secretary of State
+- Tennessee Secretary of State
+- Texas Secretary of State
+- Utah Division of Corporations
+- Vermont Secretary of State
+- Virginia State Corporation Commission
+- Washington Secretary of State
+- West Virginia Secretary of State
+- Wisconsin Department of Financial Institutions
+- Wyoming Secretary of State
 
-**Option B: Display-Based Logic**
-Modify the `getFilingDisplayStatus` function to dynamically show "pending" for recurring filings where the due date has passed, even if the stored status is "filed".
-
-I recommend **Option A** as it properly updates the data model and ensures consistency.
+**Plus DC and Territories:**
+- District of Columbia - Department of Consumer and Regulatory Affairs
+- Puerto Rico - Department of State
+- Guam - Department of Revenue and Taxation
+- American Samoa - Treasurer's Office
+- U.S. Virgin Islands - Office of the Lieutenant Governor
+- Northern Mariana Islands - Registrar of Corporations
 
 ---
 
-### Changes Required
+## Technical Details
 
-#### 1. Database: Create a Scheduled Function to Reset Filings
-Create a PostgreSQL function that runs periodically (e.g., daily via cron) to:
-- Find all recurring filings where `status = 'filed'` and `due_date < today`
-- Reset their `status` to `'pending'`
-- Advance their `due_date` to the next period based on frequency
-- Clear the `filing_date` and `confirmation_number` for the new period
+### Database Migration
+Insert 56 records into the `issuing_authorities` table with:
+- `name`: Official name of the issuing office
+- `country`: "United States"
+- `province_state`: Corresponding state/territory name (matching `src/lib/states.ts`)
+- `description`: Brief description noting "Issues Certificates of Incorporation and business filings"
 
-#### 2. Alternative: Immediate Client-Side Solution
-Modify the display logic to treat filed recurring filings as "pending" when their due date has passed:
-- Update `getFilingDisplayStatus` in `src/lib/filingUtils.ts`
-- Also update the `useCompleteTask` hook to properly advance the due_date when completing a task for a recurring filing
-
----
-
-### Technical Details
-
-```text
-Recurring Filing Lifecycle:
-                                       
-  ┌──────────────────────────────────────────────────────────────────┐
-  │                                                                  │
-  │   ┌─────────┐      Task        ┌────────┐     Due Date    ┌─────────┐
-  │   │ PENDING │  ───────────►    │ FILED  │  ───────────►   │ PENDING │
-  │   │         │    Completed     │        │     Passes      │ (next   │
-  │   │         │                  │        │    + advance    │  cycle) │
-  │   └─────────┘                  └────────┘    due_date     └─────────┘
-  │                                                                  │
-  └──────────────────────────────────────────────────────────────────┘
-```
-
-#### Database Function (Option A)
-
+### Example Records
 ```sql
-CREATE OR REPLACE FUNCTION reset_recurring_filings()
-RETURNS void AS $$
-BEGIN
-  UPDATE entity_filings
-  SET 
-    status = 'pending',
-    filing_date = NULL,
-    confirmation_number = NULL,
-    due_date = CASE frequency
-      WHEN 'monthly' THEN due_date + INTERVAL '1 month'
-      WHEN 'quarterly' THEN due_date + INTERVAL '3 months'
-      WHEN 'semi-annual' THEN due_date + INTERVAL '6 months'
-      WHEN 'annual' THEN due_date + INTERVAL '1 year'
-      ELSE due_date
-    END
-  WHERE 
-    status = 'filed' 
-    AND frequency != 'one-time'
-    AND due_date < CURRENT_DATE;
-END;
-$$ LANGUAGE plpgsql;
-
--- Schedule via pg_cron to run daily at midnight
-SELECT cron.schedule(
-  'reset-recurring-filings',
-  '0 0 * * *',
-  $$SELECT reset_recurring_filings()$$
-);
+INSERT INTO issuing_authorities (name, country, province_state, description) VALUES
+('Delaware Division of Corporations', 'United States', 'Delaware', 'Issues Certificates of Incorporation, LLCs, and business filings'),
+('California Secretary of State', 'United States', 'California', 'Issues Certificates of Incorporation and business filings'),
+...
 ```
 
-#### Client-Side Enhancement (Option B)
-
-Modify `src/lib/filingUtils.ts`:
-
-```typescript
-export function getFilingDisplayStatus(
-  dueDate: string, 
-  currentStatus: string, 
-  frequency?: string
-): string {
-  // For filed recurring filings where due date passed, show as pending (awaiting next cycle)
-  if (currentStatus === "filed" && frequency && frequency !== "one-time") {
-    const today = startOfDay(new Date());
-    const due = startOfDay(new Date(dueDate));
-    if (isBefore(due, today)) {
-      return "pending"; // Next cycle is pending
-    }
-  }
-  
-  if (currentStatus === "filed") return "filed";
-  
-  const today = startOfDay(new Date());
-  const due = startOfDay(new Date(dueDate));
-  
-  if (isBefore(due, today)) {
-    return "overdue";
-  }
-  
-  return currentStatus;
-}
-```
+### UI Behavior
+After the migration, the "Issuing Authority" dropdown in the document form will display these authorities grouped under "United States" with each state's office available for selection.
 
 ---
 
-### Recommended Implementation
+## Files to Modify
+1. **Database Migration** - SQL insert statements for all 56 authorities
 
-I recommend implementing **both approaches together**:
-
-1. **Immediate fix**: Update the display logic to show the correct status visually
-2. **Background job**: Create a daily cron job to actually reset the filing data and advance due dates
-
-This ensures:
-- Users immediately see the correct status
-- The database stays clean and properly reflects the current filing period
-- Due dates automatically advance to the next period
-
----
-
-### Summary of Changes
-
-| Component | Change |
-|-----------|--------|
-| `src/lib/filingUtils.ts` | Update `getFilingDisplayStatus` to handle recurring filings past due date |
-| Database Migration | Create `reset_recurring_filings()` function |
-| Database (pg_cron) | Schedule daily job to reset recurring filings and advance due dates |
-| `src/hooks/usePortalMutations.ts` | Update `useCompleteTask` to set filing status to "filed" when task is completed |
+No frontend code changes are required since the form already fetches and groups issuing authorities by country from the database.
 
