@@ -158,8 +158,11 @@ const DocumentsSection = ({ entityFilter }: DocumentsSectionProps) => {
   };
 
   const handleSubmit = (data: EntityDocumentFormData) => {
+    // Handle entity_id: use null if empty, "__none__", or not provided
+    const entityId = data.entity_id && data.entity_id !== "__none__" ? data.entity_id : null;
+    
     const payload = {
-      entity_id: data.entity_id,
+      entity_id: entityId,
       document_type_id: data.document_type_id === "__none__" ? null : data.document_type_id || null,
       title: data.title,
       file_path: data.file_path || null,
@@ -201,8 +204,8 @@ const DocumentsSection = ({ entityFilter }: DocumentsSectionProps) => {
   };
 
   const handleAddNew = () => {
-    if (!entities?.length) return;
-    setSelectedEntityId(entityFilter || entities[0].id);
+    // Set selected entity if filter is applied or entities exist, otherwise allow creation without entity
+    setSelectedEntityId(entityFilter || "");
     setShowForm(true);
   };
 
@@ -231,7 +234,7 @@ const DocumentsSection = ({ entityFilter }: DocumentsSectionProps) => {
           </p>
         </div>
         {canWrite && (
-          <Button onClick={handleAddNew} className="gap-2" disabled={!entities?.length}>
+          <Button onClick={handleAddNew} className="gap-2">
             <Plus className="w-4 h-4" />
             Add Document
           </Button>
@@ -445,12 +448,13 @@ const DocumentsSection = ({ entityFilter }: DocumentsSectionProps) => {
           </DialogHeader>
           {!editingDocument && !entityFilter && entities && entities.length > 0 && (
             <div className="mb-4">
-              <label className="text-sm font-medium text-foreground">Select Entity</label>
+              <label className="text-sm font-medium text-foreground">Select Entity (optional)</label>
               <Select value={selectedEntityId} onValueChange={setSelectedEntityId}>
                 <SelectTrigger className="bg-background mt-1">
-                  <SelectValue placeholder="Select entity" />
+                  <SelectValue placeholder="No entity selected" />
                 </SelectTrigger>
                 <SelectContent className="bg-background">
+                  <SelectItem value="__none__">No entity</SelectItem>
                   {entities.map((entity) => (
                     <SelectItem key={entity.id} value={entity.id}>
                       {entity.name}
@@ -460,19 +464,17 @@ const DocumentsSection = ({ entityFilter }: DocumentsSectionProps) => {
               </Select>
             </div>
           )}
-          {(selectedEntityId || editingDocument) && (
-            <EntityDocumentForm
-              entityId={selectedEntityId || editingDocument?.entity_id || ""}
-              document={editingDocument}
-              onSubmit={handleSubmit}
-              onCancel={() => {
-                setShowForm(false);
-                setEditingDocument(null);
-                setSelectedEntityId("");
-              }}
-              isLoading={createMutation.isPending || updateMutation.isPending}
-            />
-          )}
+          <EntityDocumentForm
+            entityId={selectedEntityId === "__none__" ? "" : (selectedEntityId || editingDocument?.entity_id || "")}
+            document={editingDocument}
+            onSubmit={handleSubmit}
+            onCancel={() => {
+              setShowForm(false);
+              setEditingDocument(null);
+              setSelectedEntityId("");
+            }}
+            isLoading={createMutation.isPending || updateMutation.isPending}
+          />
         </DialogContent>
       </Dialog>
 
