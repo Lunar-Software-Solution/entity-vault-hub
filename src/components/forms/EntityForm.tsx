@@ -24,7 +24,7 @@ const ENTITY_TYPES = {
   ],
   "Canada": [
     { value: "Corporation (Canada)", label: "Corporation (Federal/Provincial)" },
-    { value: "Société par actions", label: "Société par actions (Quebec)" },
+    { value: "Joint Stock Company (Quebec)", label: "Joint Stock Company (Quebec)" },
     { value: "Unlimited Liability Company", label: "ULC (Unlimited Liability Company)" },
     { value: "General Partnership (Canada)", label: "General Partnership" },
     { value: "Limited Partnership (Canada)", label: "Limited Partnership (LP)" },
