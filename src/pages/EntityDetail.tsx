@@ -54,7 +54,8 @@ import {
   Share2,
   Users,
   Pencil,
-  Trash2
+  Trash2,
+  FileText as DescriptionIcon
 } from "lucide-react";
 import { format } from "date-fns";
 import CompanyLogo from "@/components/shared/CompanyLogo";
@@ -352,6 +353,20 @@ const EntityDetail = () => {
                   </div>
                 </div>
               )}
+            </div>
+          </>
+        )}
+
+        {/* Description of Activities */}
+        {(entity as any)?.description_of_activities && (
+          <>
+            <div className="border-t border-border/50 my-4" />
+            <div className="flex items-start gap-3">
+              <DescriptionIcon className="w-4 h-4 text-muted-foreground mt-0.5 flex-shrink-0" />
+              <div>
+                <p className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground mb-1">Description of Activities</p>
+                <p className="text-sm text-foreground whitespace-pre-wrap">{(entity as any).description_of_activities}</p>
+              </div>
             </div>
           </>
         )}

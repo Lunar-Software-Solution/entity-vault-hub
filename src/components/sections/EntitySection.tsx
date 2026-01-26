@@ -35,6 +35,7 @@ const EntitySection = () => {
       jurisdiction: data.jurisdiction || null,
       founded_date: data.founded_date || null,
       fiscal_year_end: data.fiscal_year_end || null,
+      description_of_activities: data.description_of_activities || null,
     };
     
     if (editingEntity) {

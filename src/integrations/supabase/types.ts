@@ -916,6 +916,7 @@ export type Database = {
       entities: {
         Row: {
           created_at: string
+          description_of_activities: string | null
           fiscal_year_end: string | null
           founded_date: string | null
           id: string
@@ -928,6 +929,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          description_of_activities?: string | null
           fiscal_year_end?: string | null
           founded_date?: string | null
           id?: string
@@ -940,6 +942,7 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          description_of_activities?: string | null
           fiscal_year_end?: string | null
           founded_date?: string | null
           id?: string

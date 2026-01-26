@@ -3,6 +3,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { entitySchema, EntityFormData } from "@/lib/formSchemas";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "@/components/ui/select";
 import type { Entity } from "@/hooks/usePortalData";
@@ -88,6 +89,7 @@ const EntityForm = ({ entity, onSubmit, onCancel, isLoading }: EntityFormProps) 
       founded_date: entity?.founded_date ?? "",
       fiscal_year_end: (entity as any)?.fiscal_year_end ?? "",
       website: (entity as any)?.website ?? "",
+      description_of_activities: (entity as any)?.description_of_activities ?? "",
     },
   });
 
@@ -169,6 +171,20 @@ const EntityForm = ({ entity, onSubmit, onCancel, isLoading }: EntityFormProps) 
             <FormItem className="md:col-span-2">
               <FormLabel>Website</FormLabel>
               <FormControl><Input placeholder="https://example.com" {...field} /></FormControl>
+              <FormMessage />
+            </FormItem>
+          )} />
+
+          <FormField control={form.control} name="description_of_activities" render={({ field }) => (
+            <FormItem className="md:col-span-2">
+              <FormLabel>Description of Activities</FormLabel>
+              <FormControl>
+                <Textarea 
+                  placeholder="Describe the main business activities and operations..." 
+                  className="min-h-[100px] resize-none"
+                  {...field} 
+                />
+              </FormControl>
               <FormMessage />
             </FormItem>
           )} />
