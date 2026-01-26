@@ -22,7 +22,7 @@ export type Database = {
           email: string | null
           engagement_end_date: string | null
           engagement_start_date: string | null
-          entity_id: string
+          entity_id: string | null
           fee_structure: string | null
           id: string
           is_active: boolean
@@ -42,7 +42,7 @@ export type Database = {
           email?: string | null
           engagement_end_date?: string | null
           engagement_start_date?: string | null
-          entity_id: string
+          entity_id?: string | null
           fee_structure?: string | null
           id?: string
           is_active?: boolean
@@ -62,7 +62,7 @@ export type Database = {
           email?: string | null
           engagement_end_date?: string | null
           engagement_start_date?: string | null
-          entity_id?: string
+          entity_id?: string | null
           fee_structure?: string | null
           id?: string
           is_active?: boolean
@@ -148,7 +148,7 @@ export type Database = {
           email: string | null
           engagement_end_date: string | null
           engagement_start_date: string | null
-          entity_id: string
+          entity_id: string | null
           fee_structure: string | null
           id: string
           is_active: boolean
@@ -168,7 +168,7 @@ export type Database = {
           email?: string | null
           engagement_end_date?: string | null
           engagement_start_date?: string | null
-          entity_id: string
+          entity_id?: string | null
           fee_structure?: string | null
           id?: string
           is_active?: boolean
@@ -188,7 +188,7 @@ export type Database = {
           email?: string | null
           engagement_end_date?: string | null
           engagement_start_date?: string | null
-          entity_id?: string
+          entity_id?: string | null
           fee_structure?: string | null
           id?: string
           is_active?: boolean
@@ -261,7 +261,7 @@ export type Database = {
           email: string | null
           engagement_end_date: string | null
           engagement_start_date: string | null
-          entity_id: string
+          entity_id: string | null
           fee_structure: string | null
           id: string
           is_active: boolean
@@ -282,7 +282,7 @@ export type Database = {
           email?: string | null
           engagement_end_date?: string | null
           engagement_start_date?: string | null
-          entity_id: string
+          entity_id?: string | null
           fee_structure?: string | null
           id?: string
           is_active?: boolean
@@ -303,7 +303,7 @@ export type Database = {
           email?: string | null
           engagement_end_date?: string | null
           engagement_start_date?: string | null
-          entity_id?: string
+          entity_id?: string | null
           fee_structure?: string | null
           id?: string
           is_active?: boolean
@@ -399,7 +399,7 @@ export type Database = {
           email: string | null
           engagement_end_date: string | null
           engagement_start_date: string | null
-          entity_id: string
+          entity_id: string | null
           fee_structure: string | null
           id: string
           is_active: boolean
@@ -419,7 +419,7 @@ export type Database = {
           email?: string | null
           engagement_end_date?: string | null
           engagement_start_date?: string | null
-          entity_id: string
+          entity_id?: string | null
           fee_structure?: string | null
           id?: string
           is_active?: boolean
@@ -439,7 +439,7 @@ export type Database = {
           email?: string | null
           engagement_end_date?: string | null
           engagement_start_date?: string | null
-          entity_id?: string
+          entity_id?: string | null
           fee_structure?: string | null
           id?: string
           is_active?: boolean
@@ -584,7 +584,7 @@ export type Database = {
           appointment_date: string | null
           created_at: string
           director_id: string
-          entity_id: string
+          entity_id: string | null
           id: string
           is_active: boolean | null
           notes: string | null
@@ -598,7 +598,7 @@ export type Database = {
           appointment_date?: string | null
           created_at?: string
           director_id: string
-          entity_id: string
+          entity_id?: string | null
           id?: string
           is_active?: boolean | null
           notes?: string | null
@@ -612,7 +612,7 @@ export type Database = {
           appointment_date?: string | null
           created_at?: string
           director_id?: string
-          entity_id?: string
+          entity_id?: string | null
           id?: string
           is_active?: boolean | null
           notes?: string | null
@@ -698,7 +698,7 @@ export type Database = {
           created_at: string
           date_of_birth: string | null
           email: string | null
-          entity_id: string
+          entity_id: string | null
           id: string
           id_document_file_name: string | null
           id_document_file_path: string | null
@@ -732,7 +732,7 @@ export type Database = {
           created_at?: string
           date_of_birth?: string | null
           email?: string | null
-          entity_id: string
+          entity_id?: string | null
           id?: string
           id_document_file_name?: string | null
           id_document_file_path?: string | null
@@ -766,7 +766,7 @@ export type Database = {
           created_at?: string
           date_of_birth?: string | null
           email?: string | null
-          entity_id?: string
+          entity_id?: string | null
           id?: string
           id_document_file_name?: string | null
           id_document_file_path?: string | null
@@ -957,7 +957,7 @@ export type Database = {
           ai_summary: string | null
           created_at: string
           document_type_id: string | null
-          entity_id: string
+          entity_id: string | null
           expiry_date: string | null
           file_name: string | null
           file_path: string | null
@@ -975,7 +975,7 @@ export type Database = {
           ai_summary?: string | null
           created_at?: string
           document_type_id?: string | null
-          entity_id: string
+          entity_id?: string | null
           expiry_date?: string | null
           file_name?: string | null
           file_path?: string | null
@@ -993,7 +993,7 @@ export type Database = {
           ai_summary?: string | null
           created_at?: string
           document_type_id?: string | null
-          entity_id?: string
+          entity_id?: string | null
           expiry_date?: string | null
           file_name?: string | null
           file_path?: string | null
@@ -1028,7 +1028,7 @@ export type Database = {
         Row: {
           created_at: string
           email: string
-          entity_id: string
+          entity_id: string | null
           id: string
           is_primary: boolean | null
           label: string
@@ -1038,7 +1038,7 @@ export type Database = {
         Insert: {
           created_at?: string
           email: string
-          entity_id: string
+          entity_id?: string | null
           id?: string
           is_primary?: boolean | null
           label?: string
@@ -1048,7 +1048,7 @@ export type Database = {
         Update: {
           created_at?: string
           email?: string
-          entity_id?: string
+          entity_id?: string | null
           id?: string
           is_primary?: boolean | null
           label?: string
@@ -1072,7 +1072,7 @@ export type Database = {
           created_at: string
           due_date: string
           due_day: number | null
-          entity_id: string
+          entity_id: string | null
           filed_by: string | null
           filing_date: string | null
           filing_type_id: string | null
@@ -1091,7 +1091,7 @@ export type Database = {
           created_at?: string
           due_date: string
           due_day?: number | null
-          entity_id: string
+          entity_id?: string | null
           filed_by?: string | null
           filing_date?: string | null
           filing_type_id?: string | null
@@ -1110,7 +1110,7 @@ export type Database = {
           created_at?: string
           due_date?: string
           due_day?: number | null
-          entity_id?: string
+          entity_id?: string | null
           filed_by?: string | null
           filing_date?: string | null
           filing_type_id?: string | null
@@ -1178,7 +1178,7 @@ export type Database = {
           category: string
           created_at: string
           custom_name: string | null
-          entity_id: string
+          entity_id: string | null
           id: string
           is_active: boolean | null
           license_expiry_date: string | null
@@ -1193,7 +1193,7 @@ export type Database = {
           category?: string
           created_at?: string
           custom_name?: string | null
-          entity_id: string
+          entity_id?: string | null
           id?: string
           is_active?: boolean | null
           license_expiry_date?: string | null
@@ -1208,7 +1208,7 @@ export type Database = {
           category?: string
           created_at?: string
           custom_name?: string | null
-          entity_id?: string
+          entity_id?: string | null
           id?: string
           is_active?: boolean | null
           license_expiry_date?: string | null
@@ -1239,7 +1239,7 @@ export type Database = {
         Row: {
           created_at: string
           domain_expiry_date: string | null
-          entity_id: string
+          entity_id: string | null
           id: string
           is_active: boolean | null
           is_primary: boolean | null
@@ -1254,7 +1254,7 @@ export type Database = {
         Insert: {
           created_at?: string
           domain_expiry_date?: string | null
-          entity_id: string
+          entity_id?: string | null
           id?: string
           is_active?: boolean | null
           is_primary?: boolean | null
@@ -1269,7 +1269,7 @@ export type Database = {
         Update: {
           created_at?: string
           domain_expiry_date?: string | null
-          entity_id?: string
+          entity_id?: string | null
           id?: string
           is_active?: boolean | null
           is_primary?: boolean | null
@@ -1296,7 +1296,7 @@ export type Database = {
           board_approval_date: string | null
           certificate_number: string | null
           created_at: string
-          entity_id: string
+          entity_id: string | null
           from_shareholder_id: string | null
           id: string
           notes: string | null
@@ -1317,7 +1317,7 @@ export type Database = {
           board_approval_date?: string | null
           certificate_number?: string | null
           created_at?: string
-          entity_id: string
+          entity_id?: string | null
           from_shareholder_id?: string | null
           id?: string
           notes?: string | null
@@ -1338,7 +1338,7 @@ export type Database = {
           board_approval_date?: string | null
           certificate_number?: string | null
           created_at?: string
-          entity_id?: string
+          entity_id?: string | null
           from_shareholder_id?: string | null
           id?: string
           notes?: string | null
@@ -1429,7 +1429,7 @@ export type Database = {
           created_at: string
           description: string | null
           due_date: string
-          entity_id: string
+          entity_id: string | null
           filing_id: string | null
           id: string
           is_auto_generated: boolean
@@ -1444,7 +1444,7 @@ export type Database = {
           created_at?: string
           description?: string | null
           due_date: string
-          entity_id: string
+          entity_id?: string | null
           filing_id?: string | null
           id?: string
           is_auto_generated?: boolean
@@ -1459,7 +1459,7 @@ export type Database = {
           created_at?: string
           description?: string | null
           due_date?: string
-          entity_id?: string
+          entity_id?: string | null
           filing_id?: string | null
           id?: string
           is_auto_generated?: boolean
@@ -1557,7 +1557,7 @@ export type Database = {
           email: string | null
           engagement_end_date: string | null
           engagement_start_date: string | null
-          entity_id: string
+          entity_id: string | null
           fee_structure: string | null
           id: string
           is_active: boolean
@@ -1577,7 +1577,7 @@ export type Database = {
           email?: string | null
           engagement_end_date?: string | null
           engagement_start_date?: string | null
-          entity_id: string
+          entity_id?: string | null
           fee_structure?: string | null
           id?: string
           is_active?: boolean
@@ -1597,7 +1597,7 @@ export type Database = {
           email?: string | null
           engagement_end_date?: string | null
           engagement_start_date?: string | null
-          entity_id?: string
+          entity_id?: string | null
           fee_structure?: string | null
           id?: string
           is_active?: boolean
@@ -1676,7 +1676,7 @@ export type Database = {
           acceleration_single_trigger: boolean | null
           created_at: string
           early_exercise_allowed: boolean | null
-          entity_id: string
+          entity_id: string | null
           exercise_price: number
           expiration_date: string | null
           grant_date: string
@@ -1699,7 +1699,7 @@ export type Database = {
           acceleration_single_trigger?: boolean | null
           created_at?: string
           early_exercise_allowed?: boolean | null
-          entity_id: string
+          entity_id?: string | null
           exercise_price: number
           expiration_date?: string | null
           grant_date: string
@@ -1722,7 +1722,7 @@ export type Database = {
           acceleration_single_trigger?: boolean | null
           created_at?: string
           early_exercise_allowed?: boolean | null
-          entity_id?: string
+          entity_id?: string | null
           exercise_price?: number
           expiration_date?: string | null
           grant_date?: string
@@ -1768,7 +1768,7 @@ export type Database = {
         Row: {
           country_code: string
           created_at: string
-          entity_id: string
+          entity_id: string | null
           id: string
           is_primary: boolean
           label: string
@@ -1779,7 +1779,7 @@ export type Database = {
         Insert: {
           country_code?: string
           created_at?: string
-          entity_id: string
+          entity_id?: string | null
           id?: string
           is_primary?: boolean
           label?: string
@@ -1790,7 +1790,7 @@ export type Database = {
         Update: {
           country_code?: string
           created_at?: string
-          entity_id?: string
+          entity_id?: string | null
           id?: string
           is_primary?: boolean
           label?: string
@@ -1817,7 +1817,7 @@ export type Database = {
           email: string | null
           engagement_end_date: string | null
           engagement_start_date: string | null
-          entity_id: string
+          entity_id: string | null
           fee_structure: string | null
           id: string
           is_active: boolean
@@ -1837,7 +1837,7 @@ export type Database = {
           email?: string | null
           engagement_end_date?: string | null
           engagement_start_date?: string | null
-          entity_id: string
+          entity_id?: string | null
           fee_structure?: string | null
           id?: string
           is_active?: boolean
@@ -1857,7 +1857,7 @@ export type Database = {
           email?: string | null
           engagement_end_date?: string | null
           engagement_start_date?: string | null
-          entity_id?: string
+          entity_id?: string | null
           fee_structure?: string | null
           id?: string
           is_active?: boolean
@@ -1887,7 +1887,7 @@ export type Database = {
           conversion_ratio: number | null
           created_at: string
           dividend_rate: number | null
-          entity_id: string
+          entity_id: string | null
           id: string
           liquidation_preference: number | null
           name: string
@@ -1906,7 +1906,7 @@ export type Database = {
           conversion_ratio?: number | null
           created_at?: string
           dividend_rate?: number | null
-          entity_id: string
+          entity_id?: string | null
           id?: string
           liquidation_preference?: number | null
           name: string
@@ -1925,7 +1925,7 @@ export type Database = {
           conversion_ratio?: number | null
           created_at?: string
           dividend_rate?: number | null
-          entity_id?: string
+          entity_id?: string | null
           id?: string
           liquidation_preference?: number | null
           name?: string
@@ -1950,7 +1950,7 @@ export type Database = {
       shareholder_entity_links: {
         Row: {
           created_at: string
-          entity_id: string
+          entity_id: string | null
           id: string
           is_active: boolean | null
           notes: string | null
@@ -1960,7 +1960,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string
-          entity_id: string
+          entity_id?: string | null
           id?: string
           is_active?: boolean | null
           notes?: string | null
@@ -1970,7 +1970,7 @@ export type Database = {
         }
         Update: {
           created_at?: string
-          entity_id?: string
+          entity_id?: string | null
           id?: string
           is_active?: boolean | null
           notes?: string | null
@@ -2050,7 +2050,7 @@ export type Database = {
           company: string | null
           created_at: string
           email: string | null
-          entity_id: string
+          entity_id: string | null
           id: string
           is_board_member: boolean | null
           is_founder: boolean | null
@@ -2070,7 +2070,7 @@ export type Database = {
           company?: string | null
           created_at?: string
           email?: string | null
-          entity_id: string
+          entity_id?: string | null
           id?: string
           is_board_member?: boolean | null
           is_founder?: boolean | null
@@ -2090,7 +2090,7 @@ export type Database = {
           company?: string | null
           created_at?: string
           email?: string | null
-          entity_id?: string
+          entity_id?: string | null
           id?: string
           is_board_member?: boolean | null
           is_founder?: boolean | null
@@ -2242,7 +2242,7 @@ export type Database = {
           authority: string
           country: string
           created_at: string
-          entity_id: string
+          entity_id: string | null
           expiry_date: string | null
           id: string
           is_primary: boolean
@@ -2256,7 +2256,7 @@ export type Database = {
           authority: string
           country?: string
           created_at?: string
-          entity_id: string
+          entity_id?: string | null
           expiry_date?: string | null
           id?: string
           is_primary?: boolean
@@ -2270,7 +2270,7 @@ export type Database = {
           authority?: string
           country?: string
           created_at?: string
-          entity_id?: string
+          entity_id?: string | null
           expiry_date?: string | null
           id?: string
           is_primary?: boolean

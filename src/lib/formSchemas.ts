@@ -12,7 +12,7 @@ export type DocumentTypeFormData = z.infer<typeof documentTypeSchema>;
 
 // Entity Document Schema
 export const entityDocumentSchema = z.object({
-  entity_id: z.string().uuid("Entity is required"),
+  entity_id: z.string().uuid().optional().or(z.literal("")),
   document_type_id: z.string().uuid("Document type is required").optional().or(z.literal("")),
   title: z.string().trim().min(1, "Title is required").max(200, "Title must be 200 characters or less"),
   file_path: z.string().optional().or(z.literal("")),
@@ -122,7 +122,7 @@ export const socialMediaSchema = z.object({
 });
 
 export const phoneNumberSchema = z.object({
-  entity_id: z.string().uuid("Entity is required"),
+  entity_id: z.string().uuid().optional().or(z.literal("")),
   phone_number: z.string().trim().min(1, "Phone number is required").max(30),
   country_code: z.string().trim().min(1, "Country code is required").max(10),
   label: z.string().trim().min(1, "Label is required").max(50),
@@ -131,7 +131,7 @@ export const phoneNumberSchema = z.object({
 });
 
 export const taxIdSchema = z.object({
-  entity_id: z.string().uuid("Entity is required"),
+  entity_id: z.string().uuid().optional().or(z.literal("")),
   tax_id_number: z.string().trim().min(1, "Tax ID number is required").max(50),
   type: z.string().trim().min(1, "Type is required").max(50),
   authority: z.string().trim().min(1, "Authority is required").max(100),
@@ -144,7 +144,7 @@ export const taxIdSchema = z.object({
 
 // Base provider schema for common fields
 const baseProviderSchema = z.object({
-  entity_id: z.string().uuid("Entity is required"),
+  entity_id: z.string().uuid().optional().or(z.literal("")),
   name: z.string().trim().min(1, "Name is required").max(200),
   contact_name: z.string().trim().max(200).optional().or(z.literal("")),
   email: z.string().trim().email("Invalid email").optional().or(z.literal("")),
@@ -269,7 +269,7 @@ export type SocialMediaFormData = {
 };
 
 export type PhoneNumberFormData = {
-  entity_id: string;
+  entity_id?: string;
   phone_number: string;
   country_code: string;
   label: string;
@@ -278,7 +278,7 @@ export type PhoneNumberFormData = {
 };
 
 export type TaxIdFormData = {
-  entity_id: string;
+  entity_id?: string;
   tax_id_number: string;
   type: string;
   authority: string;
@@ -291,7 +291,7 @@ export type TaxIdFormData = {
 
 // Base type for all provider forms
 export type BaseProviderFormData = {
-  entity_id: string;
+  entity_id?: string;
   name: string;
   contact_name?: string;
   email?: string;
@@ -350,7 +350,7 @@ export type FilingTypeFormData = z.infer<typeof filingTypeSchema>;
 
 // Entity Filing Schema
 export const entityFilingSchema = z.object({
-  entity_id: z.string().uuid("Entity is required"),
+  entity_id: z.string().uuid().optional().or(z.literal("")),
   filing_type_id: z.string().uuid("Filing type is required").optional().or(z.literal("")),
   title: z.string().trim().min(1, "Title is required").max(200, "Title must be 200 characters or less"),
   jurisdiction: z.string().trim().max(100, "Jurisdiction must be 100 characters or less").optional().or(z.literal("")),
@@ -370,7 +370,7 @@ export type EntityFilingFormData = z.infer<typeof entityFilingSchema>;
 
 // Filing Task Schema
 export const filingTaskSchema = z.object({
-  entity_id: z.string().uuid("Entity is required"),
+  entity_id: z.string().uuid().optional().or(z.literal("")),
   filing_id: z.string().uuid().optional().or(z.literal("")),
   title: z.string().trim().min(1, "Title is required").max(200, "Title must be 200 characters or less"),
   description: z.string().trim().max(1000, "Description must be 1000 characters or less").optional().or(z.literal("")),
@@ -384,7 +384,7 @@ export type FilingTaskFormData = z.infer<typeof filingTaskSchema>;
 
 // Entity Website Schema
 export const entityWebsiteSchema = z.object({
-  entity_id: z.string().uuid("Entity is required"),
+  entity_id: z.string().uuid().optional().or(z.literal("")),
   url: z.string().trim().url("Invalid URL").min(1, "URL is required"),
   name: z.string().trim().min(1, "Name is required").max(100, "Name must be 100 characters or less"),
   type: z.string().min(1, "Type is required"),
@@ -411,7 +411,7 @@ export type SoftwareCatalogFormData = z.infer<typeof softwareCatalogSchema>;
 
 // Entity Software Schema
 export const entitySoftwareSchema = z.object({
-  entity_id: z.string().uuid("Entity is required"),
+  entity_id: z.string().uuid().optional().or(z.literal("")),
   software_id: z.string().uuid().optional().or(z.literal("")),
   custom_name: z.string().trim().max(100, "Name must be 100 characters or less").optional().or(z.literal("")),
   category: z.string().min(1, "Category is required"),
