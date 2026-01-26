@@ -142,7 +142,7 @@ const Sidebar = ({
     user,
     signOut
   } = useAuth();
-  const [openGroups, setOpenGroups] = useState<string[]>(["main"]);
+  const [openGroups, setOpenGroups] = useState<string[]>(["main", "digital"]);
   const [profileOpen, setProfileOpen] = useState(false);
   const handleLogout = async () => {
     await signOut();
