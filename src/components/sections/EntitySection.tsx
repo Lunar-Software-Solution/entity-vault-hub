@@ -28,12 +28,13 @@ const EntitySection = () => {
 
   const handleSubmit = (data: EntityFormData) => {
     const cleanData = {
-      ...data,
-      email: data.email || null,
-      phone: data.phone || null,
+      name: data.name,
+      type: data.type,
+      status: data.status,
       website: data.website || null,
       jurisdiction: data.jurisdiction || null,
       founded_date: data.founded_date || null,
+      fiscal_year_end: data.fiscal_year_end || null,
     };
     
     if (editingEntity) {

@@ -195,13 +195,10 @@ export type EntityFormData = {
   name: string;
   type: string;
   status: string;
-  email?: string;
-  phone?: string;
   website?: string;
   jurisdiction?: string;
   founded_date?: string;
   fiscal_year_end?: string;
-  is_verified: boolean;
 };
 
 export type BankAccountFormData = {
