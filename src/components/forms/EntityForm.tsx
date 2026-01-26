@@ -14,6 +14,7 @@ const ENTITY_TYPES = {
     { value: "LLC", label: "LLC (Limited Liability Company)" },
     { value: "Corporation", label: "Corporation (C-Corp)" },
     { value: "S-Corporation", label: "S-Corporation" },
+    { value: "PBC", label: "PBC (Public Benefit Corporation)" },
     { value: "Partnership", label: "Partnership" },
     { value: "LP", label: "LP (Limited Partnership)" },
     { value: "LLP", label: "LLP (Limited Liability Partnership)" },
