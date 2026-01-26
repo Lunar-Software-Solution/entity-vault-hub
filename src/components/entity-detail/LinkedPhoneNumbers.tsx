@@ -27,6 +27,7 @@ const LinkedPhoneNumbers = ({ phones, entityId }: LinkedPhoneNumbersProps) => {
   const handleSubmit = (data: PhoneNumberFormData) => {
     const payload = {
       ...data,
+      entity_id: data.entity_id || null,
       purpose: data.purpose || null,
     };
 
