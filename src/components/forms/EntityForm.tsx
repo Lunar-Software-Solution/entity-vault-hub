@@ -10,6 +10,9 @@ import type { Entity } from "@/hooks/usePortalData";
 
 // Entity types grouped by jurisdiction
 const ENTITY_TYPES = {
+  "General": [
+    { value: "Individual", label: "Individual (Personal)" },
+  ],
   "United States": [
     { value: "LLC", label: "LLC (Limited Liability Company)" },
     { value: "Corporation", label: "Corporation (C-Corp)" },
