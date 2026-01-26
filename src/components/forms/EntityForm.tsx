@@ -100,6 +100,17 @@ const ENTITY_TYPES = {
     { value: "KDA", label: "КДА / KDA (Partnership Limited by Shares)" },
     { value: "Cooperative (Bulgaria)", label: "Кооперация (Cooperative)" },
   ],
+  "Netherlands": [
+    { value: "BV", label: "BV (Besloten Vennootschap - Private Limited)" },
+    { value: "NV", label: "NV (Naamloze Vennootschap - Public Limited)" },
+    { value: "VOF", label: "VOF (Vennootschap Onder Firma - General Partnership)" },
+    { value: "CV", label: "CV (Commanditaire Vennootschap - Limited Partnership)" },
+    { value: "Eenmanszaak", label: "Eenmanszaak (Sole Proprietorship)" },
+    { value: "Maatschap", label: "Maatschap (Professional Partnership)" },
+    { value: "Stichting", label: "Stichting (Foundation)" },
+    { value: "Vereniging", label: "Vereniging (Association)" },
+    { value: "Cooperatie", label: "Coöperatie (Cooperative)" },
+  ],
   "Other": [
     { value: "Other", label: "Other" },
   ],
