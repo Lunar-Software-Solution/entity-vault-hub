@@ -63,23 +63,6 @@ const ROLE_TYPES = [
   { value: "both", label: "Both (Director & UBO)" },
 ];
 
-const TITLE_OPTIONS = [
-  "CEO",
-  "CFO",
-  "COO",
-  "CTO",
-  "Chairman",
-  "President",
-  "Vice President",
-  "Secretary",
-  "Treasurer",
-  "Board Member",
-  "Managing Director",
-  "Director",
-  "Executive Director",
-  "Non-Executive Director",
-  "Independent Director",
-];
 
 const CONTROL_TYPES = [
   { value: "direct", label: "Direct Ownership" },
@@ -242,7 +225,8 @@ export const DirectorUboForm = ({
           fieldsUpdated++;
         }
 
-        // Auto-fill form fields with enriched data (only if empty)
+        // Auto-fill form fields with enriched data
+        // Title, bio, and avatar always update (enrichment purpose); others only if empty
         if (enriched.name && !form.getValues("name")) {
           form.setValue("name", enriched.name);
           fieldsUpdated++;
@@ -251,7 +235,7 @@ export const DirectorUboForm = ({
           form.setValue("email", enriched.email);
           fieldsUpdated++;
         }
-        if (enriched.title && !form.getValues("title")) {
+        if (enriched.title) {
           form.setValue("title", enriched.title);
           fieldsUpdated++;
         }
@@ -263,7 +247,7 @@ export const DirectorUboForm = ({
           form.setValue("linkedin_url", enriched.linkedin_url);
           fieldsUpdated++;
         }
-        if (enriched.bio && !form.getValues("bio")) {
+        if (enriched.bio) {
           form.setValue("bio", enriched.bio);
           fieldsUpdated++;
         }
@@ -395,20 +379,9 @@ export const DirectorUboForm = ({
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Title/Position</FormLabel>
-                <Select onValueChange={field.onChange} defaultValue={field.value}>
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select title" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    {TITLE_OPTIONS.map((title) => (
-                      <SelectItem key={title} value={title}>
-                        {title}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <FormControl>
+                  <Input placeholder="e.g., CEO, Director, Founder" {...field} />
+                </FormControl>
                 <FormMessage />
               </FormItem>
             )}
