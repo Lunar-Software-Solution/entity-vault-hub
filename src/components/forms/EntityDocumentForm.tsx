@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import DocumentFileUpload from "@/components/documents/DocumentFileUpload";
+import DocumentFileUpload, { type ExtractedDocumentData } from "@/components/documents/DocumentFileUpload";
 import DocumentSummary from "@/components/documents/DocumentSummary";
 import { useState, useMemo } from "react";
 
@@ -61,6 +61,28 @@ const EntityDocumentForm = ({ entityId, document, onSubmit, onCancel, isLoading 
   const handleSummaryGenerated = (summary: string, generatedAt: string) => {
     setAiSummary(summary);
     setSummaryGeneratedAt(generatedAt);
+  };
+
+  const handleDataExtracted = (data: ExtractedDocumentData) => {
+    // Auto-fill form fields with extracted data (only if field is empty or we're creating new)
+    if (data.title && !form.getValues("title")) {
+      form.setValue("title", data.title);
+    }
+    if (data.document_type_id && !form.getValues("document_type_id")) {
+      form.setValue("document_type_id", data.document_type_id);
+    }
+    if (data.issued_date && !form.getValues("issued_date")) {
+      form.setValue("issued_date", data.issued_date);
+    }
+    if (data.expiry_date && !form.getValues("expiry_date")) {
+      form.setValue("expiry_date", data.expiry_date);
+    }
+    if (data.issuing_authority && !form.getValues("issuing_authority")) {
+      form.setValue("issuing_authority", data.issuing_authority);
+    }
+    if (data.reference_number && !form.getValues("reference_number")) {
+      form.setValue("reference_number", data.reference_number);
+    }
   };
 
   // Group document types by category
@@ -141,6 +163,7 @@ const EntityDocumentForm = ({ entityId, document, onSubmit, onCancel, isLoading 
               existingFileName={form.watch("file_name")}
               onUploadComplete={handleFileUpload}
               onSummaryGenerated={handleSummaryGenerated}
+              onDataExtracted={handleDataExtracted}
             />
           </div>
         </div>
