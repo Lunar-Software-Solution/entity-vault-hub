@@ -4,7 +4,7 @@ import { taxIdSchema, TaxIdFormData } from "@/lib/formSchemas";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { useEntities, useTaxIdTypes } from "@/hooks/usePortalData";
@@ -99,6 +99,55 @@ const TaxIdForm = ({ taxId, defaultEntityId, onSubmit, onCancel, isLoading }: Ta
     return TAX_ID_FORMATS[selectedType] || { placeholder: "Enter tax ID number" };
   }, [selectedType]);
 
+  // Group tax ID types by country
+  const groupedTaxIdTypes = useMemo(() => {
+    if (!taxIdTypes) return {};
+    
+    const countryPatterns: Record<string, RegExp> = {
+      'United States': /\(US\)|\(USA\)/i,
+      'Canada': /\(Canada\)/i,
+      'United Kingdom': /\(UK\)/i,
+      'France': /\(France\)/i,
+      'Netherlands': /\(Netherlands\)/i,
+      'Bulgaria': /\(Bulgaria\)/i,
+      'Australia': /Australia/i,
+      'Brazil': /\(Brazil\)/i,
+      'Spain': /\(Spain\)/i,
+      'India': /\(India\)/i,
+      'Mexico': /\(Mexico\)/i,
+    };
+    
+    const groups: Record<string, typeof taxIdTypes> = {};
+    const other: typeof taxIdTypes = [];
+    
+    taxIdTypes.forEach((type) => {
+      let matched = false;
+      for (const [country, pattern] of Object.entries(countryPatterns)) {
+        if (pattern.test(type.label)) {
+          if (!groups[country]) groups[country] = [];
+          groups[country].push(type);
+          matched = true;
+          break;
+        }
+      }
+      if (!matched) {
+        other.push(type);
+      }
+    });
+    
+    // Sort countries alphabetically
+    const sortedGroups: Record<string, typeof taxIdTypes> = {};
+    Object.keys(groups).sort().forEach(key => {
+      sortedGroups[key] = groups[key].sort((a, b) => a.code.localeCompare(b.code));
+    });
+    
+    if (other.length > 0) {
+      sortedGroups['Other'] = other.sort((a, b) => a.code.localeCompare(b.code));
+    }
+    
+    return sortedGroups;
+  }, [taxIdTypes]);
+
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
@@ -132,11 +181,18 @@ const TaxIdForm = ({ taxId, defaultEntityId, onSubmit, onCancel, isLoading }: Ta
                   <SelectValue placeholder="Select type" />
                 </SelectTrigger>
               </FormControl>
-              <SelectContent>
-                {taxIdTypes?.map((type) => (
-                  <SelectItem key={type.id} value={type.code}>
-                    {type.code} — {type.label}
-                  </SelectItem>
+              <SelectContent className="max-h-80">
+                {Object.entries(groupedTaxIdTypes).map(([country, types]) => (
+                  <SelectGroup key={country}>
+                    <SelectLabel className="text-xs font-semibold text-muted-foreground px-2 py-1.5 bg-muted/50">
+                      {country}
+                    </SelectLabel>
+                    {types.map((type) => (
+                      <SelectItem key={type.id} value={type.code}>
+                        {type.code} — {type.label}
+                      </SelectItem>
+                    ))}
+                  </SelectGroup>
                 ))}
               </SelectContent>
             </Select>
