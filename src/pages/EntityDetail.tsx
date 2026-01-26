@@ -527,7 +527,7 @@ const EntityDetail = () => {
           });
         }}
         title="Delete Entity"
-        description={`Are you sure you want to delete "${entity.name}"? This will permanently delete this entity and all associated data (bank accounts, contracts, documents, etc.). This action cannot be undone.`}
+        description={`Are you sure you want to delete "${entity.name}"? You must remove or reassign all linked items (bank accounts, contracts, documents, etc.) before the entity can be deleted.`}
         isLoading={deleteEntity.isPending}
       />
     </div>
