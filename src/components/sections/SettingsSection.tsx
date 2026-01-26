@@ -1032,7 +1032,7 @@ const SettingsSection = () => {
                     placeholder="Search types..."
                     value={typeSearch}
                     onChange={(e) => setTypeSearch(e.target.value)}
-                    className="pl-9 w-full sm:w-64"
+                    className="pl-9 w-full sm:w-64 text-foreground"
                   />
                 </div>
                 {canWrite && (
@@ -1142,7 +1142,7 @@ const SettingsSection = () => {
                     placeholder="Search authorities..."
                     value={authoritySearch}
                     onChange={(e) => setAuthoritySearch(e.target.value)}
-                    className="pl-9 w-full sm:w-64"
+                    className="pl-9 w-full sm:w-64 text-foreground"
                   />
                 </div>
                 {canWrite && (
@@ -1265,7 +1265,7 @@ const SettingsSection = () => {
                     placeholder="Search document types..."
                     value={docTypeSearch}
                     onChange={(e) => setDocTypeSearch(e.target.value)}
-                    className="pl-9 w-full sm:w-64"
+                    className="pl-9 w-full sm:w-64 text-foreground"
                   />
                 </div>
                 {canWrite && (
@@ -1375,7 +1375,7 @@ const SettingsSection = () => {
                     placeholder="Search filing types..."
                     value={filingTypeSearch}
                     onChange={(e) => setFilingTypeSearch(e.target.value)}
-                    className="pl-9 w-full sm:w-64"
+                    className="pl-9 w-full sm:w-64 text-foreground"
                   />
                 </div>
                 {canWrite && (
@@ -1490,7 +1490,7 @@ const SettingsSection = () => {
               <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full sm:w-auto">
                 <div className="relative">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                  <Input placeholder="Search software..." value={softwareSearch} onChange={(e) => setSoftwareSearch(e.target.value)} className="pl-9 w-full sm:w-64" />
+                  <Input placeholder="Search software..." value={softwareSearch} onChange={(e) => setSoftwareSearch(e.target.value)} className="pl-9 w-full sm:w-64 text-foreground" />
                 </div>
                 {canWrite && (
                   <Button onClick={() => setShowSoftwareForm(true)} size="sm" className="gap-2">
