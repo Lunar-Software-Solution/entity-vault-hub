@@ -154,7 +154,7 @@ const EntityDocumentForm = ({ entityId, document, onSubmit, onCancel, isLoading 
           )}
         />
 
-        <div>
+        <div className="space-y-3">
           <FormLabel>Document File</FormLabel>
           <div className="mt-2">
             <DocumentFileUpload
@@ -166,6 +166,28 @@ const EntityDocumentForm = ({ entityId, document, onSubmit, onCancel, isLoading 
               onDataExtracted={handleDataExtracted}
             />
           </div>
+          
+          {form.watch("file_path") && (
+            <FormField
+              control={form.control}
+              name="file_name"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Display Name</FormLabel>
+                  <FormControl>
+                    <Input 
+                      placeholder="Rename the file..." 
+                      {...field} 
+                    />
+                  </FormControl>
+                  <p className="text-xs text-muted-foreground">
+                    Customize how this file appears in the system
+                  </p>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          )}
         </div>
 
         {aiSummary && (
