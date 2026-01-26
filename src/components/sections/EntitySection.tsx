@@ -174,7 +174,7 @@ const EntitySection = () => {
         onOpenChange={(open) => !open && setDeletingEntity(null)}
         onConfirm={handleDelete}
         title="Delete Entity"
-        description="This will permanently delete this entity and all associated information."
+        description="You must remove or reassign all linked items before the entity can be deleted."
         isLoading={deleteEntity.isPending}
       />
     </div>
