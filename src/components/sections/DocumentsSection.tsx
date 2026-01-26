@@ -13,7 +13,8 @@ import EntityDocumentForm from "@/components/forms/EntityDocumentForm";
 import PdfViewerDialog from "@/components/contracts/PdfViewerDialog";
 import { useUserRole } from "@/hooks/useUserRole";
 import type { EntityDocumentFormData } from "@/lib/formSchemas";
-import { Plus, Edit, Trash2, Search, Eye, FileText, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
+import { Plus, Edit, Trash2, Search, Eye, FileText, ArrowUpDown, ArrowUp, ArrowDown, Upload } from "lucide-react";
+import BulkDocumentUpload from "@/components/documents/BulkDocumentUpload";
 import { format } from "date-fns";
 
 interface DocumentsSectionProps {
@@ -48,6 +49,7 @@ const DocumentsSection = ({ entityFilter }: DocumentsSectionProps) => {
   const [sortKey, setSortKey] = useState<SortKey>("issued_date");
   const [sortDirection, setSortDirection] = useState<SortDirection>("desc");
   const [selectedEntityId, setSelectedEntityId] = useState<string>("");
+  const [showBulkUpload, setShowBulkUpload] = useState(false);
 
   const { data: documents, isLoading: docsLoading } = useEntityDocuments();
   const { data: documentTypes, isLoading: typesLoading } = useDocumentTypes();
@@ -239,10 +241,16 @@ const DocumentsSection = ({ entityFilter }: DocumentsSectionProps) => {
           </p>
         </div>
         {canWrite && (
-          <Button onClick={handleAddNew} className="gap-2">
-            <Plus className="w-4 h-4" />
-            Add Document
-          </Button>
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={() => setShowBulkUpload(true)} className="gap-2">
+              <Upload className="w-4 h-4" />
+              Bulk Upload
+            </Button>
+            <Button onClick={handleAddNew} className="gap-2">
+              <Plus className="w-4 h-4" />
+              Add Document
+            </Button>
+          </div>
         )}
       </div>
 
@@ -504,6 +512,11 @@ const DocumentsSection = ({ entityFilter }: DocumentsSectionProps) => {
           bucketName="entity-documents"
         />
       )}
+
+      <BulkDocumentUpload
+        open={showBulkUpload}
+        onOpenChange={setShowBulkUpload}
+      />
     </div>
   );
 };
