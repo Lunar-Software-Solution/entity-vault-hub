@@ -35,6 +35,7 @@ export const entitySchema = z.object({
   founded_date: z.string().optional().or(z.literal("")),
   fiscal_year_end: z.string().trim().max(5).regex(/^(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$/, "Must be MM-DD format").optional().or(z.literal("")),
   website: z.string().trim().url("Invalid URL").optional().or(z.literal("")),
+  description_of_activities: z.string().trim().max(2000, "Description must be 2000 characters or less").optional().or(z.literal("")),
 });
 
 export const bankAccountSchema = z.object({
@@ -199,6 +200,7 @@ export type EntityFormData = {
   jurisdiction?: string;
   founded_date?: string;
   fiscal_year_end?: string;
+  description_of_activities?: string;
 };
 
 export type BankAccountFormData = {
