@@ -242,7 +242,7 @@ const DocumentsSection = ({ entityFilter }: DocumentsSectionProps) => {
         </div>
         {canWrite && (
           <div className="flex gap-2">
-            <Button variant="outline" onClick={() => setShowBulkUpload(true)} className="gap-2">
+            <Button variant="secondary" onClick={() => setShowBulkUpload(true)} className="gap-2">
               <Upload className="w-4 h-4" />
               Bulk Upload
             </Button>
