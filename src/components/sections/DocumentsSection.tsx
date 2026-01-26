@@ -1,6 +1,7 @@
 import { useState, useMemo } from "react";
 import { useEntityDocuments, useDocumentTypes, useEntities, type EntityDocument } from "@/hooks/usePortalData";
 import { useCreateEntityDocument, useUpdateEntityDocument, useDeleteEntityDocument } from "@/hooks/usePortalMutations";
+import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -13,7 +14,7 @@ import EntityDocumentForm from "@/components/forms/EntityDocumentForm";
 import PdfViewerDialog from "@/components/contracts/PdfViewerDialog";
 import { useUserRole } from "@/hooks/useUserRole";
 import type { EntityDocumentFormData } from "@/lib/formSchemas";
-import { Plus, Edit, Trash2, Search, Eye, FileText, ArrowUpDown, ArrowUp, ArrowDown, Upload } from "lucide-react";
+import { Plus, Edit, Trash2, Search, Eye, FileText, ArrowUpDown, ArrowUp, ArrowDown, Upload, Download } from "lucide-react";
 import BulkDocumentUpload from "@/components/documents/BulkDocumentUpload";
 import { format } from "date-fns";
 
@@ -157,6 +158,27 @@ const DocumentsSection = ({ entityFilter }: DocumentsSectionProps) => {
     ) : (
       <ArrowDown className="w-4 h-4 ml-1" />
     );
+  };
+
+  const handleDownload = async (filePath: string, fileName: string) => {
+    try {
+      const { data, error } = await supabase.storage
+        .from("entity-documents")
+        .download(filePath);
+      
+      if (error) throw error;
+      
+      const url = URL.createObjectURL(data);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = fileName;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error("Download error:", error);
+    }
   };
 
   const handleSubmit = (data: EntityDocumentFormData) => {
@@ -385,19 +407,29 @@ const DocumentsSection = ({ entityFilter }: DocumentsSectionProps) => {
                     <TableCell>
                       <div className="flex gap-1">
                         {doc.file_path && (
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-8 w-8 text-foreground hover:text-foreground hover:bg-foreground/10"
-                            onClick={() =>
-                              setViewingPdf({
-                                path: doc.file_path!,
-                                name: doc.file_name || "Document",
-                              })
-                            }
-                          >
-                            <Eye className="w-4 h-4" />
-                          </Button>
+                          <>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-8 w-8 text-foreground hover:text-foreground hover:bg-foreground/10"
+                              onClick={() =>
+                                setViewingPdf({
+                                  path: doc.file_path!,
+                                  name: doc.file_name || "Document",
+                                })
+                              }
+                            >
+                              <Eye className="w-4 h-4" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-8 w-8 text-green-400 hover:text-green-300 hover:bg-green-400/10"
+                              onClick={() => handleDownload(doc.file_path!, doc.file_name || "document")}
+                            >
+                              <Download className="w-4 h-4" />
+                            </Button>
+                          </>
                         )}
                         {canWrite && (
                           <Button
