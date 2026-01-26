@@ -5,12 +5,22 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 
+export interface ExtractedDocumentData {
+  title?: string | null;
+  document_type_id?: string | null;
+  issued_date?: string | null;
+  expiry_date?: string | null;
+  issuing_authority?: string | null;
+  reference_number?: string | null;
+}
+
 interface DocumentFileUploadProps {
   documentId: string;
   existingFilePath?: string | null;
   existingFileName?: string | null;
   onUploadComplete: (filePath: string, fileName: string) => void;
   onSummaryGenerated?: (summary: string, generatedAt: string) => void;
+  onDataExtracted?: (data: ExtractedDocumentData) => void;
 }
 
 const DocumentFileUpload = ({
@@ -19,6 +29,7 @@ const DocumentFileUpload = ({
   existingFileName,
   onUploadComplete,
   onSummaryGenerated,
+  onDataExtracted,
 }: DocumentFileUploadProps) => {
   const [isUploading, setIsUploading] = useState(false);
   const [isSummarizing, setIsSummarizing] = useState(false);
@@ -43,6 +54,13 @@ const DocumentFileUpload = ({
 
       if (response.data?.summary && onSummaryGenerated) {
         onSummaryGenerated(response.data.summary, new Date().toISOString());
+      }
+
+      // Handle extracted data for auto-fill
+      if (response.data?.extractedData && onDataExtracted) {
+        onDataExtracted(response.data.extractedData);
+        toast.success("Document analyzed and form auto-filled");
+      } else if (response.data?.summary) {
         toast.success("AI summary generated");
       }
     } catch (error) {
