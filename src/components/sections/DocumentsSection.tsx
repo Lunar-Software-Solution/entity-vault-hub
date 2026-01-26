@@ -446,10 +446,13 @@ const DocumentsSection = ({ entityFilter }: DocumentsSectionProps) => {
               {editingDocument ? "Edit Document" : "Add Document"}
             </DialogTitle>
           </DialogHeader>
-          {!editingDocument && !entityFilter && entities && entities.length > 0 && (
+          {!entityFilter && entities && entities.length > 0 && (
             <div className="mb-4">
               <label className="text-sm font-medium text-foreground">Select Entity (optional)</label>
-              <Select value={selectedEntityId} onValueChange={setSelectedEntityId}>
+              <Select 
+                value={selectedEntityId || editingDocument?.entity_id || "__none__"} 
+                onValueChange={setSelectedEntityId}
+              >
                 <SelectTrigger className="bg-background mt-1">
                   <SelectValue placeholder="No entity selected" />
                 </SelectTrigger>
