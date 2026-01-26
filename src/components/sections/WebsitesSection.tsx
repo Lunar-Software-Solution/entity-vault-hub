@@ -1,4 +1,5 @@
 import { useState, useMemo } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { Plus, ExternalLink, MoreVertical, Pencil, Trash2, Building2, Calendar, ShieldCheck, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useEntityWebsites, useEntities, type EntityWebsite } from "@/hooks/usePortalData";
@@ -13,14 +14,36 @@ import CompanyLogo from "@/components/shared/CompanyLogo";
 import { useUserRole } from "@/hooks/useUserRole";
 import type { EntityWebsiteFormData } from "@/lib/formSchemas";
 import { format, differenceInDays, parseISO } from "date-fns";
+import { supabase } from "@/integrations/supabase/client";
 
 interface WebsitesSectionProps {
   entityFilter?: string | null;
 }
 
+// Hook to fetch all website entity links
+const useWebsiteEntityLinks = () => {
+  return useQuery({
+    queryKey: ["website-entity-links-all"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("website_entity_links")
+        .select(`
+          id,
+          website_id,
+          entity_id,
+          is_primary,
+          entity:entities(id, name, website)
+        `);
+      if (error) throw error;
+      return data;
+    },
+  });
+};
+
 const WebsitesSection = ({ entityFilter }: WebsitesSectionProps) => {
   const { data: websites, isLoading } = useEntityWebsites();
   const { data: entities } = useEntities();
+  const { data: websiteEntityLinks } = useWebsiteEntityLinks();
   const { canWrite } = useUserRole();
   
   const [isFormOpen, setIsFormOpen] = useState(false);
@@ -31,14 +54,35 @@ const WebsitesSection = ({ entityFilter }: WebsitesSectionProps) => {
   const updateWebsite = useUpdateEntityWebsite();
   const deleteWebsite = useDeleteEntityWebsite();
 
-  // Filter websites by entity if filter is set
+  // Get linked entities for a website
+  const getLinkedEntities = (websiteId: string) => {
+    if (!websiteEntityLinks) return [];
+    return websiteEntityLinks
+      .filter(link => link.website_id === websiteId)
+      .map(link => ({
+        id: link.entity_id,
+        name: (link.entity as any)?.name || "Unknown",
+        is_primary: link.is_primary,
+      }));
+  };
+
+  // Filter websites by entity if filter is set (using junction table)
   const filteredWebsites = useMemo(() => {
     if (!websites) return [];
     if (!entityFilter) return websites;
-    return websites.filter(website => website.entity_id === entityFilter);
-  }, [websites, entityFilter]);
+    
+    // Get website IDs that are linked to the filtered entity
+    const linkedWebsiteIds = websiteEntityLinks
+      ?.filter(link => link.entity_id === entityFilter)
+      .map(link => link.website_id) || [];
+    
+    // Also include websites with the legacy entity_id
+    return websites.filter(website => 
+      linkedWebsiteIds.includes(website.id) || website.entity_id === entityFilter
+    );
+  }, [websites, entityFilter, websiteEntityLinks]);
 
-  // Get entity name by ID
+  // Get entity name by ID (for legacy display)
   const getEntityName = (entityId: string | null) => {
     if (!entityId || !entities) return null;
     return entities.find(e => e.id === entityId)?.name || null;
@@ -154,7 +198,6 @@ const WebsitesSection = ({ entityFilter }: WebsitesSectionProps) => {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {filteredWebsites.map((website) => {
-            const entityName = getEntityName(website.entity_id);
             const domainExpiringSoon = isExpiringSoon(website.domain_expiry_date);
             const domainExpired = isExpired(website.domain_expiry_date);
             const sslExpiringSoon = isExpiringSoon(website.ssl_expiry_date);
@@ -206,12 +249,34 @@ const WebsitesSection = ({ entityFilter }: WebsitesSectionProps) => {
                     {website.platform && <Badge variant="outline" className="text-muted-foreground">{website.platform}</Badge>}
                   </div>
 
-                  {entityName && (
-                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                      <Building2 className="w-3.5 h-3.5" />
-                      <span className="truncate">{entityName}</span>
-                    </div>
-                  )}
+                  {/* Linked Entities */}
+                  {(() => {
+                    const linkedEntities = getLinkedEntities(website.id);
+                    const legacyEntityName = getEntityName(website.entity_id);
+                    
+                    if (linkedEntities.length > 0) {
+                      return (
+                        <div className="flex items-center gap-2 text-sm text-muted-foreground flex-wrap">
+                          <Building2 className="w-3.5 h-3.5 flex-shrink-0" />
+                          {linkedEntities.map((entity, idx) => (
+                            <span key={entity.id} className="truncate">
+                              {entity.name}
+                              {entity.is_primary && <span className="text-primary ml-1">(Primary)</span>}
+                              {idx < linkedEntities.length - 1 && ", "}
+                            </span>
+                          ))}
+                        </div>
+                      );
+                    } else if (legacyEntityName) {
+                      return (
+                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                          <Building2 className="w-3.5 h-3.5" />
+                          <span className="truncate">{legacyEntityName}</span>
+                        </div>
+                      );
+                    }
+                    return null;
+                  })()}
 
                   {/* Domain Expiry */}
                   {website.domain_expiry_date && (
@@ -257,7 +322,7 @@ const WebsitesSection = ({ entityFilter }: WebsitesSectionProps) => {
 
       {/* Add/Edit Dialog */}
       <Dialog open={isFormOpen} onOpenChange={handleCloseForm}>
-        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>{editingWebsite ? "Edit Website" : "Add Website"}</DialogTitle>
           </DialogHeader>

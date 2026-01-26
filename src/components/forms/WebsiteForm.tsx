@@ -7,7 +7,9 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
-import { useEntities, type EntityWebsite } from "@/hooks/usePortalData";
+import { Separator } from "@/components/ui/separator";
+import { type EntityWebsite } from "@/hooks/usePortalData";
+import WebsiteEntityAffiliationsManager from "./WebsiteEntityAffiliationsManager";
 
 interface WebsiteFormProps {
   website?: EntityWebsite | null;
@@ -54,8 +56,6 @@ const platforms = [
 ];
 
 const WebsiteForm = ({ website, defaultEntityId, onSubmit, onCancel, isLoading }: WebsiteFormProps) => {
-  const { data: entities } = useEntities();
-
   const form = useForm<EntityWebsiteFormData>({
     resolver: zodResolver(entityWebsiteSchema),
     defaultValues: {
@@ -75,27 +75,6 @@ const WebsiteForm = ({ website, defaultEntityId, onSubmit, onCancel, isLoading }
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-        <FormField control={form.control} name="entity_id" render={({ field }) => (
-          <FormItem>
-            <FormLabel>Entity *</FormLabel>
-            <Select onValueChange={field.onChange} defaultValue={field.value}>
-              <FormControl>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select entity" />
-                </SelectTrigger>
-              </FormControl>
-              <SelectContent>
-                {entities?.map((entity) => (
-                  <SelectItem key={entity.id} value={entity.id}>
-                    {entity.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <FormMessage />
-          </FormItem>
-        )} />
-
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <FormField control={form.control} name="name" render={({ field }) => (
             <FormItem>
@@ -213,6 +192,10 @@ const WebsiteForm = ({ website, defaultEntityId, onSubmit, onCancel, isLoading }
             </FormItem>
           )} />
         </div>
+
+        {/* Entity Affiliations Section */}
+        <Separator className="my-4" />
+        <WebsiteEntityAffiliationsManager websiteId={website?.id || null} />
 
         <div className="flex justify-end gap-3 pt-4">
           <Button type="button" variant="outline" onClick={onCancel}>Cancel</Button>
