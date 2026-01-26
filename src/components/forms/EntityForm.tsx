@@ -4,8 +4,71 @@ import { entitySchema, EntityFormData } from "@/lib/formSchemas";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "@/components/ui/select";
 import type { Entity } from "@/hooks/usePortalData";
+
+// Entity types grouped by jurisdiction
+const ENTITY_TYPES = {
+  "United States": [
+    { value: "LLC", label: "LLC (Limited Liability Company)" },
+    { value: "Corporation", label: "Corporation (C-Corp)" },
+    { value: "S-Corporation", label: "S-Corporation" },
+    { value: "Partnership", label: "Partnership" },
+    { value: "LP", label: "LP (Limited Partnership)" },
+    { value: "LLP", label: "LLP (Limited Liability Partnership)" },
+    { value: "Sole Proprietorship", label: "Sole Proprietorship" },
+    { value: "Non-Profit", label: "Non-Profit (501(c)(3))" },
+    { value: "Trust", label: "Trust" },
+    { value: "PLLC", label: "PLLC (Professional LLC)" },
+    { value: "PC", label: "PC (Professional Corporation)" },
+  ],
+  "Canada": [
+    { value: "Corporation (Canada)", label: "Corporation (Federal/Provincial)" },
+    { value: "Société par actions", label: "Société par actions (Quebec)" },
+    { value: "Unlimited Liability Company", label: "ULC (Unlimited Liability Company)" },
+    { value: "General Partnership (Canada)", label: "General Partnership" },
+    { value: "Limited Partnership (Canada)", label: "Limited Partnership (LP)" },
+    { value: "LLP (Canada)", label: "LLP (Limited Liability Partnership)" },
+    { value: "Sole Proprietorship (Canada)", label: "Sole Proprietorship" },
+    { value: "Cooperative", label: "Cooperative" },
+    { value: "Non-Profit (Canada)", label: "Non-Profit Corporation" },
+  ],
+  "United Kingdom": [
+    { value: "Ltd", label: "Ltd (Private Limited Company)" },
+    { value: "PLC", label: "PLC (Public Limited Company)" },
+    { value: "LLP (UK)", label: "LLP (Limited Liability Partnership)" },
+    { value: "Partnership (UK)", label: "Partnership" },
+    { value: "Sole Trader", label: "Sole Trader" },
+    { value: "CIC", label: "CIC (Community Interest Company)" },
+    { value: "Charity", label: "Charity / Non-Profit" },
+    { value: "Scottish LP", label: "Scottish Limited Partnership" },
+  ],
+  "France": [
+    { value: "SARL", label: "SARL (Société à Responsabilité Limitée)" },
+    { value: "SAS", label: "SAS (Société par Actions Simplifiée)" },
+    { value: "SASU", label: "SASU (SAS Unipersonnelle)" },
+    { value: "SA", label: "SA (Société Anonyme)" },
+    { value: "SNC", label: "SNC (Société en Nom Collectif)" },
+    { value: "SCI", label: "SCI (Société Civile Immobilière)" },
+    { value: "EURL", label: "EURL (Entreprise Unipersonnelle)" },
+    { value: "Auto-entrepreneur", label: "Auto-entrepreneur / Micro-entreprise" },
+    { value: "Association", label: "Association (Loi 1901)" },
+  ],
+  "Bulgaria": [
+    { value: "EOOD", label: "ЕООД / EOOD (Single-Member LLC)" },
+    { value: "OOD", label: "ООД / OOD (Limited Liability Company)" },
+    { value: "AD", label: "АД / AD (Joint Stock Company)" },
+    { value: "EAD", label: "ЕАД / EAD (Single-Member JSC)" },
+    { value: "ET", label: "ЕТ / ET (Sole Trader)" },
+    { value: "SD", label: "СД / SD (General Partnership)" },
+    { value: "KD", label: "КД / KD (Limited Partnership)" },
+    { value: "KDA", label: "КДА / KDA (Partnership Limited by Shares)" },
+    { value: "Cooperative (Bulgaria)", label: "Кооперация (Cooperative)" },
+  ],
+  "Other": [
+    { value: "Other", label: "Other" },
+  ],
+};
 
 interface EntityFormProps {
   entity?: Entity | null;
@@ -45,13 +108,17 @@ const EntityForm = ({ entity, onSubmit, onCancel, isLoading }: EntityFormProps) 
               <FormLabel>Entity Type *</FormLabel>
               <Select onValueChange={field.onChange} defaultValue={field.value}>
                 <FormControl><SelectTrigger><SelectValue placeholder="Select type" /></SelectTrigger></FormControl>
-                <SelectContent>
-                  <SelectItem value="LLC">LLC</SelectItem>
-                  <SelectItem value="Corporation">Corporation</SelectItem>
-                  <SelectItem value="Partnership">Partnership</SelectItem>
-                  <SelectItem value="Sole Proprietorship">Sole Proprietorship</SelectItem>
-                  <SelectItem value="Non-Profit">Non-Profit</SelectItem>
-                  <SelectItem value="Trust">Trust</SelectItem>
+                <SelectContent className="max-h-[300px]">
+                  {Object.entries(ENTITY_TYPES).map(([country, types]) => (
+                    <SelectGroup key={country}>
+                      <SelectLabel className="text-xs font-semibold text-muted-foreground">{country}</SelectLabel>
+                      {types.map((type) => (
+                        <SelectItem key={type.value} value={type.value}>
+                          {type.label}
+                        </SelectItem>
+                      ))}
+                    </SelectGroup>
+                  ))}
                 </SelectContent>
               </Select>
               <FormMessage />
