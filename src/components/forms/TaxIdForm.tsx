@@ -217,7 +217,7 @@ const TaxIdForm = ({ taxId, defaultEntityId, onSubmit, onCancel, isLoading }: Ta
           <FormItem>
             <FormLabel>Country *</FormLabel>
             <FormControl>
-              <>
+              <div>
                 <Input 
                   list="countries" 
                   placeholder="Select or type..."
@@ -228,7 +228,7 @@ const TaxIdForm = ({ taxId, defaultEntityId, onSubmit, onCancel, isLoading }: Ta
                     <option key={country} value={country} />
                   ))}
                 </datalist>
-              </>
+              </div>
             </FormControl>
             <FormMessage />
           </FormItem>
