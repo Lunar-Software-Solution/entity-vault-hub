@@ -2419,6 +2419,51 @@ export type Database = {
         }
         Relationships: []
       }
+      website_entity_links: {
+        Row: {
+          created_at: string
+          entity_id: string
+          id: string
+          is_primary: boolean | null
+          notes: string | null
+          updated_at: string
+          website_id: string
+        }
+        Insert: {
+          created_at?: string
+          entity_id: string
+          id?: string
+          is_primary?: boolean | null
+          notes?: string | null
+          updated_at?: string
+          website_id: string
+        }
+        Update: {
+          created_at?: string
+          entity_id?: string
+          id?: string
+          is_primary?: boolean | null
+          notes?: string | null
+          updated_at?: string
+          website_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "website_entity_links_entity_id_fkey"
+            columns: ["entity_id"]
+            isOneToOne: false
+            referencedRelation: "entities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "website_entity_links_website_id_fkey"
+            columns: ["website_id"]
+            isOneToOne: false
+            referencedRelation: "entity_websites"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
