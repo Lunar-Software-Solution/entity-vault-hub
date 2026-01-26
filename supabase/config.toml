@@ -40,3 +40,6 @@ verify_jwt = false
 
 [functions.revoke-trusted-device]
 verify_jwt = false
+
+[functions.analyze-bulk-documents]
+verify_jwt = false
