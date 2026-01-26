@@ -110,7 +110,7 @@ const PhoneNumbersSection = ({ entityFilter }: PhoneNumbersSectionProps) => {
           <Phone className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
           <p className="text-muted-foreground mb-4">No phone numbers added yet</p>
           {canWrite && (
-            <Button onClick={() => setShowForm(true)} variant="outline" className="gap-2">
+            <Button onClick={() => setShowForm(true)} variant="outline" className="gap-2 border-border text-foreground hover:bg-muted">
               <Plus className="w-4 h-4" />
               Add Your First Phone Number
             </Button>
