@@ -109,7 +109,6 @@ const addTools = [
           tax_id_number: { type: "string", description: "Tax ID number" },
           type: { type: "string", description: "Type of tax ID (e.g., EIN, SSN, VAT)" },
           authority: { type: "string", description: "Issuing authority (e.g., IRS, State)" },
-          country: { type: "string", description: "Country" },
           is_primary: { type: "boolean", description: "Whether this is the primary tax ID" },
           issued_date: { type: "string", description: "Issued date (YYYY-MM-DD)" },
           expiry_date: { type: "string", description: "Expiry date (YYYY-MM-DD)" },
@@ -586,7 +585,6 @@ const updateTools = [
           tax_id_number: { type: "string" },
           type: { type: "string" },
           authority: { type: "string" },
-          country: { type: "string" },
           is_primary: { type: "boolean" },
           issued_date: { type: "string" },
           expiry_date: { type: "string" },
@@ -1271,7 +1269,6 @@ Format dates as YYYY-MM-DD. Always confirm before making any changes.`;
                 tax_id_number: args.tax_id_number,
                 type: args.type || "EIN",
                 authority: args.authority,
-                country: args.country || "United States",
                 is_primary: args.is_primary ?? false,
                 issued_date: args.issued_date || null,
                 expiry_date: args.expiry_date || null,
@@ -1783,7 +1780,6 @@ Format dates as YYYY-MM-DD. Always confirm before making any changes.`;
               if (args.tax_id_number) updateData.tax_id_number = args.tax_id_number;
               if (args.type) updateData.type = args.type;
               if (args.authority) updateData.authority = args.authority;
-              if (args.country) updateData.country = args.country;
               if (args.is_primary !== undefined) updateData.is_primary = args.is_primary;
               if (args.issued_date !== undefined) updateData.issued_date = args.issued_date;
               if (args.expiry_date !== undefined) updateData.expiry_date = args.expiry_date;
@@ -2335,7 +2331,7 @@ Format dates as YYYY-MM-DD. Always confirm before making any changes.`;
               }
 
               if (!args.table || args.table === "tax_ids") {
-                const { data } = await supabase.from("tax_ids").select("tax_id_number, type, authority, country").ilike("tax_id_number", `%${query}%`).limit(5);
+                const { data } = await supabase.from("tax_ids").select("tax_id_number, type, authority").ilike("tax_id_number", `%${query}%`).limit(5);
                 if (data?.length) searchResults.tax_ids = data;
               }
 
