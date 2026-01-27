@@ -2243,7 +2243,6 @@ export type Database = {
       tax_ids: {
         Row: {
           authority: string
-          country: string
           created_at: string
           entity_id: string | null
           expiry_date: string | null
@@ -2257,7 +2256,6 @@ export type Database = {
         }
         Insert: {
           authority: string
-          country?: string
           created_at?: string
           entity_id?: string | null
           expiry_date?: string | null
@@ -2271,7 +2269,6 @@ export type Database = {
         }
         Update: {
           authority?: string
-          country?: string
           created_at?: string
           entity_id?: string | null
           expiry_date?: string | null

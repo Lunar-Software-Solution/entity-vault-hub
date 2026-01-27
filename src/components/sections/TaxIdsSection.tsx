@@ -43,6 +43,7 @@ const TaxIdsSection = ({ entityFilter }: TaxIdsSectionProps) => {
   const handleSubmit = (data: TaxIdFormData) => {
     const payload = {
       ...data,
+      authority: data.authority || null,
       issued_date: data.issued_date || null,
       expiry_date: data.expiry_date || null,
       notes: data.notes || null,
@@ -169,10 +170,12 @@ const TaxIdsSection = ({ entityFilter }: TaxIdsSectionProps) => {
                   <Building2 className="w-4 h-4" />
                   <span>{getEntityName(taxId.entity_id)}</span>
                 </div>
-                <div className="flex items-center gap-2 text-muted-foreground">
-                  <Globe className="w-4 h-4" />
-                  <span>{taxId.country} — {taxId.authority}</span>
-                </div>
+                {taxId.authority && (
+                  <div className="flex items-center gap-2 text-muted-foreground">
+                    <Globe className="w-4 h-4" />
+                    <span>{taxId.authority}</span>
+                  </div>
+                )}
                 {taxId.issued_date && (
                   <div className="flex items-center gap-2 text-muted-foreground">
                     <Calendar className="w-4 h-4" />

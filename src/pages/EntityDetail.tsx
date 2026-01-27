@@ -298,7 +298,7 @@ const EntityDetail = () => {
                     <Receipt className="w-3 h-3" /> Tax ID
                   </p>
                   <p className="text-sm text-foreground font-mono truncate">{taxId.tax_id_number}</p>
-                  <p className="text-xs text-muted-foreground truncate">{taxId.type} — {taxId.country}</p>
+                  <p className="text-xs text-muted-foreground truncate">{taxId.type}</p>
                 </div>
               ))}
 
