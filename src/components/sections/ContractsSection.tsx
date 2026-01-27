@@ -38,7 +38,7 @@ const ContractsSection = ({ entityFilter }: ContractsSectionProps) => {
   const updateContract = useUpdateContract();
   const deleteContract = useDeleteContract();
 
-  const handleSubmit = (data: ContractFormData & { file_path?: string; file_name?: string }) => {
+  const handleSubmit = (data: ContractFormData & { file_path?: string; file_name?: string; ai_summary?: string }) => {
     const cleanData = {
       ...data,
       start_date: data.start_date || null,
@@ -46,6 +46,8 @@ const ContractsSection = ({ entityFilter }: ContractsSectionProps) => {
       entity_id: data.entity_id || null,
       file_path: data.file_path || null,
       file_name: data.file_name || null,
+      ai_summary: data.ai_summary || null,
+      summary_generated_at: data.ai_summary ? new Date().toISOString() : null,
     };
     
     if (editingContract) {

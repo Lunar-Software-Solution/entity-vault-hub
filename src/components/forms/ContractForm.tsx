@@ -8,12 +8,13 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import type { Contract } from "@/hooks/usePortalData";
 import { useEntities } from "@/hooks/usePortalData";
+import AnalyzeContractUpload, { ExtractedContractData } from "@/components/contracts/AnalyzeContractUpload";
 import ContractFileUpload from "@/components/contracts/ContractFileUpload";
 import ContractSummary from "@/components/contracts/ContractSummary";
 
 interface ContractFormProps {
   contract?: Contract | null;
-  onSubmit: (data: ContractFormData & { file_path?: string; file_name?: string }) => void;
+  onSubmit: (data: ContractFormData & { file_path?: string; file_name?: string; ai_summary?: string }) => void;
   onCancel: () => void;
   isLoading?: boolean;
 }
@@ -40,6 +41,49 @@ const ContractForm = ({ contract, onSubmit, onCancel, isLoading }: ContractFormP
     },
   });
 
+  const handleDataExtracted = (data: ExtractedContractData, path: string, name: string) => {
+    // Update file info
+    setFilePath(path);
+    setFileName(name);
+    
+    // Auto-fill form fields with extracted data (only if field is empty or we're creating new)
+    if (data.title && !form.getValues("title")) {
+      form.setValue("title", data.title);
+    }
+    if (data.type && !form.getValues("type")) {
+      form.setValue("type", data.type);
+    }
+    if (data.parties && data.parties.length > 0) {
+      const currentParties = form.getValues("parties");
+      if (!currentParties || (Array.isArray(currentParties) && currentParties.length === 0)) {
+        form.setValue("parties", data.parties);
+      }
+    }
+    if (data.start_date && !form.getValues("start_date")) {
+      form.setValue("start_date", data.start_date);
+    }
+    if (data.end_date && !form.getValues("end_date")) {
+      form.setValue("end_date", data.end_date);
+    }
+    if (data.status && form.getValues("status") === "active") {
+      form.setValue("status", data.status);
+    }
+    if (data.entity_id && !form.getValues("entity_id")) {
+      form.setValue("entity_id", data.entity_id);
+    }
+    
+    // Store summary
+    if (data.summary) {
+      setAiSummary(data.summary);
+      setSummaryGeneratedAt(new Date().toISOString());
+    }
+  };
+
+  const handleFileRemoved = () => {
+    setFilePath(null);
+    setFileName(null);
+  };
+
   const handleFileUpload = (path: string, name: string) => {
     setFilePath(path);
     setFileName(name);
@@ -60,17 +104,47 @@ const ContractForm = ({ contract, onSubmit, onCancel, isLoading }: ContractFormP
       parties,
       file_path: filePath || undefined,
       file_name: fileName || undefined,
+      ai_summary: aiSummary || undefined,
     });
   };
 
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
+        {/* AI Upload Section - Only for new contracts without file */}
+        {!contract?.id && !filePath && (
+          <div className="space-y-2">
+            <h4 className="text-sm font-medium text-foreground">Upload Contract (Optional)</h4>
+            <AnalyzeContractUpload
+              onDataExtracted={handleDataExtracted}
+              existingFilePath={filePath}
+              existingFileName={fileName}
+              onFileRemoved={handleFileRemoved}
+            />
+          </div>
+        )}
+
+        {/* Show uploaded file for new contracts */}
+        {!contract?.id && filePath && fileName && (
+          <div className="space-y-2">
+            <h4 className="text-sm font-medium text-foreground">Uploaded Contract</h4>
+            <AnalyzeContractUpload
+              onDataExtracted={handleDataExtracted}
+              existingFilePath={filePath}
+              existingFileName={fileName}
+              onFileRemoved={handleFileRemoved}
+            />
+          </div>
+        )}
+
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <FormField control={form.control} name="entity_id" render={({ field }) => (
             <FormItem className="md:col-span-2">
               <FormLabel>Linked Entity</FormLabel>
-              <Select onValueChange={(value) => field.onChange(value === "__none__" ? "" : value)} defaultValue={field.value || "__none__"}>
+              <Select 
+                onValueChange={(value) => field.onChange(value === "__none__" ? "" : value)} 
+                value={field.value || "__none__"}
+              >
                 <FormControl><SelectTrigger><SelectValue placeholder="Select entity (optional)" /></SelectTrigger></FormControl>
                 <SelectContent>
                   <SelectItem value="__none__">No entity</SelectItem>
@@ -94,7 +168,7 @@ const ContractForm = ({ contract, onSubmit, onCancel, isLoading }: ContractFormP
           <FormField control={form.control} name="type" render={({ field }) => (
             <FormItem>
               <FormLabel>Contract Type *</FormLabel>
-              <Select onValueChange={field.onChange} defaultValue={field.value}>
+              <Select onValueChange={field.onChange} value={field.value}>
                 <FormControl><SelectTrigger><SelectValue placeholder="Select type" /></SelectTrigger></FormControl>
                 <SelectContent>
                   <SelectItem value="General">General</SelectItem>
@@ -113,7 +187,7 @@ const ContractForm = ({ contract, onSubmit, onCancel, isLoading }: ContractFormP
           <FormField control={form.control} name="status" render={({ field }) => (
             <FormItem>
               <FormLabel>Status *</FormLabel>
-              <Select onValueChange={field.onChange} defaultValue={field.value}>
+              <Select onValueChange={field.onChange} value={field.value}>
                 <FormControl><SelectTrigger><SelectValue placeholder="Select status" /></SelectTrigger></FormControl>
                 <SelectContent>
                   <SelectItem value="active">Active</SelectItem>
@@ -158,7 +232,12 @@ const ContractForm = ({ contract, onSubmit, onCancel, isLoading }: ContractFormP
           )} />
         </div>
 
-        {/* File Upload Section */}
+        {/* AI Summary Display */}
+        {aiSummary && (
+          <ContractSummary summary={aiSummary} generatedAt={summaryGeneratedAt} />
+        )}
+
+        {/* File Upload Section - For existing contracts */}
         {contract?.id && (
           <div className="space-y-4 pt-2 border-t border-border">
             <h4 className="text-sm font-medium text-foreground">Contract Document</h4>
@@ -169,14 +248,7 @@ const ContractForm = ({ contract, onSubmit, onCancel, isLoading }: ContractFormP
               onUploadComplete={handleFileUpload}
               onSummaryGenerated={handleSummaryGenerated}
             />
-            <ContractSummary summary={aiSummary} generatedAt={summaryGeneratedAt} />
           </div>
-        )}
-
-        {!contract?.id && (
-          <p className="text-xs text-muted-foreground italic">
-            Save the contract first to upload a PDF and generate an AI summary.
-          </p>
         )}
 
         <div className="flex justify-end gap-3 pt-4">
