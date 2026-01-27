@@ -362,7 +362,7 @@ const BulkDocumentUpload = ({
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden flex flex-col bg-background">
+      <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden flex flex-col bg-background" aria-describedby={undefined}>
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Sparkles className="w-5 h-5 text-primary" />
