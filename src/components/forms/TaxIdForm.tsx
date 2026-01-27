@@ -34,11 +34,29 @@ const TAX_ID_FORMATS: Record<string, { placeholder: string; hint?: string }> = {
   BSN: { placeholder: "XXXXXXXXX", hint: "9-digit number" },
   CRN: { placeholder: "XXXXXXXX", hint: "Company Registration Number" },
   TIN: { placeholder: "Enter tax ID number", hint: "Tax Identification Number" },
-  // Canada
+  // Canada - Federal & General
   GST_CA: { placeholder: "XXXXXXXXX RT XXXX", hint: "BN + RT + 4 digits" },
   PST: { placeholder: "PST-XXXX-XXXX", hint: "Format varies by province" },
   QST: { placeholder: "XXXXXXXXXX TQ XXXX", hint: "10-digit QST number" },
   NEQ: { placeholder: "XXXXXXXXXX", hint: "10-digit Quebec enterprise number" },
+  FED_CORP: { placeholder: "XXXXXXX", hint: "Federal corporation number" },
+  // Canada - Provincial Corporation Numbers
+  ON_CORP: { placeholder: "XXXXXXX", hint: "7-digit Ontario corporation number" },
+  BC_CORP: { placeholder: "BC XXXXXXX", hint: "BC + 7-digit number" },
+  AB_CORP: { placeholder: "XXXXXXXXX", hint: "9-digit Corporate Access Number" },
+  MB_CORP: { placeholder: "XXXXXXX", hint: "Manitoba business number" },
+  SK_CORP: { placeholder: "XXXXXXX", hint: "Saskatchewan corporation number" },
+  NS_CORP: { placeholder: "XXXXXXX", hint: "Nova Scotia registry ID" },
+  NB_CORP: { placeholder: "XXXXXX", hint: "New Brunswick corporation number" },
+  PE_CORP: { placeholder: "XXXXXX", hint: "PEI corporation number" },
+  NL_CORP: { placeholder: "XXXXXXX", hint: "Newfoundland corporation number" },
+  NT_BL: { placeholder: "XXXXXX", hint: "NWT business licence number" },
+  YT_CORP: { placeholder: "XXXXXXX", hint: "Yukon corporation number" },
+  NU_BL: { placeholder: "XXXXXX", hint: "Nunavut business licence number" },
+  // Canada - Provincial Sales Tax
+  RST_MB: { placeholder: "XXXXXXX", hint: "Manitoba RST number" },
+  PST_SK: { placeholder: "XXXXXXX", hint: "Saskatchewan PST vendor licence" },
+  PST_BC: { placeholder: "PST-XXXX-XXXX", hint: "BC PST registration number" },
   // Bulgaria
   EGN: { placeholder: "XXXXXXXXXX", hint: "10-digit personal ID" },
   BG_VAT: { placeholder: "BG XXXXXXXXX", hint: "BG + EIK number" },
@@ -106,7 +124,7 @@ const TaxIdForm = ({ taxId, defaultEntityId, onSubmit, onCancel, isLoading }: Ta
     
     const countryPatterns: Record<string, RegExp> = {
       'United States': /\(US\)|\(USA\)/i,
-      'Canada': /\(Canada\)/i,
+      'Canada': /\(Canada\)|\(Ontario\)|\(British Columbia\)|\(Alberta\)|\(Manitoba\)|\(Saskatchewan\)|\(Nova Scotia\)|\(New Brunswick\)|\(Prince Edward Island\)|\(Newfoundland\)|\(Northwest Territories\)|\(Yukon\)|\(Nunavut\)|\(Quebec\)|\(Canada Federal\)/i,
       'United Kingdom': /\(UK\)/i,
       'France': /\(France\)/i,
       'Netherlands': /\(Netherlands\)/i,
