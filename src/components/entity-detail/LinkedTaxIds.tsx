@@ -28,7 +28,8 @@ const LinkedTaxIds = ({ taxIds, entityId }: LinkedTaxIdsProps) => {
   const handleSubmit = (data: TaxIdFormData) => {
     const payload = {
       ...data,
-      authority: data.authority || null,
+      entity_id: data.entity_id || null,
+      authority: data.authority || "",
       issued_date: data.issued_date || null,
       expiry_date: data.expiry_date || null,
       notes: data.notes || null,
