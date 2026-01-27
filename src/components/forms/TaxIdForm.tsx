@@ -38,6 +38,7 @@ const TAX_ID_FORMATS: Record<string, { placeholder: string; hint?: string }> = {
   GST_CA: { placeholder: "XXXXXXXXX RT XXXX", hint: "BN + RT + 4 digits" },
   PST: { placeholder: "PST-XXXX-XXXX", hint: "Format varies by province" },
   QST: { placeholder: "XXXXXXXXXX TQ XXXX", hint: "10-digit QST number" },
+  NEQ: { placeholder: "XXXXXXXXXX", hint: "10-digit Quebec enterprise number" },
   // Bulgaria
   EGN: { placeholder: "XXXXXXXXXX", hint: "10-digit personal ID" },
   BG_VAT: { placeholder: "BG XXXXXXXXX", hint: "BG + EIK number" },
