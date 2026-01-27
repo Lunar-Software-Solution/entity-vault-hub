@@ -177,6 +177,7 @@ const ContractForm = ({ contract, onSubmit, onCancel, isLoading }: ContractFormP
                   <SelectItem value="Employment">Employment</SelectItem>
                   <SelectItem value="NDA">NDA</SelectItem>
                   <SelectItem value="Partnership">Partnership</SelectItem>
+                  <SelectItem value="Power of Attorney">Power of Attorney</SelectItem>
                   <SelectItem value="Vendor">Vendor</SelectItem>
                 </SelectContent>
               </Select>
