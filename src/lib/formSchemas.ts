@@ -136,7 +136,6 @@ export const taxIdSchema = z.object({
   tax_id_number: z.string().trim().min(1, "Tax ID number is required").max(50),
   type: z.string().trim().min(1, "Type is required").max(50),
   authority: z.string().trim().max(100).optional().or(z.literal("")),
-  country: z.string().trim().min(1, "Country is required").max(100),
   issued_date: z.string().optional().or(z.literal("")),
   expiry_date: z.string().optional().or(z.literal("")),
   notes: z.string().trim().max(500).optional().or(z.literal("")),
@@ -280,8 +279,7 @@ export type TaxIdFormData = {
   entity_id?: string;
   tax_id_number: string;
   type: string;
-  authority: string;
-  country: string;
+  authority?: string;
   issued_date?: string;
   expiry_date?: string;
   notes?: string;

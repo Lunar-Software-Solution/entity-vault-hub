@@ -28,6 +28,7 @@ const LinkedTaxIds = ({ taxIds, entityId }: LinkedTaxIdsProps) => {
   const handleSubmit = (data: TaxIdFormData) => {
     const payload = {
       ...data,
+      authority: data.authority || null,
       issued_date: data.issued_date || null,
       expiry_date: data.expiry_date || null,
       notes: data.notes || null,
@@ -94,10 +95,12 @@ const LinkedTaxIds = ({ taxIds, entityId }: LinkedTaxIdsProps) => {
                     )}
                   </div>
                   <p className="text-sm font-mono text-foreground">{taxId.tax_id_number}</p>
-                  <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                    <Globe className="w-3 h-3" />
-                    <span>{taxId.country} — {taxId.authority}</span>
-                  </div>
+                  {taxId.authority && (
+                    <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                      <Globe className="w-3 h-3" />
+                      <span>{taxId.authority}</span>
+                    </div>
+                  )}
                   {taxId.issued_date && (
                     <div className="flex items-center gap-1 text-xs text-muted-foreground">
                       <Calendar className="w-3 h-3" />

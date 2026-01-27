@@ -104,7 +104,6 @@ const TaxIdForm = ({ taxId, defaultEntityId, onSubmit, onCancel, isLoading }: Ta
       tax_id_number: taxId?.tax_id_number ?? "",
       type: taxId?.type ?? "",
       authority: taxId?.authority ?? "",
-      country: taxId?.country ?? "United States",
       issued_date: taxId?.issued_date ?? "",
       expiry_date: taxId?.expiry_date ?? "",
       notes: taxId?.notes ?? "",
@@ -228,27 +227,6 @@ const TaxIdForm = ({ taxId, defaultEntityId, onSubmit, onCancel, isLoading }: Ta
             {formatInfo.hint && (
               <p className="text-xs text-muted-foreground">{formatInfo.hint}</p>
             )}
-            <FormMessage />
-          </FormItem>
-        )} />
-
-        <FormField control={form.control} name="country" render={({ field }) => (
-          <FormItem>
-            <FormLabel>Country *</FormLabel>
-            <Select onValueChange={field.onChange} defaultValue={field.value}>
-              <FormControl>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select country" />
-                </SelectTrigger>
-              </FormControl>
-              <SelectContent>
-                {commonCountries.map((country) => (
-                  <SelectItem key={country} value={country}>
-                    {country}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
             <FormMessage />
           </FormItem>
         )} />
