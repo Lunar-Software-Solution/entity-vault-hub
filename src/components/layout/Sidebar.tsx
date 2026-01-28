@@ -148,10 +148,19 @@ const Sidebar = ({
     e.preventDefault();
     e.stopPropagation();
     try {
+      // Clear any 2FA session data
+      sessionStorage.removeItem("needs2FA");
+      sessionStorage.removeItem("pending2FAUser");
+      sessionStorage.removeItem("pendingAccessToken");
+      sessionStorage.removeItem("pending2FAPassword");
+      
       await signOut();
-      window.location.href = "/auth";
+      // Force navigation to auth page
+      window.location.replace("/auth");
     } catch (error) {
       console.error("Logout error:", error);
+      // Force navigation even on error
+      window.location.replace("/auth");
     }
   };
   const userEmail = user?.email || "user@example.com";
