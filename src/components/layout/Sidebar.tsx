@@ -144,8 +144,15 @@ const Sidebar = ({
   } = useAuth();
   const [openGroups, setOpenGroups] = useState<string[]>(["main"]);
   const [profileOpen, setProfileOpen] = useState(false);
-  const handleLogout = async () => {
-    await signOut();
+  const handleLogout = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    try {
+      await signOut();
+      window.location.href = "/auth";
+    } catch (error) {
+      console.error("Logout error:", error);
+    }
   };
   const userEmail = user?.email || "user@example.com";
   const userInitials = userEmail.split("@")[0].slice(0, 2).toUpperCase();
