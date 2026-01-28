@@ -44,6 +44,12 @@ const AIChatAssistant = () => {
     setIsLoading(true);
 
     try {
+      // Check if user is authenticated before making the request
+      const { data: sessionData } = await supabase.auth.getSession();
+      if (!sessionData.session) {
+        throw new Error("Please log in to use the AI assistant");
+      }
+
       const chatHistory = [...messages, { role: "user", content: userMessage }].map(m => ({
         role: m.role,
         content: m.content,
@@ -54,7 +60,8 @@ const AIChatAssistant = () => {
       });
 
       if (error) {
-        throw error;
+        console.error("Function invoke error:", error);
+        throw new Error(error.message || "Failed to call AI assistant");
       }
 
       if (data?.error) {
