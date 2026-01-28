@@ -172,13 +172,16 @@ const ContractForm = ({ contract, onSubmit, onCancel, isLoading }: ContractFormP
                 <FormControl><SelectTrigger><SelectValue placeholder="Select type" /></SelectTrigger></FormControl>
                 <SelectContent>
                   <SelectItem value="General">General</SelectItem>
-                  <SelectItem value="Lease">Lease</SelectItem>
-                  <SelectItem value="Service">Service</SelectItem>
+                  <SelectItem value="Advisor Agreement">Advisor Agreement</SelectItem>
+                  <SelectItem value="Convertible Note">Convertible Note</SelectItem>
                   <SelectItem value="Employment">Employment</SelectItem>
+                  <SelectItem value="Lease">Lease</SelectItem>
                   <SelectItem value="NDA">NDA</SelectItem>
                   <SelectItem value="Partnership">Partnership</SelectItem>
                   <SelectItem value="Power of Attorney">Power of Attorney</SelectItem>
+                  <SelectItem value="Service">Service</SelectItem>
                   <SelectItem value="Vendor">Vendor</SelectItem>
+                  <SelectItem value="Written Consent">Written Consent</SelectItem>
                 </SelectContent>
               </Select>
               <FormMessage />
