@@ -1,128 +1,130 @@
 
+# Multi-Entity Support for Phone Numbers and Email Addresses
 
-## Add All Missing Canadian Provincial Tax ID Types
+## Summary
 
-### Overview
-Add comprehensive Canadian provincial and territorial tax ID types to support businesses registered across all Canadian jurisdictions. This includes provincial corporation/business registry numbers, provincial sales tax accounts, and other mandatory identifiers.
-
----
-
-### Tax ID Types to Add
-
-#### Provincial Corporation/Business Registry Numbers
-
-| Code | Label | Description |
-|------|-------|-------------|
-| ON_CORP | Ontario Corporation Number (Ontario) | 7-digit number assigned by Ontario Business Registry to incorporated businesses in Ontario. |
-| BC_CORP | BC Incorporation Number (British Columbia) | Alphanumeric identifier (e.g., BC1234567) assigned by BC Registry Services to incorporated businesses. |
-| AB_CORP | Corporate Access Number (Alberta) | 9-digit number assigned by Alberta Corporate Registry to registered businesses. |
-| MB_CORP | Manitoba Business Number (Manitoba) | Registration number assigned by Companies Office of Manitoba to incorporated businesses. |
-| SK_CORP | Saskatchewan Corporation Number (Saskatchewan) | Registration number assigned by ISC Corporate Registry to Saskatchewan corporations. |
-| NS_CORP | Nova Scotia Registry ID (Nova Scotia) | Registration number assigned by NS Registry of Joint Stock Companies. |
-| NB_CORP | New Brunswick Corporation Number (New Brunswick) | Registration number assigned by Service New Brunswick Corporate Registry. |
-| PE_CORP | PEI Corporation Number (Prince Edward Island) | Registration number assigned by PEI Corporate/Business Names Registry. |
-| NL_CORP | Newfoundland Corporation Number (Newfoundland & Labrador) | Registration number assigned by NL Companies & Deeds Registry. |
-| NT_BL | NWT Business Licence (Northwest Territories) | Business licence number issued by GNWT to businesses operating in NWT. |
-| YT_CORP | Yukon Corporation Number (Yukon) | Registration number assigned by Yukon Corporate Affairs. |
-| NU_BL | Nunavut Business Licence (Nunavut) | Business licence number issued by Nunavut Legal Registries. |
-| FED_CORP | Federal Corporation Number (Canada Federal) | Corporation number assigned by Corporations Canada to federally incorporated businesses. |
-
-#### Provincial Sales Tax Accounts
-
-| Code | Label | Description |
-|------|-------|-------------|
-| RST_MB | Retail Sales Tax Number (Manitoba) | Registration number for collecting and remitting Manitoba's 7% Retail Sales Tax. |
-| PST_SK | PST Vendor Licence (Saskatchewan) | Licence number for collecting and remitting Saskatchewan's 6% Provincial Sales Tax. |
-| PST_BC | BC PST Number (British Columbia) | Registration number for collecting and remitting BC's 7% Provincial Sales Tax. |
+The database migration was completed successfully, creating the `phone_number_entity_links` and `email_entity_links` junction tables. However, the code implementation to use these tables is still needed. This plan covers creating the UI components and updating existing forms to enable many-to-many relationships between phone numbers/emails and entities.
 
 ---
 
-### Implementation Steps
+## Implementation Steps
 
-#### Step 1: Database Insert
-Insert the new tax ID types into the `tax_id_types` table:
+### Step 1: Create Phone Number Entity Affiliations Manager
 
-```sql
-INSERT INTO tax_id_types (code, label, description) VALUES
--- Federal
-('FED_CORP', 'Federal Corporation Number (Canada Federal)', 
- 'Corporation number assigned by Corporations Canada to federally incorporated businesses.'),
+Create a new component `PhoneNumberEntityAffiliationsManager.tsx` that allows users to link a phone number to multiple entities with specific roles (e.g., 'main', 'billing', 'support').
 
--- Provincial Corporation Numbers
-('ON_CORP', 'Ontario Corporation Number (Ontario)', 
- '7-digit number assigned by Ontario Business Registry to incorporated businesses in Ontario.'),
-('BC_CORP', 'BC Incorporation Number (British Columbia)', 
- 'Alphanumeric identifier (e.g., BC1234567) assigned by BC Registry Services to incorporated businesses.'),
-('AB_CORP', 'Corporate Access Number (Alberta)', 
- '9-digit number assigned by Alberta Corporate Registry to registered businesses.'),
-('MB_CORP', 'Manitoba Business Number (Manitoba)', 
- 'Registration number assigned by Companies Office of Manitoba to incorporated businesses.'),
-('SK_CORP', 'Saskatchewan Corporation Number (Saskatchewan)', 
- 'Registration number assigned by ISC Corporate Registry to Saskatchewan corporations.'),
-('NS_CORP', 'Nova Scotia Registry ID (Nova Scotia)', 
- 'Registration number assigned by NS Registry of Joint Stock Companies.'),
-('NB_CORP', 'New Brunswick Corporation Number (New Brunswick)', 
- 'Registration number assigned by Service New Brunswick Corporate Registry.'),
-('PE_CORP', 'PEI Corporation Number (Prince Edward Island)', 
- 'Registration number assigned by PEI Corporate/Business Names Registry.'),
-('NL_CORP', 'Newfoundland Corporation Number (Newfoundland & Labrador)', 
- 'Registration number assigned by NL Companies & Deeds Registry.'),
-('NT_BL', 'NWT Business Licence (Northwest Territories)', 
- 'Business licence number issued by GNWT to businesses operating in NWT.'),
-('YT_CORP', 'Yukon Corporation Number (Yukon)', 
- 'Registration number assigned by Yukon Corporate Affairs.'),
-('NU_BL', 'Nunavut Business Licence (Nunavut)', 
- 'Business licence number issued by Nunavut Legal Registries.'),
-
--- Provincial Sales Tax Accounts
-('RST_MB', 'Retail Sales Tax Number (Manitoba)', 
- 'Registration number for collecting and remitting Manitoba''s 7% Retail Sales Tax.'),
-('PST_SK', 'PST Vendor Licence (Saskatchewan)', 
- 'Licence number for collecting and remitting Saskatchewan''s 6% Provincial Sales Tax.'),
-('PST_BC', 'BC PST Number (British Columbia)', 
- 'Registration number for collecting and remitting BC''s 7% Provincial Sales Tax.');
-```
-
-#### Step 2: Add Format Hints to TaxIdForm.tsx
-Update the `TAX_ID_FORMATS` constant with placeholders and hints:
-
-```typescript
-// Canada - Federal
-FED_CORP: { placeholder: "XXXXXXX", hint: "Federal corporation number" },
-
-// Canada - Provincial Corporation Numbers
-ON_CORP: { placeholder: "XXXXXXX", hint: "7-digit Ontario corporation number" },
-BC_CORP: { placeholder: "BC XXXXXXX", hint: "BC + 7-digit number" },
-AB_CORP: { placeholder: "XXXXXXXXX", hint: "9-digit Corporate Access Number" },
-MB_CORP: { placeholder: "XXXXXXX", hint: "Manitoba business number" },
-SK_CORP: { placeholder: "XXXXXXX", hint: "Saskatchewan corporation number" },
-NS_CORP: { placeholder: "XXXXXXX", hint: "Nova Scotia registry ID" },
-NB_CORP: { placeholder: "XXXXXX", hint: "New Brunswick corporation number" },
-PE_CORP: { placeholder: "XXXXXX", hint: "PEI corporation number" },
-NL_CORP: { placeholder: "XXXXXXX", hint: "Newfoundland corporation number" },
-NT_BL: { placeholder: "XXXXXX", hint: "NWT business licence number" },
-YT_CORP: { placeholder: "XXXXXXX", hint: "Yukon corporation number" },
-NU_BL: { placeholder: "XXXXXX", hint: "Nunavut business licence number" },
-
-// Canada - Provincial Sales Tax
-RST_MB: { placeholder: "XXXXXXX", hint: "Manitoba RST number" },
-PST_SK: { placeholder: "XXXXXXX", hint: "Saskatchewan PST vendor licence" },
-PST_BC: { placeholder: "PST-XXXX-XXXX", hint: "BC PST registration number" },
-```
-
-#### Step 3: Update Country Pattern Matching
-Update the `countryPatterns` in TaxIdForm.tsx to properly group all Canadian types:
-
-```typescript
-'Canada': /\(Canada\)|\(Ontario\)|\(British Columbia\)|\(Alberta\)|\(Manitoba\)|\(Saskatchewan\)|\(Nova Scotia\)|\(New Brunswick\)|\(Prince Edward Island\)|\(Newfoundland\)|\(Northwest Territories\)|\(Yukon\)|\(Nunavut\)|\(Quebec\)|\(Canada Federal\)/i,
-```
+**Key Features:**
+- Display existing entity affiliations for a phone number
+- Add new affiliations with role selection
+- Mark one affiliation as primary
+- Remove affiliations
+- Follows the same pattern as `AddressEntityAffiliationsManager`
 
 ---
 
-### Result
-After implementation:
-- 16 new Canadian tax ID types will be added to the database
-- All types will appear in the Tax ID Type dropdown grouped under **Canada**
-- Each type will have appropriate placeholder text and format hints
-- Covers all 13 provinces/territories plus federal corporation numbers
+### Step 2: Create Email Entity Affiliations Manager
 
+Create a new component `EmailEntityAffiliationsManager.tsx` following the same pattern for email addresses.
+
+**Key Features:**
+- Display existing entity affiliations for an email
+- Add new affiliations with role selection (e.g., 'general', 'billing', 'support', 'notifications')
+- Mark one affiliation as primary
+- Remove affiliations
+
+---
+
+### Step 3: Update Phone Number Form
+
+Modify `PhoneNumberForm.tsx` to:
+- Include the `PhoneNumberEntityAffiliationsManager` component when editing an existing phone number
+- Add a "Linked Entities" section below the main form fields
+- This allows managing complex multi-entity relationships after the phone number is created
+
+---
+
+### Step 4: Update Linked Phone Numbers Component
+
+Modify `LinkedPhoneNumbers.tsx` to:
+- Query both the legacy `entity_id` column AND the new `phone_number_entity_links` junction table
+- Merge results to show all phone numbers linked to an entity
+- Display role and link indicator for junction-table relationships
+- Maintain backward compatibility with existing data
+
+---
+
+### Step 5: Create Linked Email Addresses Component
+
+Create a new `LinkedEmailAddresses.tsx` component for the Entity Detail page that:
+- Shows emails linked via the legacy `entity_id` column
+- Also queries `email_entity_links` junction table for additional affiliations
+- Displays inline add/edit/delete functionality
+- Shows role badges for affiliated emails
+
+---
+
+### Step 6: Update Email Section Form
+
+Modify `EmailSection.tsx` to:
+- Include the `EmailEntityAffiliationsManager` when editing existing emails
+- Allow managing multi-entity affiliations after the email is created
+
+---
+
+### Step 7: Update Entity Detail Page
+
+Modify `EntityDetail.tsx` to:
+- Import and use the new `LinkedEmailAddresses` component
+- Pass `entityId` to `LinkedPhoneNumbers` for junction table queries
+- Add the email addresses section to the entity detail view
+
+---
+
+## Technical Details
+
+### Junction Table Queries
+
+Both components will use queries like:
+
+```text
+supabase
+  .from("phone_number_entity_links")
+  .select(`
+    id,
+    phone_number_id,
+    is_primary,
+    role,
+    phone_number:phone_numbers(*)
+  `)
+  .eq("entity_id", entityId)
+```
+
+### Role Options
+
+**Phone Numbers:**
+- main, billing, support, sales, fax, mobile, office, other
+
+**Email Addresses:**
+- general, billing, support, notifications, marketing, legal, hr, other
+
+### Files to Create
+
+1. `src/components/forms/PhoneNumberEntityAffiliationsManager.tsx`
+2. `src/components/forms/EmailEntityAffiliationsManager.tsx`
+3. `src/components/entity-detail/LinkedEmailAddresses.tsx`
+
+### Files to Modify
+
+1. `src/components/forms/PhoneNumberForm.tsx` - Add affiliations manager
+2. `src/components/entity-detail/LinkedPhoneNumbers.tsx` - Query junction table
+3. `src/components/sections/EmailSection.tsx` - Add affiliations manager to form
+4. `src/pages/EntityDetail.tsx` - Add email section, pass entityId to phone section
+
+---
+
+## Backward Compatibility
+
+The implementation maintains backward compatibility:
+- Existing records with `entity_id` continue to work
+- Junction table adds additional affiliations
+- UI merges both data sources seamlessly
