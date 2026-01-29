@@ -289,7 +289,7 @@ const CloudflareWebsiteImporter = ({ open, onOpenChange }: CloudflareWebsiteImpo
                     return (
                       <div
                         key={record.name}
-                        className={`grid grid-cols-[auto_1fr_60px_120px_120px_150px] items-center gap-3 p-2 rounded-md hover:bg-muted/50 ${
+                        className={`relative grid grid-cols-[auto_1fr_60px_120px_120px_150px] items-center gap-3 p-2 rounded-md hover:bg-muted/50 ${
                           record.isDuplicate ? "opacity-50" : ""
                         }`}
                       >
@@ -347,7 +347,7 @@ const CloudflareWebsiteImporter = ({ open, onOpenChange }: CloudflareWebsiteImpo
                               </SelectContent>
                             </Select>
                             <Input
-                              className="h-7 text-xs"
+                              className="h-7 text-xs w-[150px] focus:absolute focus:right-2 focus:w-[300px] focus:z-10 transition-all duration-200"
                               placeholder="Notes..."
                               value={config.notes}
                               onChange={(e) => updateRecordConfig(record.name, "notes", e.target.value)}
