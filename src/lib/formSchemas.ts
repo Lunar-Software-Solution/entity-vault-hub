@@ -392,7 +392,6 @@ export const entityWebsiteSchema = z.object({
   platform: z.string().trim().max(100, "Platform must be 100 characters or less").optional().or(z.literal("")),
   is_primary: z.boolean().default(false),
   is_active: z.boolean().default(true),
-  ssl_expiry_date: z.string().optional().or(z.literal("")),
   domain_expiry_date: z.string().optional().or(z.literal("")),
   notes: z.string().trim().max(1000, "Notes must be 1000 characters or less").optional().or(z.literal("")),
 });

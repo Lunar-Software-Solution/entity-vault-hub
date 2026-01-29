@@ -117,9 +117,78 @@ serve(async (req) => {
       );
     }
 
-    const zoneId = zonesData.result[0].id;
-    const zoneName = zonesData.result[0].name;
+    const zone = zonesData.result[0];
+    const zoneId = zone.id;
+    const zoneName = zone.name;
+    
+    // Extract domain expiry from zone data if available (registrar info)
+    let domainExpiryDate: string | null = null;
+    
     console.log(`Found zone ID: ${zoneId} for ${zoneName}`);
+
+    // Try to get registrar/domain expiry info
+    try {
+      const registrarResponse = await fetch(
+        `https://api.cloudflare.com/client/v4/zones/${zoneId}`,
+        {
+          headers: {
+            'Authorization': `Bearer ${cloudflareApiToken}`,
+            'Content-Type': 'application/json',
+          },
+        }
+      );
+      
+      const registrarData = await registrarResponse.json();
+      if (registrarData.success && registrarData.result) {
+        // Check for domain expiry in various possible fields
+        const result = registrarData.result;
+        if (result.meta?.registry_expiry) {
+          domainExpiryDate = result.meta.registry_expiry.split('T')[0];
+        }
+      }
+    } catch (regError) {
+      console.log('Could not fetch registrar info:', regError);
+    }
+
+    // Also try the registrar domains endpoint if domain is registered through Cloudflare
+    if (!domainExpiryDate) {
+      try {
+        // Get account ID first
+        const accountsResponse = await fetch(
+          'https://api.cloudflare.com/client/v4/accounts?page=1&per_page=1',
+          {
+            headers: {
+              'Authorization': `Bearer ${cloudflareApiToken}`,
+              'Content-Type': 'application/json',
+            },
+          }
+        );
+        
+        const accountsData = await accountsResponse.json();
+        if (accountsData.success && accountsData.result?.[0]?.id) {
+          const accountId = accountsData.result[0].id;
+          
+          // Try to get domain registration info
+          const domainsResponse = await fetch(
+            `https://api.cloudflare.com/client/v4/accounts/${accountId}/registrar/domains/${rootDomain}`,
+            {
+              headers: {
+                'Authorization': `Bearer ${cloudflareApiToken}`,
+                'Content-Type': 'application/json',
+              },
+            }
+          );
+          
+          const domainsData = await domainsResponse.json();
+          if (domainsData.success && domainsData.result?.expires_at) {
+            domainExpiryDate = domainsData.result.expires_at.split('T')[0];
+            console.log(`Found domain expiry: ${domainExpiryDate}`);
+          }
+        }
+      } catch (domainError) {
+        console.log('Could not fetch domain registration info:', domainError);
+      }
+    }
 
     // Fetch A and CNAME records for the zone
     const dnsResponse = await fetch(
@@ -157,6 +226,7 @@ serve(async (req) => {
       JSON.stringify({ 
         success: true,
         domain: zoneName,
+        domain_expiry_date: domainExpiryDate,
         records 
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
