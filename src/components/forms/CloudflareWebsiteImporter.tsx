@@ -273,7 +273,7 @@ const CloudflareWebsiteImporter = ({ open, onOpenChange }: CloudflareWebsiteImpo
                 </Select>
               </div>
 
-              <ScrollArea className="flex-1 min-h-0 h-[350px] border rounded-lg">
+              <div className="flex-1 min-h-0 h-[350px] border rounded-lg overflow-y-auto">
                 <div className="p-2 space-y-1">
                   {recordsWithStatus.map((record) => {
                     const config = getRecordConfig(record.name);
@@ -350,7 +350,7 @@ const CloudflareWebsiteImporter = ({ open, onOpenChange }: CloudflareWebsiteImpo
                     );
                   })}
                 </div>
-              </ScrollArea>
+              </div>
             </>
           )}
         </div>
