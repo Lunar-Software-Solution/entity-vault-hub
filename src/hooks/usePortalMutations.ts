@@ -1298,3 +1298,24 @@ export const useBulkUpdateTaskStatus = () => {
     onError: (error) => toast.error(`Failed to update tasks: ${error.message}`),
   });
 };
+
+// Bulk create entity websites (for Cloudflare import)
+export const useBulkCreateEntityWebsites = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (websites: TablesInsert<"entity_websites">[]) => {
+      const { data, error } = await supabase
+        .from("entity_websites")
+        .insert(websites)
+        .select();
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ["entity_websites"] });
+      queryClient.invalidateQueries({ queryKey: ["website-entity-links-all"] });
+      toast.success(`${data.length} website${data.length !== 1 ? "s" : ""} imported successfully`);
+    },
+    onError: (error) => toast.error(`Failed to import websites: ${error.message}`),
+  });
+};
