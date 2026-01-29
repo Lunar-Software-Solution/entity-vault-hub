@@ -461,6 +461,54 @@ export type Database = {
           },
         ]
       }
+      contract_entity_links: {
+        Row: {
+          contract_id: string
+          created_at: string
+          entity_id: string
+          id: string
+          is_primary: boolean | null
+          notes: string | null
+          role: string | null
+          updated_at: string
+        }
+        Insert: {
+          contract_id: string
+          created_at?: string
+          entity_id: string
+          id?: string
+          is_primary?: boolean | null
+          notes?: string | null
+          role?: string | null
+          updated_at?: string
+        }
+        Update: {
+          contract_id?: string
+          created_at?: string
+          entity_id?: string
+          id?: string
+          is_primary?: boolean | null
+          notes?: string | null
+          role?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "contract_entity_links_contract_id_fkey"
+            columns: ["contract_id"]
+            isOneToOne: false
+            referencedRelation: "contracts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contract_entity_links_entity_id_fkey"
+            columns: ["entity_id"]
+            isOneToOne: false
+            referencedRelation: "entities"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       contracts: {
         Row: {
           ai_summary: string | null

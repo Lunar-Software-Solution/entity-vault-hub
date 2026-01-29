@@ -6,8 +6,7 @@ import {
   useEntities, 
   useBankAccounts, 
   useCreditCards, 
-  useAddresses, 
-  useContracts,
+  useAddresses,
   usePhoneNumbers,
   useTaxIds,
   useAccountantFirms,
@@ -98,6 +97,56 @@ const useDirectorsUbosForEntity = (entityId: string) => {
   });
 };
 
+// Fetch contracts linked to this entity via junction table
+const useContractsForEntity = (entityId: string) => {
+  return useQuery({
+    queryKey: ["contracts-for-entity", entityId],
+    queryFn: async () => {
+      // Get contract IDs from the links table
+      const { data: links, error: linksError } = await supabase
+        .from("contract_entity_links")
+        .select("contract_id")
+        .eq("entity_id", entityId);
+      
+      if (linksError) throw linksError;
+      
+      const contractIds = links?.map(l => l.contract_id) || [];
+      
+      // Also get contracts with legacy entity_id
+      const { data: legacyContracts, error: legacyError } = await supabase
+        .from("contracts")
+        .select("*")
+        .eq("entity_id", entityId);
+      
+      if (legacyError) throw legacyError;
+      
+      // If no linked contracts, just return legacy
+      if (contractIds.length === 0) {
+        return legacyContracts || [];
+      }
+      
+      // Get contracts from links
+      const { data: linkedContracts, error: linkedError } = await supabase
+        .from("contracts")
+        .select("*")
+        .in("id", contractIds);
+      
+      if (linkedError) throw linkedError;
+      
+      // Merge and dedupe
+      const allContracts = [...(legacyContracts || [])];
+      linkedContracts?.forEach(c => {
+        if (!allContracts.some(ac => ac.id === c.id)) {
+          allContracts.push(c);
+        }
+      });
+      
+      return allContracts;
+    },
+    enabled: !!entityId,
+  });
+};
+
 const EntityDetail = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -111,7 +160,7 @@ const EntityDetail = () => {
   const { data: bankAccounts, isLoading: bankLoading } = useBankAccounts();
   const { data: creditCards, isLoading: cardsLoading } = useCreditCards();
   const { data: addresses, isLoading: addressesLoading } = useAddresses();
-  const { data: contracts, isLoading: contractsLoading } = useContracts();
+  const { data: linkedContracts, isLoading: contractsLoading } = useContractsForEntity(id || "");
   const { data: phoneNumbers, isLoading: phonesLoading } = usePhoneNumbers();
   const { data: taxIds, isLoading: taxIdsLoading } = useTaxIds();
   const { data: accountantFirms, isLoading: accountantsLoading } = useAccountantFirms();
@@ -133,7 +182,6 @@ const EntityDetail = () => {
   const linkedBankAccounts = bankAccounts?.filter(b => b.entity_id === id) ?? [];
   const linkedCreditCards = creditCards?.filter(c => c.entity_id === id) ?? [];
   const linkedAddresses = addresses?.filter(a => a.entity_id === id) ?? [];
-  const linkedContracts = contracts?.filter(c => c.entity_id === id) ?? [];
   const linkedPhoneNumbers = phoneNumbers?.filter(p => p.entity_id === id) ?? [];
   const linkedTaxIds = taxIds?.filter(t => t.entity_id === id) ?? [];
   const linkedAccountantFirms = accountantFirms?.filter(f => f.entity_id === id) ?? [];

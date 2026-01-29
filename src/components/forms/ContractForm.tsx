@@ -11,6 +11,7 @@ import { useEntities } from "@/hooks/usePortalData";
 import AnalyzeContractUpload, { ExtractedContractData } from "@/components/contracts/AnalyzeContractUpload";
 import ContractFileUpload from "@/components/contracts/ContractFileUpload";
 import ContractSummary from "@/components/contracts/ContractSummary";
+import ContractEntityAffiliationsManager from "@/components/forms/ContractEntityAffiliationsManager";
 
 interface ContractFormProps {
   contract?: Contract | null;
@@ -137,10 +138,23 @@ const ContractForm = ({ contract, onSubmit, onCancel, isLoading }: ContractFormP
           </div>
         )}
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {/* Legacy entity_id - hidden, only used for backward compatibility */}
+        <FormField control={form.control} name="entity_id" render={({ field }) => (
+          <input type="hidden" {...field} value={field.value || ""} />
+        )} />
+
+        {/* Multi-Entity Affiliations - Only for existing contracts */}
+        {contract?.id && (
+          <div className="space-y-2 border-b border-border pb-4">
+            <ContractEntityAffiliationsManager contractId={contract.id} />
+          </div>
+        )}
+
+        {/* For new contracts, show single entity selector */}
+        {!contract?.id && (
           <FormField control={form.control} name="entity_id" render={({ field }) => (
-            <FormItem className="md:col-span-2">
-              <FormLabel>Linked Entity</FormLabel>
+            <FormItem className="mb-4">
+              <FormLabel>Initial Entity (can add more after saving)</FormLabel>
               <Select 
                 onValueChange={(value) => field.onChange(value === "__none__" ? "" : value)} 
                 value={field.value || "__none__"}
@@ -156,7 +170,9 @@ const ContractForm = ({ contract, onSubmit, onCancel, isLoading }: ContractFormP
               <FormMessage />
             </FormItem>
           )} />
-          
+        )}
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <FormField control={form.control} name="title" render={({ field }) => (
             <FormItem className="md:col-span-2">
               <FormLabel>Contract Title *</FormLabel>
