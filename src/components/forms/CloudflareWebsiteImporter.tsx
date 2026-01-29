@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { supabase } from "@/integrations/supabase/client";
-import { useEntities, useEntityWebsites } from "@/hooks/usePortalData";
+import { useEntities, useEntityWebsites, useWebsiteTypes, useWebsitePlatforms } from "@/hooks/usePortalData";
 import { useBulkCreateEntityWebsites } from "@/hooks/usePortalMutations";
 import { toast } from "sonner";
 
@@ -18,6 +18,11 @@ interface DnsRecord {
   type: string;
   content: string;
   proxied: boolean;
+}
+
+interface RecordConfig {
+  websiteType: string;
+  platform: string;
 }
 
 interface CloudflareWebsiteImporterProps {
@@ -29,13 +34,17 @@ const CloudflareWebsiteImporter = ({ open, onOpenChange }: CloudflareWebsiteImpo
   const [domain, setDomain] = useState("");
   const [records, setRecords] = useState<DnsRecord[]>([]);
   const [selectedRecords, setSelectedRecords] = useState<Set<string>>(new Set());
+  const [recordConfigs, setRecordConfigs] = useState<Record<string, RecordConfig>>({});
   const [isFetching, setIsFetching] = useState(false);
   const [fetchError, setFetchError] = useState<string | null>(null);
   const [selectedEntityId, setSelectedEntityId] = useState<string>("__none__");
-  const [websiteType, setWebsiteType] = useState<string>("other");
+  const [defaultType, setDefaultType] = useState<string>("other");
+  const [defaultPlatform, setDefaultPlatform] = useState<string>("__none__");
 
   const { data: entities } = useEntities();
   const { data: existingWebsites } = useEntityWebsites();
+  const { data: websiteTypes } = useWebsiteTypes();
+  const { data: websitePlatforms } = useWebsitePlatforms();
   const bulkCreate = useBulkCreateEntityWebsites();
 
   // Filter to only A and CNAME records, exclude wildcards
@@ -74,6 +83,7 @@ const CloudflareWebsiteImporter = ({ open, onOpenChange }: CloudflareWebsiteImpo
     setFetchError(null);
     setRecords([]);
     setSelectedRecords(new Set());
+    setRecordConfigs({});
 
     try {
       const { data, error } = await supabase.functions.invoke("fetch-cloudflare-dns", {
@@ -93,6 +103,20 @@ const CloudflareWebsiteImporter = ({ open, onOpenChange }: CloudflareWebsiteImpo
     } finally {
       setIsFetching(false);
     }
+  };
+
+  const getRecordConfig = (name: string): RecordConfig => {
+    return recordConfigs[name] || { websiteType: defaultType, platform: defaultPlatform };
+  };
+
+  const updateRecordConfig = (name: string, field: keyof RecordConfig, value: string) => {
+    setRecordConfigs((prev) => ({
+      ...prev,
+      [name]: {
+        ...getRecordConfig(name),
+        [field]: value,
+      },
+    }));
   };
 
   const toggleRecord = (name: string) => {
@@ -130,14 +154,18 @@ const CloudflareWebsiteImporter = ({ open, onOpenChange }: CloudflareWebsiteImpo
       return;
     }
 
-    const websites = Array.from(selectedRecords).map((name) => ({
-      url: `https://${name}`,
-      name: generateWebsiteName(name),
-      type: websiteType,
-      entity_id: selectedEntityId === "__none__" ? null : selectedEntityId,
-      is_active: true,
-      is_primary: false,
-    }));
+    const websites = Array.from(selectedRecords).map((name) => {
+      const config = getRecordConfig(name);
+      return {
+        url: `https://${name}`,
+        name: generateWebsiteName(name),
+        type: config.websiteType,
+        platform: config.platform === "__none__" ? null : config.platform,
+        entity_id: selectedEntityId === "__none__" ? null : selectedEntityId,
+        is_active: true,
+        is_primary: false,
+      };
+    });
 
     bulkCreate.mutate(websites, {
       onSuccess: () => {
@@ -151,9 +179,11 @@ const CloudflareWebsiteImporter = ({ open, onOpenChange }: CloudflareWebsiteImpo
     setDomain("");
     setRecords([]);
     setSelectedRecords(new Set());
+    setRecordConfigs({});
     setFetchError(null);
     setSelectedEntityId("__none__");
-    setWebsiteType("other");
+    setDefaultType("other");
+    setDefaultPlatform("__none__");
   };
 
   const handleClose = () => {
@@ -161,19 +191,38 @@ const CloudflareWebsiteImporter = ({ open, onOpenChange }: CloudflareWebsiteImpo
     resetForm();
   };
 
-  const websiteTypes = [
-    { value: "corporate", label: "Corporate" },
-    { value: "ecommerce", label: "E-Commerce" },
-    { value: "landing", label: "Landing Page" },
-    { value: "blog", label: "Blog" },
-    { value: "portal", label: "Portal" },
-    { value: "documentation", label: "Documentation" },
-    { value: "other", label: "Other" },
-  ];
+  // Apply defaults to all records when changed
+  const handleDefaultTypeChange = (value: string) => {
+    setDefaultType(value);
+    // Update all records that haven't been individually configured
+    const updated: Record<string, RecordConfig> = {};
+    availableRecords.forEach((r) => {
+      if (!recordConfigs[r.name]) {
+        updated[r.name] = { websiteType: value, platform: defaultPlatform };
+      }
+    });
+    if (Object.keys(updated).length > 0) {
+      setRecordConfigs((prev) => ({ ...prev, ...updated }));
+    }
+  };
+
+  const handleDefaultPlatformChange = (value: string) => {
+    setDefaultPlatform(value);
+    // Update all records that haven't been individually configured
+    const updated: Record<string, RecordConfig> = {};
+    availableRecords.forEach((r) => {
+      if (!recordConfigs[r.name]) {
+        updated[r.name] = { websiteType: defaultType, platform: value };
+      }
+    });
+    if (Object.keys(updated).length > 0) {
+      setRecordConfigs((prev) => ({ ...prev, ...updated }));
+    }
+  };
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="max-w-2xl max-h-[85vh] flex flex-col">
+      <DialogContent className="max-w-4xl max-h-[90vh] flex flex-col">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Cloud className="h-5 w-5 text-primary" />
@@ -232,48 +281,45 @@ const CloudflareWebsiteImporter = ({ open, onOpenChange }: CloudflareWebsiteImpo
                 )}
               </div>
 
-              <ScrollArea className="flex-1 max-h-[240px] border rounded-lg">
-                <div className="p-2 space-y-1">
-                  {recordsWithStatus.map((record) => (
-                    <div
-                      key={record.name}
-                      className={`flex items-center gap-3 p-2 rounded-md hover:bg-muted/50 ${
-                        record.isDuplicate ? "opacity-50" : ""
-                      }`}
-                    >
-                      <Checkbox
-                        checked={selectedRecords.has(record.name)}
-                        onCheckedChange={() => toggleRecord(record.name)}
-                        disabled={record.isDuplicate}
-                      />
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium truncate">{record.name}</p>
-                        <p className="text-xs text-muted-foreground truncate">{record.content}</p>
-                      </div>
-                      <Badge variant="outline" className="text-xs">
-                        {record.type}
-                      </Badge>
-                      {record.proxied && (
-                        <Badge variant="secondary" className="text-xs">
-                          Proxied
-                        </Badge>
-                      )}
-                      {record.isDuplicate && (
-                        <Badge variant="destructive" className="text-xs">
-                          Exists
-                        </Badge>
-                      )}
-                    </div>
-                  ))}
+              {/* Default options row */}
+              <div className="flex items-center gap-4 p-2 bg-muted/30 rounded-lg">
+                <span className="text-sm font-medium text-muted-foreground">Defaults:</span>
+                <div className="flex items-center gap-2">
+                  <Label className="text-xs text-muted-foreground">Type</Label>
+                  <Select value={defaultType} onValueChange={handleDefaultTypeChange}>
+                    <SelectTrigger className="h-8 w-[130px] text-xs">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {websiteTypes?.map((type) => (
+                        <SelectItem key={type.id} value={type.code}>
+                          {type.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
-              </ScrollArea>
-
-              {/* Options */}
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="cf-entity">Link to Entity (optional)</Label>
+                <div className="flex items-center gap-2">
+                  <Label className="text-xs text-muted-foreground">Platform</Label>
+                  <Select value={defaultPlatform} onValueChange={handleDefaultPlatformChange}>
+                    <SelectTrigger className="h-8 w-[130px] text-xs">
+                      <SelectValue placeholder="None" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="__none__">None</SelectItem>
+                      {websitePlatforms?.map((platform) => (
+                        <SelectItem key={platform.id} value={platform.code}>
+                          {platform.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="flex-1" />
+                <div className="flex items-center gap-2">
+                  <Label className="text-xs text-muted-foreground">Entity</Label>
                   <Select value={selectedEntityId} onValueChange={setSelectedEntityId}>
-                    <SelectTrigger id="cf-entity">
+                    <SelectTrigger className="h-8 w-[150px] text-xs">
                       <SelectValue placeholder="No entity" />
                     </SelectTrigger>
                     <SelectContent>
@@ -286,22 +332,77 @@ const CloudflareWebsiteImporter = ({ open, onOpenChange }: CloudflareWebsiteImpo
                     </SelectContent>
                   </Select>
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="cf-type">Website Type</Label>
-                  <Select value={websiteType} onValueChange={setWebsiteType}>
-                    <SelectTrigger id="cf-type">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {websiteTypes.map((type) => (
-                        <SelectItem key={type.value} value={type.value}>
-                          {type.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
               </div>
+
+              <ScrollArea className="flex-1 min-h-0 h-[350px] border rounded-lg">
+                <div className="p-2 space-y-1">
+                  {recordsWithStatus.map((record) => {
+                    const config = getRecordConfig(record.name);
+                    return (
+                      <div
+                        key={record.name}
+                        className={`flex items-center gap-2 p-2 rounded-md hover:bg-muted/50 ${
+                          record.isDuplicate ? "opacity-50" : ""
+                        }`}
+                      >
+                        <Checkbox
+                          checked={selectedRecords.has(record.name)}
+                          onCheckedChange={() => toggleRecord(record.name)}
+                          disabled={record.isDuplicate}
+                        />
+                        <div className="flex-1 min-w-0 max-w-[200px]">
+                          <p className="text-sm font-medium truncate">{record.name}</p>
+                          <p className="text-xs text-muted-foreground truncate">{record.content}</p>
+                        </div>
+                        <Badge variant="outline" className="text-xs shrink-0">
+                          {record.type}
+                        </Badge>
+                        {record.isDuplicate ? (
+                          <Badge variant="destructive" className="text-xs shrink-0">
+                            Exists
+                          </Badge>
+                        ) : (
+                          <>
+                            <Select
+                              value={config.websiteType}
+                              onValueChange={(v) => updateRecordConfig(record.name, "websiteType", v)}
+                              disabled={record.isDuplicate}
+                            >
+                              <SelectTrigger className="h-7 w-[120px] text-xs">
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {websiteTypes?.map((type) => (
+                                  <SelectItem key={type.id} value={type.code}>
+                                    {type.name}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                            <Select
+                              value={config.platform}
+                              onValueChange={(v) => updateRecordConfig(record.name, "platform", v)}
+                              disabled={record.isDuplicate}
+                            >
+                              <SelectTrigger className="h-7 w-[120px] text-xs">
+                                <SelectValue placeholder="Platform" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="__none__">None</SelectItem>
+                                {websitePlatforms?.map((platform) => (
+                                  <SelectItem key={platform.id} value={platform.code}>
+                                    {platform.name}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              </ScrollArea>
             </>
           )}
         </div>
