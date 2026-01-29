@@ -38,10 +38,12 @@ interface AddressEntityAffiliationsManagerProps {
 const ADDRESS_ROLES = [
   { value: "registered", label: "Registered" },
   { value: "mailing", label: "Mailing" },
-  { value: "physical", label: "Physical" },
   { value: "billing", label: "Billing" },
   { value: "headquarters", label: "Headquarters" },
   { value: "branch", label: "Branch" },
+  { value: "office", label: "Office" },
+  { value: "warehouse", label: "Warehouse" },
+  { value: "3pl", label: "3PL" },
   { value: "other", label: "Other" },
 ];
 
