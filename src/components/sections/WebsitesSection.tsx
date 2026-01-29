@@ -206,9 +206,7 @@ const WebsitesSection = ({ entityFilter }: WebsitesSectionProps) => {
           {filteredWebsites.map((website) => {
             const domainExpiringSoon = isExpiringSoon(website.domain_expiry_date);
             const domainExpired = isExpired(website.domain_expiry_date);
-            const sslExpiringSoon = isExpiringSoon(website.ssl_expiry_date);
-            const sslExpired = isExpired(website.ssl_expiry_date);
-            const hasWarning = domainExpiringSoon || domainExpired || sslExpiringSoon || sslExpired;
+            const hasWarning = domainExpiringSoon || domainExpired;
             
             return (
               <div key={website.id} className="glass-card rounded-xl p-5 hover:border-primary/30 transition-all duration-300">
@@ -296,17 +294,6 @@ const WebsitesSection = ({ entityFilter }: WebsitesSectionProps) => {
                     </div>
                   )}
 
-                  {/* SSL Expiry */}
-                  {website.ssl_expiry_date && (
-                    <div className="flex items-center gap-2 text-sm">
-                      <ShieldCheck className="w-3.5 h-3.5 text-muted-foreground" />
-                      <span className={sslExpired ? "text-destructive" : sslExpiringSoon ? "text-warning" : "text-muted-foreground"}>
-                        SSL: {format(parseISO(website.ssl_expiry_date), "MMM d, yyyy")}
-                      </span>
-                      {sslExpired && <AlertTriangle className="w-3.5 h-3.5 text-destructive" />}
-                      {sslExpiringSoon && !sslExpired && <AlertTriangle className="w-3.5 h-3.5 text-warning" />}
-                    </div>
-                  )}
                 </div>
 
                 <div className="mt-4 pt-4 border-t border-border">
