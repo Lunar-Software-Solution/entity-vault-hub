@@ -522,7 +522,7 @@ const EntityDetail = () => {
         <LinkedPhoneNumbers phones={linkedPhoneNumbers} entityId={id!} />
         <LinkedEmailAddresses emails={linkedEmails} entityId={id!} />
         <LinkedTaxIds taxIds={linkedTaxIds} entityId={id!} />
-        <LinkedAddresses addresses={linkedAddresses} entityId={id} />
+        <LinkedAddresses entityId={id!} />
         <LinkedDocuments documents={linkedDocuments} entityId={id!} />
         <LinkedContracts contracts={linkedContracts} />
         <LinkedWebsites websites={linkedWebsites} entityId={id!} />

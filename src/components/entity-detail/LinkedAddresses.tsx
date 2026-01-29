@@ -5,8 +5,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
 interface LinkedAddressesProps {
-  addresses: Address[];
-  entityId?: string;
+  entityId: string;
 }
 
 interface AddressEntityLink {
@@ -17,7 +16,7 @@ interface AddressEntityLink {
   address?: Address;
 }
 
-const LinkedAddresses = ({ addresses, entityId }: LinkedAddressesProps) => {
+const LinkedAddresses = ({ entityId }: LinkedAddressesProps) => {
   // Fetch addresses linked via junction table
   const { data: linkedAddresses = [] } = useQuery({
     queryKey: ["entity-address-links", entityId],
@@ -39,21 +38,13 @@ const LinkedAddresses = ({ addresses, entityId }: LinkedAddressesProps) => {
     enabled: !!entityId,
   });
 
-  // Combine direct addresses with linked addresses, avoiding duplicates
-  const directAddressIds = new Set(addresses.map(a => a.id));
-  const additionalLinkedAddresses = linkedAddresses.filter(
-    link => link.address && !directAddressIds.has(link.address_id)
-  );
-
-  const allAddresses = [
-    ...addresses.map(addr => ({ address: addr, isLinked: false, role: null, linkIsPrimary: false })),
-    ...additionalLinkedAddresses.map(link => ({ 
+  const allAddresses = linkedAddresses
+    .filter(link => link.address)
+    .map(link => ({ 
       address: link.address!, 
-      isLinked: true, 
       role: link.role,
       linkIsPrimary: link.is_primary 
-    })),
-  ];
+    }));
 
   return (
     <div className="glass-card rounded-xl p-6">
@@ -73,7 +64,7 @@ const LinkedAddresses = ({ addresses, entityId }: LinkedAddressesProps) => {
         </p>
       ) : (
         <div className="space-y-3">
-          {allAddresses.map(({ address, isLinked, role, linkIsPrimary }) => (
+          {allAddresses.map(({ address, role, linkIsPrimary }) => (
             <div 
               key={address.id} 
               className="bg-muted/30 rounded-lg p-4 border border-border/50"
@@ -84,9 +75,7 @@ const LinkedAddresses = ({ addresses, entityId }: LinkedAddressesProps) => {
                   {(address.is_primary || linkIsPrimary) && (
                     <Star className="w-4 h-4 text-yellow-500 fill-yellow-500" />
                   )}
-                  {isLinked && (
-                    <Link2 className="w-3.5 h-3.5 text-muted-foreground" />
-                  )}
+                  <Link2 className="w-3.5 h-3.5 text-muted-foreground" />
                 </div>
                 <div className="flex items-center gap-1.5">
                   {role && (
