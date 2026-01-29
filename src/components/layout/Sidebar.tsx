@@ -144,17 +144,21 @@ const Sidebar = ({
   } = useAuth();
   const [openGroups, setOpenGroups] = useState<string[]>(["main"]);
   const [profileOpen, setProfileOpen] = useState(false);
-  const handleLogout = () => {
+  const handleLogout = (e: Event) => {
+    // Prevent default dropdown behavior to ensure our handler runs
+    e.preventDefault();
+    
     // Clear any 2FA session data
     sessionStorage.removeItem("needs2FA");
     sessionStorage.removeItem("pending2FAUser");
     sessionStorage.removeItem("pendingAccessToken");
     sessionStorage.removeItem("pending2FAPassword");
     
-    // Sign out and force navigation
-    signOut().finally(() => {
-      window.location.replace("/auth");
-    });
+    // Clear local auth state immediately
+    signOut();
+    
+    // Force navigation to auth page
+    window.location.href = "/auth";
   };
   const userEmail = user?.email || "user@example.com";
   const userInitials = userEmail.split("@")[0].slice(0, 2).toUpperCase();
