@@ -2,6 +2,7 @@ import { useState, useMemo } from "react";
 import { Cloud, Loader2, Globe, CheckSquare, Square, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -346,8 +347,8 @@ const CloudflareWebsiteImporter = ({ open, onOpenChange }: CloudflareWebsiteImpo
                                 ))}
                               </SelectContent>
                             </Select>
-                            <Input
-                              className="h-7 text-xs min-w-[150px] focus:min-w-[250px] focus:flex-1 transition-all duration-200"
+                            <Textarea
+                              className="h-7 min-h-7 text-xs resize-none py-1.5 focus:h-20 focus:min-h-20 transition-all duration-200"
                               placeholder="Notes..."
                               value={config.notes}
                               onChange={(e) => updateRecordConfig(record.name, "notes", e.target.value)}
