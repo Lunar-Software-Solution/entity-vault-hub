@@ -1405,7 +1405,6 @@ export type Database = {
           name: string
           notes: string | null
           platform: string | null
-          ssl_expiry_date: string | null
           type: string
           updated_at: string
           url: string
@@ -1420,7 +1419,6 @@ export type Database = {
           name: string
           notes?: string | null
           platform?: string | null
-          ssl_expiry_date?: string | null
           type?: string
           updated_at?: string
           url: string
@@ -1435,7 +1433,6 @@ export type Database = {
           name?: string
           notes?: string | null
           platform?: string | null
-          ssl_expiry_date?: string | null
           type?: string
           updated_at?: string
           url?: string
