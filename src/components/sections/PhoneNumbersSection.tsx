@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { usePhoneNumbers, useEntities, type PhoneNumber } from "@/hooks/usePortalData";
 import { useCreatePhoneNumber, useUpdatePhoneNumber, useDeletePhoneNumber } from "@/hooks/usePortalMutations";
 import { Button } from "@/components/ui/button";
@@ -11,10 +12,32 @@ import PhoneNumberForm from "@/components/forms/PhoneNumberForm";
 import { Phone, Plus, MoreHorizontal, Edit, Trash2, Star, Building2 } from "lucide-react";
 import { useUserRole } from "@/hooks/useUserRole";
 import type { PhoneNumberFormData } from "@/lib/formSchemas";
+import { supabase } from "@/integrations/supabase/client";
 
 interface PhoneNumbersSectionProps {
   entityFilter?: string | null;
 }
+
+// Hook to fetch all phone number entity links
+const usePhoneEntityLinks = () => {
+  return useQuery({
+    queryKey: ["phone-entity-links-all"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("phone_number_entity_links")
+        .select(`
+          id,
+          phone_number_id,
+          entity_id,
+          is_primary,
+          role,
+          entity:entities(id, name)
+        `);
+      if (error) throw error;
+      return data;
+    },
+  });
+};
 
 const PhoneNumbersSection = ({ entityFilter }: PhoneNumbersSectionProps) => {
   const [showForm, setShowForm] = useState(false);
@@ -23,6 +46,7 @@ const PhoneNumbersSection = ({ entityFilter }: PhoneNumbersSectionProps) => {
 
   const { data: phoneNumbers, isLoading: phonesLoading } = usePhoneNumbers();
   const { data: entities, isLoading: entitiesLoading } = useEntities();
+  const { data: phoneEntityLinks } = usePhoneEntityLinks();
   const { canWrite } = useUserRole();
   
   const createMutation = useCreatePhoneNumber();
@@ -31,13 +55,33 @@ const PhoneNumbersSection = ({ entityFilter }: PhoneNumbersSectionProps) => {
 
   const isLoading = phonesLoading || entitiesLoading;
 
-  const filteredPhones = entityFilter
-    ? phoneNumbers?.filter(p => p.entity_id === entityFilter)
-    : phoneNumbers;
-
-  const getEntityName = (entityId: string) => {
-    return entities?.find(e => e.id === entityId)?.name ?? "Unknown Entity";
+  // Get linked entities for a phone number
+  const getLinkedEntities = (phoneId: string) => {
+    if (!phoneEntityLinks) return [];
+    return phoneEntityLinks
+      .filter(link => link.phone_number_id === phoneId)
+      .map(link => ({
+        id: link.entity_id,
+        name: (link.entity as any)?.name || "Unknown",
+        is_primary: link.is_primary,
+      }));
   };
+
+  // Filter phones by entity using junction table
+  const filteredPhones = useMemo(() => {
+    if (!phoneNumbers) return [];
+    if (!entityFilter) return phoneNumbers;
+    
+    // Get phone IDs that are linked to the filtered entity
+    const linkedPhoneIds = phoneEntityLinks
+      ?.filter(link => link.entity_id === entityFilter)
+      .map(link => link.phone_number_id) || [];
+    
+    // Also include phones with the legacy entity_id
+    return phoneNumbers.filter(phone => 
+      linkedPhoneIds.includes(phone.id) || phone.entity_id === entityFilter
+    );
+  }, [phoneNumbers, entityFilter, phoneEntityLinks]);
 
   const handleSubmit = (data: PhoneNumberFormData) => {
     const payload = {
@@ -118,62 +162,75 @@ const PhoneNumbersSection = ({ entityFilter }: PhoneNumbersSectionProps) => {
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {filteredPhones.map((phone) => (
-            <div key={phone.id} className="glass-card rounded-xl p-5 hover:border-primary/30 transition-all duration-200">
-              <div className="flex items-start justify-between mb-3">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-                    <Phone className="w-5 h-5 text-primary" />
-                  </div>
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <span className="font-semibold text-foreground">{phone.label}</span>
-                      {phone.is_primary && (
-                        <Star className="w-4 h-4 text-amber-500 fill-amber-500" />
-                      )}
+          {filteredPhones.map((phone) => {
+            const linkedEntities = getLinkedEntities(phone.id);
+            
+            return (
+              <div key={phone.id} className="glass-card rounded-xl p-5 hover:border-primary/30 transition-all duration-200">
+                <div className="flex items-start justify-between mb-3">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+                      <Phone className="w-5 h-5 text-primary" />
                     </div>
-                    <p className="text-lg font-mono text-foreground">
-                      {phone.country_code} {phone.phone_number}
-                    </p>
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <span className="font-semibold text-foreground">{phone.label}</span>
+                        {phone.is_primary && (
+                          <Star className="w-4 h-4 text-amber-500 fill-amber-500" />
+                        )}
+                      </div>
+                      <p className="text-lg font-mono text-foreground">
+                        {phone.country_code} {phone.phone_number}
+                      </p>
+                    </div>
                   </div>
+                  {canWrite && (
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="icon" className="h-8 w-8 text-foreground">
+                          <MoreHorizontal className="w-4 h-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem onClick={() => handleEdit(phone)}>
+                          <Edit className="w-4 h-4 mr-2" />
+                          Edit
+                        </DropdownMenuItem>
+                        <DropdownMenuItem 
+                          onClick={() => setDeletingPhone(phone)}
+                          className="text-destructive focus:text-destructive"
+                        >
+                          <Trash2 className="w-4 h-4 mr-2" />
+                          Delete
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  )}
                 </div>
-                {canWrite && (
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="icon" className="h-8 w-8 text-foreground">
-                        <MoreHorizontal className="w-4 h-4" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      <DropdownMenuItem onClick={() => handleEdit(phone)}>
-                        <Edit className="w-4 h-4 mr-2" />
-                        Edit
-                      </DropdownMenuItem>
-                      <DropdownMenuItem 
-                        onClick={() => setDeletingPhone(phone)}
-                        className="text-destructive focus:text-destructive"
-                      >
-                        <Trash2 className="w-4 h-4 mr-2" />
-                        Delete
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                )}
-              </div>
 
-              <div className="space-y-2 text-sm">
-                <div className="flex items-center gap-2 text-muted-foreground">
-                  <Building2 className="w-4 h-4" />
-                  <span>{getEntityName(phone.entity_id)}</span>
+                <div className="space-y-2 text-sm">
+                  {/* Show linked entities from junction table */}
+                  {linkedEntities.length > 0 && (
+                    <div className="flex items-center gap-2 text-muted-foreground flex-wrap">
+                      <Building2 className="w-4 h-4 flex-shrink-0" />
+                      {linkedEntities.map((entity, idx) => (
+                        <span key={entity.id}>
+                          {entity.name}
+                          {entity.is_primary && <span className="text-primary ml-1">(Primary)</span>}
+                          {idx < linkedEntities.length - 1 && ", "}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                  {phone.purpose && (
+                    <Badge variant="secondary" className="text-xs">
+                      {phone.purpose}
+                    </Badge>
+                  )}
                 </div>
-                {phone.purpose && (
-                  <Badge variant="secondary" className="text-xs">
-                    {phone.purpose}
-                  </Badge>
-                )}
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
 

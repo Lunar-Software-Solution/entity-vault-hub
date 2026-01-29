@@ -125,7 +125,6 @@ export const socialMediaSchema = z.object({
 });
 
 export const phoneNumberSchema = z.object({
-  entity_id: z.string().uuid().optional().or(z.literal("")),
   phone_number: z.string().trim().min(1, "Phone number is required").max(30),
   country_code: z.string().trim().min(1, "Country code is required").max(10),
   label: z.string().trim().min(1, "Label is required").max(50),
@@ -268,7 +267,6 @@ export type SocialMediaFormData = {
 };
 
 export type PhoneNumberFormData = {
-  entity_id?: string;
   phone_number: string;
   country_code: string;
   label: string;
@@ -382,7 +380,6 @@ export type FilingTaskFormData = z.infer<typeof filingTaskSchema>;
 
 // Entity Website Schema
 export const entityWebsiteSchema = z.object({
-  entity_id: z.string().uuid().optional().or(z.literal("")),
   url: z.string().trim().url("Invalid URL").min(1, "URL is required"),
   name: z.string().trim().min(1, "Name is required").max(100, "Name must be 100 characters or less"),
   type: z.string().min(1, "Type is required"),

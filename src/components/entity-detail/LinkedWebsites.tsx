@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Globe, Star, Plus, MoreHorizontal, Edit, Trash2, ExternalLink } from "lucide-react";
+import { Globe, Star, Plus, MoreHorizontal, Edit, Trash2, ExternalLink, Link2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -7,13 +7,21 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import DeleteConfirmDialog from "@/components/shared/DeleteConfirmDialog";
 import WebsiteForm from "@/components/forms/WebsiteForm";
 import { useCreateEntityWebsite, useUpdateEntityWebsite, useDeleteEntityWebsite } from "@/hooks/usePortalMutations";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 import type { EntityWebsite } from "@/hooks/usePortalData";
 import type { EntityWebsiteFormData } from "@/lib/formSchemas";
 import { useUserRole } from "@/hooks/useUserRole";
 
 interface LinkedWebsitesProps {
-  websites: EntityWebsite[];
   entityId: string;
+}
+
+interface WebsiteEntityLink {
+  id: string;
+  website_id: string;
+  is_primary: boolean;
+  website?: EntityWebsite;
 }
 
 const typeLabels: Record<string, string> = {
@@ -52,7 +60,7 @@ const platformLabels: Record<string, string> = {
   other: "Other",
 };
 
-const LinkedWebsites = ({ websites, entityId }: LinkedWebsitesProps) => {
+const LinkedWebsites = ({ entityId }: LinkedWebsitesProps) => {
   const [showForm, setShowForm] = useState(false);
   const [editingWebsite, setEditingWebsite] = useState<EntityWebsite | null>(null);
   const [deletingWebsite, setDeletingWebsite] = useState<EntityWebsite | null>(null);
@@ -62,11 +70,38 @@ const LinkedWebsites = ({ websites, entityId }: LinkedWebsitesProps) => {
   const updateMutation = useUpdateEntityWebsite();
   const deleteMutation = useDeleteEntityWebsite();
 
+  // Fetch websites linked via junction table
+  const { data: linkedWebsites = [] } = useQuery({
+    queryKey: ["entity-website-links", entityId],
+    queryFn: async () => {
+      if (!entityId) return [];
+      const { data, error } = await supabase
+        .from("website_entity_links")
+        .select(`
+          id,
+          website_id,
+          is_primary,
+          website:entity_websites(*)
+        `)
+        .eq("entity_id", entityId);
+      if (error) throw error;
+      return data as WebsiteEntityLink[];
+    },
+    enabled: !!entityId,
+  });
+
+  // Map linked websites for display
+  const allWebsites = linkedWebsites
+    .filter(link => link.website)
+    .map(link => ({ 
+      website: link.website!, 
+      linkIsPrimary: link.is_primary 
+    }));
+
   const handleSubmit = (data: EntityWebsiteFormData) => {
     const payload = {
-      entity_id: data.entity_id,
-      url: data.url,
       name: data.name,
+      url: data.url,
       type: data.type,
       platform: data.platform || null,
       is_primary: data.is_primary,
@@ -111,7 +146,7 @@ const LinkedWebsites = ({ websites, entityId }: LinkedWebsitesProps) => {
         <div className="flex items-center gap-2">
           <Globe className="w-5 h-5 text-primary" />
           <h3 className="font-semibold text-foreground">Websites & URLs</h3>
-          <Badge variant="secondary" className="text-xs">{websites.length}</Badge>
+          <Badge variant="secondary" className="text-xs">{allWebsites.length}</Badge>
         </div>
         {canWrite && (
           <Button variant="ghost" size="sm" onClick={() => setShowForm(true)} className="gap-1">
@@ -121,11 +156,11 @@ const LinkedWebsites = ({ websites, entityId }: LinkedWebsitesProps) => {
         )}
       </div>
 
-      {websites.length === 0 ? (
+      {allWebsites.length === 0 ? (
         <p className="text-sm text-muted-foreground">No websites linked</p>
       ) : (
         <div className="space-y-3">
-          {websites.map((website) => (
+          {allWebsites.map(({ website, linkIsPrimary }) => (
             <div key={website.id} className="flex items-center justify-between p-3 rounded-lg bg-muted/50">
               <div className="flex items-center gap-3 flex-1 min-w-0">
                 <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
@@ -134,9 +169,10 @@ const LinkedWebsites = ({ websites, entityId }: LinkedWebsitesProps) => {
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2 flex-wrap">
                     <span className="text-sm font-medium text-foreground">{website.name}</span>
-                    {website.is_primary && (
+                    {(website.is_primary || linkIsPrimary) && (
                       <Star className="w-3 h-3 text-amber-500 fill-amber-500" />
                     )}
+                    <Link2 className="w-3 h-3 text-muted-foreground" />
                     <Badge variant="outline" className="text-xs">
                       {typeLabels[website.type] || website.type}
                     </Badge>

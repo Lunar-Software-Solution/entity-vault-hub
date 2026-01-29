@@ -519,13 +519,13 @@ const EntityDetail = () => {
         <LinkedBankAccounts accounts={linkedBankAccounts} />
         <LinkedCreditCards cards={linkedCreditCards} />
         <LinkedDirectorsUbos directorsUbos={linkedDirectorsUbos} entityId={id!} entityName={entity.name} />
-        <LinkedPhoneNumbers phones={linkedPhoneNumbers} entityId={id!} />
-        <LinkedEmailAddresses emails={linkedEmails} entityId={id!} />
+        <LinkedPhoneNumbers entityId={id!} />
+        <LinkedEmailAddresses entityId={id!} />
         <LinkedTaxIds taxIds={linkedTaxIds} entityId={id!} />
         <LinkedAddresses entityId={id!} />
         <LinkedDocuments documents={linkedDocuments} entityId={id!} />
         <LinkedContracts contracts={linkedContracts} />
-        <LinkedWebsites websites={linkedWebsites} entityId={id!} />
+        <LinkedWebsites entityId={id!} />
         <LinkedSoftware software={linkedEntitySoftware} entityId={id!} />
         <LinkedSocialMedia accounts={linkedSocialMedia} entityId={id!} />
         <LinkedFilings entityId={id!} />
