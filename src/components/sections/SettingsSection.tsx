@@ -1,12 +1,13 @@
 import { useState, useMemo } from "react";
-import { useTaxIdTypes, useIssuingAuthorities, useDocumentTypes, useFilingTypes, useSoftwareCatalog, useWebsiteTypes, type TaxIdType, type IssuingAuthority, type DocumentType, type FilingType, type SoftwareCatalog, type WebsiteType } from "@/hooks/usePortalData";
+import { useTaxIdTypes, useIssuingAuthorities, useDocumentTypes, useFilingTypes, useSoftwareCatalog, useWebsiteTypes, useWebsitePlatforms, type TaxIdType, type IssuingAuthority, type DocumentType, type FilingType, type SoftwareCatalog, type WebsiteType, type WebsitePlatform } from "@/hooks/usePortalData";
 import { 
   useCreateTaxIdType, useUpdateTaxIdType, useDeleteTaxIdType,
   useCreateIssuingAuthority, useUpdateIssuingAuthority, useDeleteIssuingAuthority,
   useCreateDocumentType, useUpdateDocumentType, useDeleteDocumentType,
   useCreateFilingType, useUpdateFilingType, useDeleteFilingType,
   useCreateSoftwareCatalog, useUpdateSoftwareCatalog, useDeleteSoftwareCatalog,
-  useCreateWebsiteType, useUpdateWebsiteType, useDeleteWebsiteType
+  useCreateWebsiteType, useUpdateWebsiteType, useDeleteWebsiteType,
+  useCreateWebsitePlatform, useUpdateWebsitePlatform, useDeleteWebsitePlatform
 } from "@/hooks/usePortalMutations";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -18,7 +19,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 
 import { Badge } from "@/components/ui/badge";
 import DeleteConfirmDialog from "@/components/shared/DeleteConfirmDialog";
-import { Plus, Edit, Trash2, FileText, Building2, Search, ArrowUpDown, ArrowUp, ArrowDown, FolderOpen, Calendar, Monitor, Globe } from "lucide-react";
+import { Plus, Edit, Trash2, FileText, Building2, Search, ArrowUpDown, ArrowUp, ArrowDown, FolderOpen, Calendar, Monitor, Globe, Server } from "lucide-react";
 import { useUserRole } from "@/hooks/useUserRole";
 import { useForm } from "react-hook-form";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
@@ -238,6 +239,7 @@ type DocTypeSortKey = "code" | "name" | "category" | "description";
 type FilingTypeSortKey = "code" | "name" | "category" | "default_frequency" | "description";
 type SoftwareSortKey = "name" | "category" | "vendor" | "website";
 type WebsiteTypeSortKey = "code" | "name" | "description";
+type WebsitePlatformSortKey = "code" | "name" | "description";
 type SortDirection = "asc" | "desc";
 
 // Filing Type Form
@@ -643,9 +645,70 @@ const WebsiteTypeForm = ({
   );
 };
 
+// Website Platform Form
+interface WebsitePlatformFormData {
+  code: string;
+  name: string;
+  description?: string;
+}
+
+const WebsitePlatformForm = ({ 
+  item, 
+  onSubmit, 
+  onCancel, 
+  isLoading
+}: { 
+  item?: WebsitePlatform | null; 
+  onSubmit: (data: WebsitePlatformFormData) => void; 
+  onCancel: () => void; 
+  isLoading?: boolean;
+}) => {
+  const form = useForm<WebsitePlatformFormData>({
+    defaultValues: {
+      code: item?.code ?? "",
+      name: item?.name ?? "",
+      description: item?.description ?? "",
+    },
+  });
+
+  return (
+    <Form {...form}>
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+        <FormField control={form.control} name="code" render={({ field }) => (
+          <FormItem>
+            <FormLabel>Code *</FormLabel>
+            <FormControl><Input placeholder="e.g., shopify, wordpress" {...field} /></FormControl>
+            <FormMessage />
+          </FormItem>
+        )} />
+        <FormField control={form.control} name="name" render={({ field }) => (
+          <FormItem>
+            <FormLabel>Name *</FormLabel>
+            <FormControl><Input placeholder="e.g., Shopify, WordPress" {...field} /></FormControl>
+            <FormMessage />
+          </FormItem>
+        )} />
+        <FormField control={form.control} name="description" render={({ field }) => (
+          <FormItem>
+            <FormLabel>Description</FormLabel>
+            <FormControl><Textarea placeholder="Optional description..." rows={2} {...field} /></FormControl>
+            <FormMessage />
+          </FormItem>
+        )} />
+        <div className="flex justify-end gap-3 pt-4">
+          <Button type="button" variant="outline" onClick={onCancel}>Cancel</Button>
+          <Button type="submit" disabled={isLoading}>
+            {isLoading ? "Saving..." : item ? "Update" : "Add Platform"}
+          </Button>
+        </div>
+      </form>
+    </Form>
+  );
+};
+
 const SettingsSection = () => {
   const { canWrite } = useUserRole();
-  
+
   const [showTypeForm, setShowTypeForm] = useState(false);
   const [editingType, setEditingType] = useState<TaxIdType | null>(null);
   const [deletingType, setDeletingType] = useState<TaxIdType | null>(null);
@@ -700,12 +763,22 @@ const SettingsSection = () => {
   const [websiteTypeSortKey, setWebsiteTypeSortKey] = useState<WebsiteTypeSortKey>("code");
   const [websiteTypeSortDirection, setWebsiteTypeSortDirection] = useState<SortDirection>("asc");
 
+  // Search and sort state for Website Platforms
+  const [platformSearch, setPlatformSearch] = useState("");
+  const [platformSortKey, setPlatformSortKey] = useState<WebsitePlatformSortKey>("code");
+  const [platformSortDirection, setPlatformSortDirection] = useState<SortDirection>("asc");
+
+  const [showPlatformForm, setShowPlatformForm] = useState(false);
+  const [editingPlatform, setEditingPlatform] = useState<WebsitePlatform | null>(null);
+  const [deletingPlatform, setDeletingPlatform] = useState<WebsitePlatform | null>(null);
+
   const { data: taxIdTypes, isLoading: typesLoading } = useTaxIdTypes();
   const { data: issuingAuthorities, isLoading: authoritiesLoading } = useIssuingAuthorities();
   const { data: documentTypes, isLoading: docTypesLoading } = useDocumentTypes();
   const { data: filingTypes, isLoading: filingTypesLoading } = useFilingTypes();
   const { data: softwareCatalog, isLoading: softwareLoading } = useSoftwareCatalog();
   const { data: websiteTypes, isLoading: websiteTypesLoading } = useWebsiteTypes();
+  const { data: websitePlatforms, isLoading: platformsLoading } = useWebsitePlatforms();
 
   const createTypeMutation = useCreateTaxIdType();
   const updateTypeMutation = useUpdateTaxIdType();
@@ -730,6 +803,10 @@ const SettingsSection = () => {
   const createWebsiteTypeMutation = useCreateWebsiteType();
   const updateWebsiteTypeMutation = useUpdateWebsiteType();
   const deleteWebsiteTypeMutation = useDeleteWebsiteType();
+
+  const createPlatformMutation = useCreateWebsitePlatform();
+  const updatePlatformMutation = useUpdateWebsitePlatform();
+  const deletePlatformMutation = useDeleteWebsitePlatform();
 
   // Get authority name for a tax id type
   const getAuthorityName = (authorityId: string | null | undefined) => {
@@ -914,6 +991,33 @@ const SettingsSection = () => {
       }
     });
   }, [websiteTypes, websiteTypeSearch, websiteTypeSortKey, websiteTypeSortDirection]);
+
+  // Filter and sort Website Platforms
+  const filteredAndSortedPlatforms = useMemo(() => {
+    if (!websitePlatforms) return [];
+    
+    let filtered = websitePlatforms;
+    
+    if (platformSearch.trim()) {
+      const searchLower = platformSearch.toLowerCase();
+      filtered = websitePlatforms.filter((p) => 
+        p.code.toLowerCase().includes(searchLower) ||
+        p.name.toLowerCase().includes(searchLower) ||
+        (p.description || "").toLowerCase().includes(searchLower)
+      );
+    }
+    
+    return [...filtered].sort((a, b) => {
+      const aVal = (a[platformSortKey] || "").toLowerCase();
+      const bVal = (b[platformSortKey] || "").toLowerCase();
+      
+      if (platformSortDirection === "asc") {
+        return aVal.localeCompare(bVal);
+      } else {
+        return bVal.localeCompare(aVal);
+      }
+    });
+  }, [websitePlatforms, platformSearch, platformSortKey, platformSortDirection]);
 
   const handleTypeSort = (key: TypeSortKey) => {
     if (typeSortKey === key) {
@@ -1115,7 +1219,39 @@ const SettingsSection = () => {
     }
   };
 
-  if (typesLoading || authoritiesLoading || filingTypesLoading || docTypesLoading || websiteTypesLoading) {
+  const handlePlatformSort = (key: WebsitePlatformSortKey) => {
+    if (platformSortKey === key) {
+      setPlatformSortDirection(prev => prev === "asc" ? "desc" : "asc");
+    } else {
+      setPlatformSortKey(key);
+      setPlatformSortDirection("asc");
+    }
+  };
+
+  const getPlatformSortIcon = (key: WebsitePlatformSortKey) => {
+    if (platformSortKey !== key) return <ArrowUpDown className="w-4 h-4 ml-1 opacity-50" />;
+    return platformSortDirection === "asc" 
+      ? <ArrowUp className="w-4 h-4 ml-1" /> 
+      : <ArrowDown className="w-4 h-4 ml-1" />;
+  };
+
+  const handlePlatformSubmit = (data: WebsitePlatformFormData) => {
+    const payload = { 
+      ...data, 
+      description: data.description || null,
+    };
+    if (editingPlatform) {
+      updatePlatformMutation.mutate({ id: editingPlatform.id, ...payload }, {
+        onSuccess: () => { setShowPlatformForm(false); setEditingPlatform(null); },
+      });
+    } else {
+      createPlatformMutation.mutate(payload, {
+        onSuccess: () => setShowPlatformForm(false),
+      });
+    }
+  };
+
+  if (typesLoading || authoritiesLoading || filingTypesLoading || docTypesLoading || websiteTypesLoading || platformsLoading) {
     return (
       <div className="space-y-6">
         <Skeleton className="h-8 w-48" />
@@ -1128,40 +1264,38 @@ const SettingsSection = () => {
     <div className="space-y-6">
       <div>
         <h2 className="text-2xl font-bold text-foreground">Settings</h2>
-        <p className="text-muted-foreground">Manage lookup tables for Tax ID Types, Issuing Authorities, Document Types, Filing Types, Software, and Website Types</p>
+        <p className="text-muted-foreground">Manage lookup tables for Tax ID Types, Authorities, Document Types, Filing Types, Software, Website Types, and Platforms</p>
       </div>
 
       <Tabs defaultValue="tax-id-types" className="w-full">
-        <TabsList className="grid w-full max-w-4xl grid-cols-6">
-          <TabsTrigger value="tax-id-types" className="gap-2">
+        <TabsList className="grid w-full max-w-5xl grid-cols-7">
+          <TabsTrigger value="tax-id-types" className="gap-1 text-xs sm:text-sm">
             <FileText className="w-4 h-4" />
-            <span className="hidden sm:inline">Tax ID Types</span>
-            <span className="sm:hidden">Tax IDs</span>
+            <span className="hidden md:inline">Tax IDs</span>
           </TabsTrigger>
-          <TabsTrigger value="issuing-authorities" className="gap-2">
+          <TabsTrigger value="issuing-authorities" className="gap-1 text-xs sm:text-sm">
             <Building2 className="w-4 h-4" />
-            <span className="hidden sm:inline">Authorities</span>
-            <span className="sm:hidden">Auth</span>
+            <span className="hidden md:inline">Authorities</span>
           </TabsTrigger>
-          <TabsTrigger value="document-types" className="gap-2">
+          <TabsTrigger value="document-types" className="gap-1 text-xs sm:text-sm">
             <FolderOpen className="w-4 h-4" />
-            <span className="hidden sm:inline">Doc Types</span>
-            <span className="sm:hidden">Docs</span>
+            <span className="hidden md:inline">Docs</span>
           </TabsTrigger>
-          <TabsTrigger value="filing-types" className="gap-2">
+          <TabsTrigger value="filing-types" className="gap-1 text-xs sm:text-sm">
             <Calendar className="w-4 h-4" />
-            <span className="hidden sm:inline">Filing Types</span>
-            <span className="sm:hidden">Filings</span>
+            <span className="hidden md:inline">Filings</span>
           </TabsTrigger>
-          <TabsTrigger value="software-catalog" className="gap-2">
+          <TabsTrigger value="software-catalog" className="gap-1 text-xs sm:text-sm">
             <Monitor className="w-4 h-4" />
-            <span className="hidden sm:inline">Software</span>
-            <span className="sm:hidden">SW</span>
+            <span className="hidden md:inline">Software</span>
           </TabsTrigger>
-          <TabsTrigger value="website-types" className="gap-2">
+          <TabsTrigger value="website-types" className="gap-1 text-xs sm:text-sm">
             <Globe className="w-4 h-4" />
-            <span className="hidden sm:inline">Website Types</span>
-            <span className="sm:hidden">Web</span>
+            <span className="hidden md:inline">Web Types</span>
+          </TabsTrigger>
+          <TabsTrigger value="platforms" className="gap-1 text-xs sm:text-sm">
+            <Server className="w-4 h-4" />
+            <span className="hidden md:inline">Platforms</span>
           </TabsTrigger>
         </TabsList>
 
@@ -1739,6 +1873,69 @@ const SettingsSection = () => {
             </div>
           </div>
         </TabsContent>
+
+        {/* Platforms Tab */}
+        <TabsContent value="platforms" className="mt-6">
+          <div className="glass-card rounded-xl p-6">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-4">
+              <h3 className="text-lg font-semibold text-foreground">Website Platforms</h3>
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full sm:w-auto">
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                  <Input
+                    placeholder="Search platforms..."
+                    value={platformSearch}
+                    onChange={(e) => setPlatformSearch(e.target.value)}
+                    className="pl-9 w-full sm:w-64 text-foreground"
+                  />
+                </div>
+                {canWrite && (
+                  <Button onClick={() => setShowPlatformForm(true)} size="sm" className="gap-2">
+                    <Plus className="w-4 h-4" />
+                    Add Platform
+                  </Button>
+                )}
+              </div>
+            </div>
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="cursor-pointer" onClick={() => handlePlatformSort("code")}>
+                      <div className="flex items-center">Code {getPlatformSortIcon("code")}</div>
+                    </TableHead>
+                    <TableHead className="cursor-pointer" onClick={() => handlePlatformSort("name")}>
+                      <div className="flex items-center">Name {getPlatformSortIcon("name")}</div>
+                    </TableHead>
+                    <TableHead className="cursor-pointer" onClick={() => handlePlatformSort("description")}>
+                      <div className="flex items-center">Description {getPlatformSortIcon("description")}</div>
+                    </TableHead>
+                    <TableHead className="w-[100px]">Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {filteredAndSortedPlatforms.length === 0 ? (
+                    <TableRow><TableCell colSpan={4} className="text-center text-muted-foreground py-8">No platforms found</TableCell></TableRow>
+                  ) : filteredAndSortedPlatforms.map((platform) => (
+                    <TableRow key={platform.id}>
+                      <TableCell className="font-medium font-mono">{platform.code}</TableCell>
+                      <TableCell>{platform.name}</TableCell>
+                      <TableCell className="text-muted-foreground max-w-xs truncate">{platform.description || "-"}</TableCell>
+                      <TableCell>
+                        {canWrite && (
+                          <div className="flex items-center gap-1">
+                            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => { setEditingPlatform(platform); setShowPlatformForm(true); }}><Edit className="w-4 h-4" /></Button>
+                            <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => setDeletingPlatform(platform)}><Trash2 className="w-4 h-4" /></Button>
+                          </div>
+                        )}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          </div>
+        </TabsContent>
       </Tabs>
 
       {/* Tax ID Type Dialog */}
@@ -1905,6 +2102,32 @@ const SettingsSection = () => {
         description={`Are you sure you want to delete "${deletingWebsiteType?.code} - ${deletingWebsiteType?.name}"? This may affect existing websites using this type.`}
         isLoading={deleteWebsiteTypeMutation.isPending}
       />
+
+      <DeleteConfirmDialog
+        open={!!deletingPlatform}
+        onOpenChange={() => setDeletingPlatform(null)}
+        onConfirm={() => {
+          if (deletingPlatform) deletePlatformMutation.mutate(deletingPlatform.id, { onSuccess: () => setDeletingPlatform(null) });
+        }}
+        title="Delete Platform"
+        description={`Are you sure you want to delete "${deletingPlatform?.code} - ${deletingPlatform?.name}"? This may affect existing websites using this platform.`}
+        isLoading={deletePlatformMutation.isPending}
+      />
+
+      {/* Platform Dialog */}
+      <Dialog open={showPlatformForm} onOpenChange={() => { setShowPlatformForm(false); setEditingPlatform(null); }}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>{editingPlatform ? "Edit Platform" : "Add Platform"}</DialogTitle>
+          </DialogHeader>
+          <WebsitePlatformForm
+            item={editingPlatform}
+            onSubmit={handlePlatformSubmit}
+            onCancel={() => { setShowPlatformForm(false); setEditingPlatform(null); }}
+            isLoading={createPlatformMutation.isPending || updatePlatformMutation.isPending}
+          />
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

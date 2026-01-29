@@ -1367,3 +1367,51 @@ export const useDeleteWebsiteType = () => {
     onError: (error) => toast.error(`Failed to delete website type: ${error.message}`),
   });
 };
+
+// Website Platform mutations
+export const useCreateWebsitePlatform = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (platform: TablesInsert<"website_platforms">) => {
+      const { data, error } = await supabase.from("website_platforms").insert(platform).select().single();
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["website_platforms"] });
+      toast.success("Platform added successfully");
+    },
+    onError: (error) => toast.error(`Failed to add platform: ${error.message}`),
+  });
+};
+
+export const useUpdateWebsitePlatform = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, ...platform }: TablesUpdate<"website_platforms"> & { id: string }) => {
+      const { data, error } = await supabase.from("website_platforms").update(platform).eq("id", id).select().single();
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["website_platforms"] });
+      toast.success("Platform updated successfully");
+    },
+    onError: (error) => toast.error(`Failed to update platform: ${error.message}`),
+  });
+};
+
+export const useDeleteWebsitePlatform = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from("website_platforms").delete().eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["website_platforms"] });
+      toast.success("Platform deleted successfully");
+    },
+    onError: (error) => toast.error(`Failed to delete platform: ${error.message}`),
+  });
+};
