@@ -110,7 +110,6 @@ const WebsitesSection = ({ entityFilter }: WebsitesSectionProps) => {
       platform: data.platform || null,
       notes: data.notes || null,
       domain_expiry_date: data.domain_expiry_date || null,
-      ssl_expiry_date: data.ssl_expiry_date || null,
       is_primary: data.is_primary ?? false,
       is_active: data.is_active ?? true,
     };

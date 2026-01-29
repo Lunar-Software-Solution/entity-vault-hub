@@ -106,7 +106,6 @@ const LinkedWebsites = ({ entityId }: LinkedWebsitesProps) => {
       platform: data.platform || null,
       is_primary: data.is_primary,
       is_active: data.is_active,
-      ssl_expiry_date: data.ssl_expiry_date || null,
       domain_expiry_date: data.domain_expiry_date || null,
       notes: data.notes || null,
     };

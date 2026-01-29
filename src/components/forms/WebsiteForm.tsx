@@ -83,7 +83,6 @@ const WebsiteForm = ({ website, defaultEntityId, onSubmit, onCancel, isLoading }
       platform: website?.platform ?? "",
       is_primary: website?.is_primary ?? false,
       is_active: website?.is_active ?? true,
-      ssl_expiry_date: website?.ssl_expiry_date ?? "",
       domain_expiry_date: website?.domain_expiry_date ?? "",
       notes: website?.notes ?? "",
     },
@@ -290,27 +289,15 @@ const WebsiteForm = ({ website, defaultEntityId, onSubmit, onCancel, isLoading }
           )} />
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <FormField control={form.control} name="ssl_expiry_date" render={({ field }) => (
-            <FormItem>
-              <FormLabel>SSL Expiry Date</FormLabel>
-              <FormControl>
-                <Input type="date" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )} />
-
-          <FormField control={form.control} name="domain_expiry_date" render={({ field }) => (
-            <FormItem>
-              <FormLabel>Domain Expiry Date</FormLabel>
-              <FormControl>
-                <Input type="date" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )} />
-        </div>
+        <FormField control={form.control} name="domain_expiry_date" render={({ field }) => (
+          <FormItem>
+            <FormLabel>Domain Expiry Date</FormLabel>
+            <FormControl>
+              <Input type="date" {...field} />
+            </FormControl>
+            <FormMessage />
+          </FormItem>
+        )} />
 
         <FormField control={form.control} name="notes" render={({ field }) => (
           <FormItem>
