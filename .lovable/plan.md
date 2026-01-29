@@ -1,154 +1,112 @@
 
-# Mapbox Geocoding Address Autocomplete Integration
+# Remove Primary Entity Field from Address Form
 
 ## Summary
 
-Integrate Mapbox Search JS into the AddressForm component to provide worldwide address autocomplete functionality. Users will be able to type an address and receive real-time suggestions that automatically populate the street, city, state, zip, and country fields.
+Remove the "Primary Entity" dropdown field from the Address form and transition to using only the "Linked Entities" concept via the `address_entity_links` junction table. This simplifies the address-entity relationship to a single, consistent many-to-many pattern.
 
 ---
 
-## Architecture Overview
+## Current State
 
-The implementation will use Mapbox's official `@mapbox/search-js-react` package which provides the `AddressAutofill` component specifically designed for address forms. This component wraps standard HTML inputs and automatically handles autocomplete suggestions.
+The Address form currently has two ways to link an address to an entity:
 
-```text
-+-------------------+     +----------------------+     +------------------+
-|   AddressForm     | --> | AddressAutofill      | --> | Mapbox Geocoding |
-|   (React Form)    |     | (@mapbox/search-js)  |     | API (worldwide)  |
-+-------------------+     +----------------------+     +------------------+
-         |                         |
-         v                         v
-+-------------------+     +----------------------+
-|  Form Fields      |     | Suggestion Dropdown  |
-|  (auto-populated) |     | (address results)    |
-+-------------------+     +----------------------+
-```
+1. **Primary Entity field** (line 44-61 in AddressForm.tsx): A dropdown that sets the `entity_id` column directly on the `addresses` table
+2. **Linked Entities section** (AddressEntityAffiliationsManager): A junction table approach that allows many-to-many relationships with roles
+
+This creates confusion and redundancy. The plan is to remove option 1 and rely solely on the junction table approach.
 
 ---
 
 ## Implementation Steps
 
-### Step 1: Store the Mapbox Access Token
+### Step 1: Update AddressForm.tsx
 
-Request the user to provide their Mapbox public access token. This is a publishable key that can be safely used in frontend code.
+Remove the "Primary Entity" field and its associated logic:
 
-**Action:** Use the secrets tool to prompt for `MAPBOX_ACCESS_TOKEN`
-
----
-
-### Step 2: Install the Mapbox Search JS Package
-
-Add the `@mapbox/search-js-react` package to the project dependencies.
-
-**Package:** `@mapbox/search-js-react`
+- Remove the `entity_id` FormField (lines 44-61)
+- Remove `entity_id` from the form's defaultValues
+- Remove the `useEntities` import (no longer needed in form)
+- Keep the `AddressEntityAffiliationsManager` section for linking entities
 
 ---
 
-### Step 3: Create AddressAutocomplete Component
+### Step 2: Update Form Schema
 
-Create a reusable `AddressAutocomplete.tsx` component in `src/components/shared/` that:
+Modify `addressSchema` in `formSchemas.ts`:
 
-- Wraps the Mapbox `AddressAutofill` component
-- Provides an input field for street address with autocomplete
-- Exposes an `onAddressSelect` callback with parsed address components
-- Handles the Mapbox API response and maps it to our address schema
-
-**Key Features:**
-- Real-time address suggestions as user types
-- Worldwide coverage with proper localization
-- Parses response into: street, city, state/region, postal code, country
-- Matches existing form styling using shadcn/ui Input component
-
-**File:** `src/components/shared/AddressAutocomplete.tsx`
+- Remove the `entity_id` field from the schema
+- Remove `entity_id` from the `AddressFormData` type
 
 ---
 
-### Step 4: Update AddressForm to Use Autocomplete
+### Step 3: Update AddressesSection.tsx
 
-Modify `AddressForm.tsx` to:
+Update the section to handle the removal of direct `entity_id`:
 
-1. Replace the plain street Input with the new `AddressAutocomplete` component
-2. When an address is selected from suggestions, auto-fill:
-   - Street address (address-line1)
-   - City (address-level2)
-   - State/Province (address-level1)
-   - ZIP/Postal code (postal-code)
-   - Country (country-name)
-3. Keep all fields editable for manual corrections
-4. Show a toggle to switch between autocomplete and manual entry modes
-
-**File:** `src/components/forms/AddressForm.tsx`
+- Update the `handleSubmit` function to not include `entity_id`
+- Update the `filteredAddresses` logic to also check the junction table for entity filtering
+- Update the entity display logic on cards to use junction table data
 
 ---
 
-### Step 5: Handle Address Field Mapping
+### Step 4: Update LinkedAddresses.tsx
 
-Create utility functions to map Mapbox response format to our address schema:
+Simplify the component since addresses will only come from the junction table:
 
-```text
-Mapbox Response           ->  Our Schema
--------------------------     ------------------
-address_line1             ->  street
-place (locality)          ->  city
-region (address-level1)   ->  state
-postcode                  ->  zip
-country                   ->  country
-```
+- Remove the legacy `addresses` prop that relied on direct `entity_id`
+- Query only from `address_entity_links` junction table
+- Update the component interface to only require `entityId`
 
-The Mapbox `AddressAutofill` component uses the `autocomplete` HTML attribute standard, making the mapping straightforward.
+---
+
+### Step 5: Database Migration (Optional - For Cleanup)
+
+**Note:** The `entity_id` column in the `addresses` table can be kept for backward compatibility with existing data. Alternatively, a migration can:
+
+- Set all existing `addresses.entity_id` values to create corresponding `address_entity_links` entries
+- Then set `entity_id` to null on all addresses
+
+This step is optional and can be done later if full migration is desired.
 
 ---
 
 ## Technical Details
 
-### Mapbox AddressAutofill Component Usage
+### Files to Modify
 
-The Mapbox `AddressAutofill` component works by wrapping form inputs that have proper `autocomplete` HTML attributes:
+1. `src/components/forms/AddressForm.tsx`
+   - Remove the Primary Entity select field
+   - Remove `entity_id` from defaultValues
+   - Remove unused `useEntities` hook
 
-- `address-line1` - Street address (triggers autocomplete)
-- `address-level2` - City
-- `address-level1` - State/Province
-- `postal-code` - ZIP/Postal code
-- `country-name` - Country
+2. `src/lib/formSchemas.ts`
+   - Remove `entity_id` from `addressSchema`
+   - Remove `entity_id` from `AddressFormData` type
 
-When a user selects a suggestion, Mapbox automatically fills all related input fields based on their autocomplete attributes.
+3. `src/components/sections/AddressesSection.tsx`
+   - Update `handleSubmit` to not pass `entity_id`
+   - Update filtering logic to query junction table
+   - Update card display to show entities from junction table
 
-### API Rate Limits
-
-Mapbox provides 100,000 free geocoding requests per month, which should be sufficient for this portal's usage.
-
-### No Map Display Required
-
-Unlike Google Places, Mapbox does not require displaying a map to use the geocoding API, keeping the implementation simple.
-
----
-
-## Files to Create
-
-1. `src/components/shared/AddressAutocomplete.tsx` - Reusable autocomplete input component
+4. `src/components/entity-detail/LinkedAddresses.tsx`
+   - Remove the `addresses` prop
+   - Simplify to only query junction table
 
 ---
 
-## Files to Modify
+## Impact on Entity Filtering
 
-1. `src/components/forms/AddressForm.tsx` - Integrate the autocomplete component
-2. `package.json` - Add `@mapbox/search-js-react` dependency
+Currently, the Addresses section can filter by entity using the direct `entity_id`. After this change:
 
----
-
-## User Experience
-
-1. User clicks on the "Street Address" field
-2. As they type, address suggestions appear in a dropdown
-3. User selects an address from the list
-4. City, State, ZIP, and Country fields auto-populate
-5. User can manually edit any field if needed
-6. A small "Enter manually" link allows bypassing autocomplete
+- Filtering will query the `address_entity_links` table instead
+- An address will appear for an entity if it has a link in the junction table
+- This is consistent with how the LinkedAddresses component already works
 
 ---
 
-## Fallback Behavior
+## Backward Compatibility
 
-- If Mapbox API is unavailable, the form falls back to manual entry
-- All fields remain editable regardless of autocomplete selection
-- The existing country dropdown remains available for selection
+- Existing addresses with `entity_id` set will need to be migrated to the junction table
+- The LinkedAddresses component already handles both sources, so existing data will still display correctly in entity detail view
+- After migration, all new entity associations will use the junction table exclusively
