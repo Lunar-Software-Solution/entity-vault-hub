@@ -26,6 +26,7 @@ const AddressForm = ({ address, onSubmit, onCancel, isLoading }: AddressFormProp
       label: address?.label ?? "",
       type: address?.type ?? "home",
       street: address?.street ?? "",
+      suite: address?.suite ?? "",
       city: address?.city ?? "",
       state: address?.state ?? "",
       zip: address?.zip ?? "",
@@ -82,7 +83,7 @@ const AddressForm = ({ address, onSubmit, onCancel, isLoading }: AddressFormProp
           )} />
 
           <FormField control={form.control} name="street" render={({ field }) => (
-            <FormItem className="md:col-span-2">
+            <FormItem>
               <FormLabel>Street Address *</FormLabel>
               <FormControl>
                 <AddressAutocomplete
@@ -92,6 +93,14 @@ const AddressForm = ({ address, onSubmit, onCancel, isLoading }: AddressFormProp
                   placeholder="Start typing an address..."
                 />
               </FormControl>
+              <FormMessage />
+            </FormItem>
+          )} />
+
+          <FormField control={form.control} name="suite" render={({ field }) => (
+            <FormItem>
+              <FormLabel>Suite / Apt / Unit</FormLabel>
+              <FormControl><Input placeholder="Suite 100, Apt 4B" {...field} /></FormControl>
               <FormMessage />
             </FormItem>
           )} />

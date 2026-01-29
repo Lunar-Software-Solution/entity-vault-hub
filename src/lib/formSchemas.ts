@@ -76,6 +76,11 @@ export const addressSchema = z.object({
     .min(5, "Street address must be at least 5 characters")
     .max(200, "Street address must be 200 characters or less")
     .regex(/^[a-zA-Z0-9\s.,#\-/']+$/, "Street address contains invalid characters"),
+  suite: z.string().trim()
+    .max(100, "Suite/Apt must be 100 characters or less")
+    .regex(/^[a-zA-Z0-9\s.,#\-/']*$/, "Suite/Apt contains invalid characters")
+    .optional()
+    .or(z.literal("")),
   city: z.string().trim()
     .min(1, "City is required")
     .min(2, "City must be at least 2 characters")
@@ -237,6 +242,7 @@ export type AddressFormData = {
   label: string;
   type: string;
   street: string;
+  suite?: string;
   city: string;
   state?: string;
   zip?: string;
