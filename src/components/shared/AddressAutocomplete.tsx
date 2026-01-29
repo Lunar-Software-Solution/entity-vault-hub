@@ -1,5 +1,5 @@
-import { useRef, useEffect, useCallback } from "react";
-import { AddressAutofill } from "@mapbox/search-js-react";
+import { useState, useCallback, useEffect } from "react";
+import { SearchBox } from "@mapbox/search-js-react";
 
 interface AddressData {
   street: string;
@@ -26,86 +26,119 @@ const AddressAutocomplete = ({
   placeholder = "Start typing an address...",
   disabled = false,
 }: AddressAutocompleteProps) => {
-  const inputRef = useRef<HTMLInputElement>(null);
-  const formRef = useRef<HTMLFormElement>(null);
+  const [inputValue, setInputValue] = useState(value);
 
-  // Sync external value to input
+  // Keep local state in sync with external value
   useEffect(() => {
-    if (inputRef.current && inputRef.current.value !== value) {
-      inputRef.current.value = value;
-    }
+    setInputValue(value);
   }, [value]);
 
-  // Handle autofill retrieve event - this fires when user selects an address
-  const handleRetrieve = useCallback((res: any) => {
-    if (!res?.features?.[0]?.properties) return;
+  // Handle selection from SearchBox
+  const handleRetrieve = useCallback((result: any) => {
+    console.log("SearchBox onRetrieve:", result);
     
-    const props = res.features[0].properties;
+    if (!result?.features?.[0]) return;
     
-    // Map Mapbox properties to our schema
+    const feature = result.features[0];
+    const props = feature.properties || {};
+    const context = props.context || {};
+    
+    // Extract address components from the result
     const addressData: AddressData = {
-      street: props.address_line1 || props.full_address?.split(",")[0] || "",
-      city: props.address_level2 || props.place || props.locality || "",
-      state: props.address_level1 || props.region || "",
-      zip: props.postcode || "",
-      country: props.country || "",
+      street: props.name || props.address || inputValue,
+      city: context.place?.name || context.locality?.name || props.place || "",
+      state: context.region?.name || context.region?.region_code || props.region || "",
+      zip: context.postcode?.name || props.postcode || "",
+      country: context.country?.name || props.country || "",
     };
     
-    // Update the input value with the street address
-    if (inputRef.current) {
-      inputRef.current.value = addressData.street;
-    }
-    onChange(addressData.street);
+    console.log("Mapped address:", addressData);
     
-    // Call the parent handler to fill other fields
+    // Update values
+    setInputValue(addressData.street);
+    onChange(addressData.street);
     onAddressSelect(addressData);
-  }, [onChange, onAddressSelect]);
+  }, [inputValue, onChange, onAddressSelect]);
 
-  // Handle input changes for manual typing
-  const handleInputChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    onChange(e.target.value);
-  }, [onChange]);
+  const inputClassName = "flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-base ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 md:text-sm";
 
   if (!MAPBOX_TOKEN) {
     return (
       <input
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
+        value={inputValue}
+        onChange={(e) => {
+          setInputValue(e.target.value);
+          onChange(e.target.value);
+        }}
         placeholder={placeholder}
         disabled={disabled}
-        className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-base ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 md:text-sm"
+        className={inputClassName}
       />
     );
   }
 
   return (
-    <form ref={formRef} className="relative" onSubmit={(e) => e.preventDefault()}>
-      <AddressAutofill
+    <div className="address-searchbox-wrapper">
+      <SearchBox
         accessToken={MAPBOX_TOKEN}
+        value={inputValue}
+        onChange={(val) => {
+          setInputValue(val);
+          onChange(val);
+        }}
         onRetrieve={handleRetrieve}
+        placeholder={placeholder}
         options={{
           language: "en",
           country: "US,CA,GB,AU,NZ,IE,SG,HK,FR,DE",
+          types: "address",
         }}
-      >
-        <input
-          ref={inputRef}
-          defaultValue={value}
-          onChange={handleInputChange}
-          placeholder={placeholder}
-          disabled={disabled}
-          autoComplete="street-address"
-          name="street-address"
-          className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-base ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 md:text-sm"
-        />
-      </AddressAutofill>
-      
-      {/* Hidden inputs for autofill to populate */}
-      <input type="hidden" autoComplete="address-level2" name="city" />
-      <input type="hidden" autoComplete="address-level1" name="state" />
-      <input type="hidden" autoComplete="postal-code" name="postal-code" />
-      <input type="hidden" autoComplete="country-name" name="country" />
-    </form>
+      />
+      <style>{`
+        .address-searchbox-wrapper .mapboxgl-ctrl-geocoder {
+          width: 100%;
+          max-width: none;
+          min-width: 0;
+          font-family: inherit;
+        }
+        .address-searchbox-wrapper .mapboxgl-ctrl-geocoder--input {
+          height: 40px;
+          padding: 8px 12px;
+          font-size: 14px;
+          border: 1px solid hsl(var(--input));
+          border-radius: 6px;
+          background: hsl(var(--background));
+          color: hsl(var(--foreground));
+        }
+        .address-searchbox-wrapper .mapboxgl-ctrl-geocoder--input:focus {
+          outline: none;
+          ring: 2px solid hsl(var(--ring));
+          border-color: hsl(var(--ring));
+        }
+        .address-searchbox-wrapper .mapboxgl-ctrl-geocoder--icon {
+          display: none;
+        }
+        .address-searchbox-wrapper .mapboxgl-ctrl-geocoder--button {
+          display: none;
+        }
+        .address-searchbox-wrapper .suggestions-wrapper {
+          background: hsl(var(--popover));
+          border: 1px solid hsl(var(--border));
+          border-radius: 6px;
+          box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+          z-index: 9999;
+        }
+        .address-searchbox-wrapper .suggestion {
+          padding: 8px 12px;
+          cursor: pointer;
+          color: hsl(var(--popover-foreground));
+        }
+        .address-searchbox-wrapper .suggestion:hover,
+        .address-searchbox-wrapper .suggestion--selected {
+          background: hsl(var(--accent));
+        }
+      `}</style>
+    </div>
   );
 };
 
