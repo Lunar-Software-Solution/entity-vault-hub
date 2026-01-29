@@ -214,8 +214,47 @@ const CapTableSection = () => {
 
   const createShareholder = useMutation({
     mutationFn: async (data: any) => {
-      const { error } = await supabase.from("shareholders").insert(data);
+      // Extract ID documents and temp ID from form data
+      const { _idDocuments, _tempId, ...shareholderData } = data;
+      
+      // Insert the shareholder
+      const { data: newShareholder, error } = await supabase
+        .from("shareholders")
+        .insert(shareholderData)
+        .select()
+        .single();
       if (error) throw error;
+      
+      // If there are ID documents with files, save them and update paths
+      if (_idDocuments && _idDocuments.length > 0 && newShareholder) {
+        for (const doc of _idDocuments) {
+          if (!doc.document_type) continue;
+          
+          // If the file was uploaded with temp ID, rename the path
+          let filePath = doc.file_path;
+          if (filePath && _tempId && filePath.includes(_tempId)) {
+            const newPath = filePath.replace(_tempId, newShareholder.id);
+            const { error: moveError } = await supabase.storage
+              .from("id-documents")
+              .move(filePath, newPath);
+            if (!moveError) {
+              filePath = newPath;
+            }
+          }
+          
+          await supabase.from("shareholder_id_documents").insert({
+            shareholder_id: newShareholder.id,
+            document_type: doc.document_type,
+            document_number: doc.document_number || null,
+            expiry_date: doc.expiry_date || null,
+            file_path: filePath || null,
+            file_name: doc.file_name || null,
+            notes: doc.notes || null,
+          });
+        }
+      }
+      
+      return newShareholder;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["shareholders"] });
