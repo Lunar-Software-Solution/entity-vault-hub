@@ -1018,6 +1018,54 @@ export type Database = {
           },
         ]
       }
+      email_entity_links: {
+        Row: {
+          created_at: string
+          email_id: string
+          entity_id: string
+          id: string
+          is_primary: boolean | null
+          notes: string | null
+          role: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          email_id: string
+          entity_id: string
+          id?: string
+          is_primary?: boolean | null
+          notes?: string | null
+          role?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          email_id?: string
+          entity_id?: string
+          id?: string
+          is_primary?: boolean | null
+          notes?: string | null
+          role?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "email_entity_links_email_id_fkey"
+            columns: ["email_id"]
+            isOneToOne: false
+            referencedRelation: "email_addresses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "email_entity_links_entity_id_fkey"
+            columns: ["entity_id"]
+            isOneToOne: false
+            referencedRelation: "entities"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       entities: {
         Row: {
           created_at: string
@@ -1868,6 +1916,54 @@ export type Database = {
             columns: ["shareholder_id"]
             isOneToOne: false
             referencedRelation: "shareholders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      phone_number_entity_links: {
+        Row: {
+          created_at: string
+          entity_id: string
+          id: string
+          is_primary: boolean | null
+          notes: string | null
+          phone_number_id: string
+          role: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          entity_id: string
+          id?: string
+          is_primary?: boolean | null
+          notes?: string | null
+          phone_number_id: string
+          role?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          entity_id?: string
+          id?: string
+          is_primary?: boolean | null
+          notes?: string | null
+          phone_number_id?: string
+          role?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "phone_number_entity_links_entity_id_fkey"
+            columns: ["entity_id"]
+            isOneToOne: false
+            referencedRelation: "entities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "phone_number_entity_links_phone_number_id_fkey"
+            columns: ["phone_number_id"]
+            isOneToOne: false
+            referencedRelation: "phone_numbers"
             referencedColumns: ["id"]
           },
         ]
