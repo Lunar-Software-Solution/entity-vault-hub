@@ -115,6 +115,13 @@ serve(async (req) => {
     }
     
     console.log(`Fetched ${submissions.length} submissions from DocuSeal`);
+    
+    // Log full metadata for debugging specific contracts
+    for (const sub of submissions) {
+      if (sub.template?.name?.includes("PHONE") || sub.id === 23) {
+        console.log("Full metadata for PHONE contract:", JSON.stringify(sub, null, 2));
+      }
+    }
 
     // Get existing contracts with docuseal_id to avoid duplicates
     const { data: existingContracts } = await supabase
