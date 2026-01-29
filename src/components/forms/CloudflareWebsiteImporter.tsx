@@ -273,8 +273,17 @@ const CloudflareWebsiteImporter = ({ open, onOpenChange }: CloudflareWebsiteImpo
                 </Select>
               </div>
 
-              <div className="flex-1 min-h-0 h-[350px] border rounded-lg overflow-y-auto">
-                <div className="p-2 space-y-1">
+              <div className="flex-1 min-h-0 h-[350px] border rounded-lg overflow-hidden flex flex-col">
+                {/* Column Headers */}
+                <div className="grid grid-cols-[auto_1fr_60px_120px_120px_150px] items-center gap-3 px-4 py-2 bg-muted/50 border-b text-xs font-medium text-muted-foreground sticky top-0">
+                  <span className="w-4"></span>
+                  <span>Domain</span>
+                  <span className="text-center">Type</span>
+                  <span>Category</span>
+                  <span>Platform</span>
+                  <span>Notes</span>
+                </div>
+                <div className="p-2 space-y-1 overflow-y-auto flex-1">
                   {recordsWithStatus.map((record) => {
                     const config = getRecordConfig(record.name);
                     return (
