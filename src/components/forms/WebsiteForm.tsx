@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { entityWebsiteSchema, EntityWebsiteFormData } from "@/lib/formSchemas";
@@ -8,8 +9,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { Separator } from "@/components/ui/separator";
+import { Badge } from "@/components/ui/badge";
 import { type EntityWebsite } from "@/hooks/usePortalData";
 import WebsiteEntityAffiliationsManager from "./WebsiteEntityAffiliationsManager";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "@/hooks/use-toast";
+import { Loader2, Globe, RefreshCw, Shield, Server } from "lucide-react";
 
 interface WebsiteFormProps {
   website?: EntityWebsite | null;
@@ -17,6 +22,14 @@ interface WebsiteFormProps {
   onSubmit: (data: EntityWebsiteFormData) => void;
   onCancel: () => void;
   isLoading?: boolean;
+}
+
+interface DNSRecord {
+  type: string;
+  name: string;
+  content: string;
+  ttl: number;
+  proxied?: boolean;
 }
 
 const websiteTypes = [
@@ -56,6 +69,11 @@ const platforms = [
 ];
 
 const WebsiteForm = ({ website, defaultEntityId, onSubmit, onCancel, isLoading }: WebsiteFormProps) => {
+  const [dnsRecords, setDnsRecords] = useState<DNSRecord[]>([]);
+  const [isFetchingDns, setIsFetchingDns] = useState(false);
+  const [dnsError, setDnsError] = useState<string | null>(null);
+  const [dnsDomain, setDnsDomain] = useState<string | null>(null);
+
   const form = useForm<EntityWebsiteFormData>({
     resolver: zodResolver(entityWebsiteSchema),
     defaultValues: {
@@ -70,6 +88,63 @@ const WebsiteForm = ({ website, defaultEntityId, onSubmit, onCancel, isLoading }
       notes: website?.notes ?? "",
     },
   });
+
+  const fetchDnsRecords = async () => {
+    const url = form.getValues("url");
+    if (!url) {
+      toast({
+        title: "URL Required",
+        description: "Please enter a website URL first",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsFetchingDns(true);
+    setDnsError(null);
+    setDnsRecords([]);
+    setDnsDomain(null);
+
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        throw new Error("Not authenticated");
+      }
+
+      const { data, error } = await supabase.functions.invoke('fetch-cloudflare-dns', {
+        body: { domain: url },
+      });
+
+      if (error) {
+        throw error;
+      }
+
+      if (data.error) {
+        setDnsError(data.details || data.error);
+        if (data.records) {
+          setDnsRecords(data.records);
+        }
+      } else {
+        setDnsRecords(data.records || []);
+        setDnsDomain(data.domain);
+        toast({
+          title: "DNS Records Fetched",
+          description: `Found ${data.records?.length || 0} A/CNAME records for ${data.domain}`,
+        });
+      }
+    } catch (error: unknown) {
+      console.error("Error fetching DNS records:", error);
+      const errorMessage = error instanceof Error ? error.message : "Failed to fetch DNS records";
+      setDnsError(errorMessage);
+      toast({
+        title: "Error",
+        description: errorMessage,
+        variant: "destructive",
+      });
+    } finally {
+      setIsFetchingDns(false);
+    }
+  };
 
   return (
     <Form {...form}>
@@ -88,13 +163,88 @@ const WebsiteForm = ({ website, defaultEntityId, onSubmit, onCancel, isLoading }
           <FormField control={form.control} name="url" render={({ field }) => (
             <FormItem>
               <FormLabel>URL *</FormLabel>
-              <FormControl>
-                <Input placeholder="https://example.com" {...field} />
-              </FormControl>
+              <div className="flex gap-2">
+                <FormControl>
+                  <Input placeholder="https://example.com" {...field} />
+                </FormControl>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="icon"
+                  onClick={fetchDnsRecords}
+                  disabled={isFetchingDns}
+                  title="Fetch DNS Records from Cloudflare"
+                >
+                  {isFetchingDns ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <Globe className="h-4 w-4" />
+                  )}
+                </Button>
+              </div>
               <FormMessage />
             </FormItem>
           )} />
         </div>
+
+        {/* DNS Records Display */}
+        {(dnsRecords.length > 0 || dnsError) && (
+          <div className="rounded-lg border bg-muted/30 p-4 space-y-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Server className="h-4 w-4 text-muted-foreground" />
+                <span className="text-sm font-medium">
+                  DNS Records {dnsDomain && <span className="text-muted-foreground">({dnsDomain})</span>}
+                </span>
+              </div>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={fetchDnsRecords}
+                disabled={isFetchingDns}
+              >
+                <RefreshCw className={`h-3 w-3 mr-1 ${isFetchingDns ? 'animate-spin' : ''}`} />
+                Refresh
+              </Button>
+            </div>
+
+            {dnsError && (
+              <p className="text-sm text-destructive">{dnsError}</p>
+            )}
+
+            {dnsRecords.length > 0 && (
+              <div className="space-y-2">
+                {dnsRecords.map((record, index) => (
+                  <div
+                    key={`${record.name}-${record.type}-${index}`}
+                    className="flex items-center gap-2 text-sm bg-background rounded-md p-2 border"
+                  >
+                    <Badge variant={record.type === 'A' ? 'default' : 'secondary'} className="w-16 justify-center">
+                      {record.type}
+                    </Badge>
+                    <span className="font-mono text-xs flex-1 truncate" title={record.name}>
+                      {record.name}
+                    </span>
+                    <span className="text-muted-foreground">→</span>
+                    <span className="font-mono text-xs flex-1 truncate" title={record.content}>
+                      {record.content}
+                    </span>
+                    {record.proxied && (
+                      <span title="Proxied through Cloudflare">
+                        <Shield className="h-3 w-3 text-orange-500" />
+                      </span>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {dnsRecords.length === 0 && !dnsError && (
+              <p className="text-sm text-muted-foreground">No A or CNAME records found</p>
+            )}
+          </div>
+        )}
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <FormField control={form.control} name="type" render={({ field }) => (
