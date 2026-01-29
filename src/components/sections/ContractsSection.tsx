@@ -9,6 +9,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import ContractForm from "@/components/forms/ContractForm";
 import DeleteConfirmDialog from "@/components/shared/DeleteConfirmDialog";
 import PdfViewerDialog from "@/components/contracts/PdfViewerDialog";
+import DocuSealSync from "@/components/contracts/DocuSealSync";
 import { format, differenceInDays } from "date-fns";
 import { supabase } from "@/integrations/supabase/client";
 import { useUserRole } from "@/hooks/useUserRole";
@@ -186,12 +187,15 @@ const ContractsSection = ({ entityFilter }: ContractsSectionProps) => {
               : "Track and manage all your business and personal contracts."}
           </p>
         </div>
-        {canWrite && (
-          <Button className="gap-2" onClick={() => setIsFormOpen(true)}>
-            <Plus className="w-4 h-4" />
-            Add Contract
-          </Button>
-        )}
+        <div className="flex items-center gap-3">
+          {canWrite && <DocuSealSync />}
+          {canWrite && (
+            <Button className="gap-2" onClick={() => setIsFormOpen(true)}>
+              <Plus className="w-4 h-4" />
+              Add Contract
+            </Button>
+          )}
+        </div>
       </div>
 
       {/* Summary Cards */}

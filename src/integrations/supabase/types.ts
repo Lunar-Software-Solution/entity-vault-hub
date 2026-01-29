@@ -465,6 +465,9 @@ export type Database = {
         Row: {
           ai_summary: string | null
           created_at: string
+          docuseal_id: string | null
+          docuseal_status: string | null
+          docuseal_synced_at: string | null
           end_date: string | null
           entity_id: string | null
           file_name: string | null
@@ -481,6 +484,9 @@ export type Database = {
         Insert: {
           ai_summary?: string | null
           created_at?: string
+          docuseal_id?: string | null
+          docuseal_status?: string | null
+          docuseal_synced_at?: string | null
           end_date?: string | null
           entity_id?: string | null
           file_name?: string | null
@@ -497,6 +503,9 @@ export type Database = {
         Update: {
           ai_summary?: string | null
           created_at?: string
+          docuseal_id?: string | null
+          docuseal_status?: string | null
+          docuseal_synced_at?: string | null
           end_date?: string | null
           entity_id?: string | null
           file_name?: string | null
