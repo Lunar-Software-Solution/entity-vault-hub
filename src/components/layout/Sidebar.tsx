@@ -144,7 +144,7 @@ const Sidebar = ({
   } = useAuth();
   const [openGroups, setOpenGroups] = useState<string[]>(["main"]);
   const [profileOpen, setProfileOpen] = useState(false);
-  const handleLogout = () => {
+  const handleLogout = async () => {
     console.log("=== LOGOUT HANDLER CALLED ===");
     
     // Clear any 2FA session data
@@ -153,11 +153,21 @@ const Sidebar = ({
     sessionStorage.removeItem("pendingAccessToken");
     sessionStorage.removeItem("pending2FAPassword");
     
-    // Clear local auth state
-    signOut();
+    // Clear Supabase session from localStorage directly to prevent race conditions
+    const supabaseKey = Object.keys(localStorage).find(key => key.startsWith('sb-') && key.endsWith('-auth-token'));
+    if (supabaseKey) {
+      localStorage.removeItem(supabaseKey);
+    }
     
-    // Force navigation to auth page
-    window.location.href = "/auth";
+    // Call signOut to clean up on the server
+    try {
+      await signOut();
+    } catch (e) {
+      console.log("SignOut completed (may have errored if session was already invalid)");
+    }
+    
+    // Force navigation to auth page with replace to prevent back navigation
+    window.location.replace("/auth");
   };
   const userEmail = user?.email || "user@example.com";
   const userInitials = userEmail.split("@")[0].slice(0, 2).toUpperCase();
