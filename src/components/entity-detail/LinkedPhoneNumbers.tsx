@@ -13,7 +13,6 @@ import type { PhoneNumber } from "@/hooks/usePortalData";
 import type { PhoneNumberFormData } from "@/lib/formSchemas";
 
 interface LinkedPhoneNumbersProps {
-  phones: PhoneNumber[];
   entityId: string;
 }
 
@@ -25,7 +24,7 @@ interface PhoneNumberEntityLink {
   phone_number?: PhoneNumber;
 }
 
-const LinkedPhoneNumbers = ({ phones, entityId }: LinkedPhoneNumbersProps) => {
+const LinkedPhoneNumbers = ({ entityId }: LinkedPhoneNumbersProps) => {
   const [showForm, setShowForm] = useState(false);
   const [editingPhone, setEditingPhone] = useState<PhoneNumber | null>(null);
   const [deletingPhone, setDeletingPhone] = useState<PhoneNumber | null>(null);
@@ -55,26 +54,18 @@ const LinkedPhoneNumbers = ({ phones, entityId }: LinkedPhoneNumbersProps) => {
     enabled: !!entityId,
   });
 
-  // Combine direct phones with linked phones, avoiding duplicates
-  const directPhoneIds = new Set(phones.map(p => p.id));
-  const additionalLinkedPhones = linkedPhones.filter(
-    link => link.phone_number && !directPhoneIds.has(link.phone_number_id)
-  );
-
-  const allPhones = [
-    ...phones.map(phone => ({ phone, isLinked: false, role: null as string | null, linkIsPrimary: false })),
-    ...additionalLinkedPhones.map(link => ({ 
+  // Map linked phones for display
+  const allPhones = linkedPhones
+    .filter(link => link.phone_number)
+    .map(link => ({ 
       phone: link.phone_number!, 
-      isLinked: true, 
       role: link.role,
       linkIsPrimary: link.is_primary 
-    })),
-  ];
+    }));
 
   const handleSubmit = (data: PhoneNumberFormData) => {
     const payload = {
       ...data,
-      entity_id: data.entity_id === "__none__" ? null : (data.entity_id || null),
       purpose: data.purpose || null,
     };
 
@@ -125,7 +116,7 @@ const LinkedPhoneNumbers = ({ phones, entityId }: LinkedPhoneNumbersProps) => {
         <p className="text-sm text-muted-foreground">No phone numbers linked</p>
       ) : (
         <div className="space-y-3">
-          {allPhones.map(({ phone, isLinked, role, linkIsPrimary }) => (
+          {allPhones.map(({ phone, role, linkIsPrimary }) => (
             <div key={phone.id} className="flex items-center justify-between p-3 rounded-lg bg-muted/50">
               <div className="flex items-center gap-3">
                 <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
@@ -137,9 +128,7 @@ const LinkedPhoneNumbers = ({ phones, entityId }: LinkedPhoneNumbersProps) => {
                     {(phone.is_primary || linkIsPrimary) && (
                       <Star className="w-3 h-3 text-amber-500 fill-amber-500" />
                     )}
-                    {isLinked && (
-                      <Link2 className="w-3 h-3 text-muted-foreground" />
-                    )}
+                    <Link2 className="w-3 h-3 text-muted-foreground" />
                   </div>
                   <p className="text-sm font-mono text-muted-foreground">
                     {phone.country_code} {phone.phone_number}

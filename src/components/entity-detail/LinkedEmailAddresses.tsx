@@ -14,7 +14,6 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
-import { useEntities } from "@/hooks/usePortalData";
 import EmailEntityAffiliationsManager from "@/components/forms/EmailEntityAffiliationsManager";
 
 interface EmailAddress {
@@ -36,12 +35,10 @@ interface EmailEntityLink {
 }
 
 interface LinkedEmailAddressesProps {
-  emails: EmailAddress[];
   entityId: string;
 }
 
 interface EmailFormData {
-  entity_id: string;
   email: string;
   label: string;
   purpose?: string;
@@ -50,21 +47,17 @@ interface EmailFormData {
 
 const EmailForm = ({
   item,
-  defaultEntityId,
   onSubmit,
   onCancel,
   isLoading,
 }: {
   item?: EmailAddress | null;
-  defaultEntityId?: string;
   onSubmit: (data: EmailFormData) => void;
   onCancel: () => void;
   isLoading?: boolean;
 }) => {
-  const { data: entities } = useEntities();
   const form = useForm<EmailFormData>({
     defaultValues: {
-      entity_id: item?.entity_id || defaultEntityId || "",
       email: item?.email || "",
       label: item?.label || "Support",
       purpose: item?.purpose || "",
@@ -77,28 +70,6 @@ const EmailForm = ({
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-        <FormField control={form.control} name="entity_id" render={({ field }) => (
-          <FormItem>
-            <FormLabel>Entity</FormLabel>
-            <Select onValueChange={field.onChange} value={field.value || ""}>
-              <FormControl>
-                <SelectTrigger className="bg-background">
-                  <SelectValue placeholder="Select an entity (optional)" />
-                </SelectTrigger>
-              </FormControl>
-              <SelectContent className="bg-background max-h-[300px]">
-                <SelectItem value="__none__">None</SelectItem>
-                {entities?.map((entity) => (
-                  <SelectItem key={entity.id} value={entity.id}>
-                    {entity.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <FormMessage />
-          </FormItem>
-        )} />
-
         <div className="grid grid-cols-2 gap-4">
           <FormField control={form.control} name="email" render={({ field }) => (
             <FormItem>
@@ -164,7 +135,7 @@ const EmailForm = ({
   );
 };
 
-const LinkedEmailAddresses = ({ emails, entityId }: LinkedEmailAddressesProps) => {
+const LinkedEmailAddresses = ({ entityId }: LinkedEmailAddressesProps) => {
   const [showForm, setShowForm] = useState(false);
   const [editingEmail, setEditingEmail] = useState<EmailAddress | null>(null);
   const [deletingEmail, setDeletingEmail] = useState<EmailAddress | null>(null);
@@ -191,21 +162,14 @@ const LinkedEmailAddresses = ({ emails, entityId }: LinkedEmailAddressesProps) =
     enabled: !!entityId,
   });
 
-  // Combine direct emails with linked emails, avoiding duplicates
-  const directEmailIds = new Set(emails.map(e => e.id));
-  const additionalLinkedEmails = linkedEmails.filter(
-    link => link.email && !directEmailIds.has(link.email_id)
-  );
-
-  const allEmails = [
-    ...emails.map(email => ({ email, isLinked: false, role: null as string | null, linkIsPrimary: false })),
-    ...additionalLinkedEmails.map(link => ({ 
+  // Map linked emails for display
+  const allEmails = linkedEmails
+    .filter(link => link.email)
+    .map(link => ({ 
       email: link.email!, 
-      isLinked: true, 
       role: link.role,
       linkIsPrimary: link.is_primary 
-    })),
-  ];
+    }));
 
   const createMutation = useMutation({
     mutationFn: async (data: EmailFormData) => {
@@ -213,7 +177,6 @@ const LinkedEmailAddresses = ({ emails, entityId }: LinkedEmailAddressesProps) =
         .from("email_addresses")
         .insert({
           ...data,
-          entity_id: data.entity_id === "__none__" ? null : (data.entity_id || null),
           purpose: data.purpose || null,
         })
         .select()
@@ -235,7 +198,6 @@ const LinkedEmailAddresses = ({ emails, entityId }: LinkedEmailAddressesProps) =
         .from("email_addresses")
         .update({
           ...data,
-          entity_id: data.entity_id === "__none__" ? null : (data.entity_id || null),
           purpose: data.purpose || null,
         })
         .eq("id", id)
@@ -307,7 +269,7 @@ const LinkedEmailAddresses = ({ emails, entityId }: LinkedEmailAddressesProps) =
         <p className="text-sm text-muted-foreground">No email addresses linked</p>
       ) : (
         <div className="space-y-3">
-          {allEmails.map(({ email, isLinked, role, linkIsPrimary }) => (
+          {allEmails.map(({ email, role, linkIsPrimary }) => (
             <div key={email.id} className="flex items-center justify-between p-3 rounded-lg bg-muted/50">
               <div className="flex items-center gap-3">
                 <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
@@ -319,9 +281,7 @@ const LinkedEmailAddresses = ({ emails, entityId }: LinkedEmailAddressesProps) =
                     {(email.is_primary || linkIsPrimary) && (
                       <Star className="w-3 h-3 text-amber-500 fill-amber-500" />
                     )}
-                    {isLinked && (
-                      <Link2 className="w-3 h-3 text-muted-foreground" />
-                    )}
+                    <Link2 className="w-3 h-3 text-muted-foreground" />
                   </div>
                   <div className="flex items-center gap-2 mt-0.5">
                     <Badge variant="outline" className="text-xs">{email.label}</Badge>
@@ -365,7 +325,6 @@ const LinkedEmailAddresses = ({ emails, entityId }: LinkedEmailAddressesProps) =
           </DialogHeader>
           <EmailForm
             item={editingEmail}
-            defaultEntityId={entityId}
             onSubmit={handleSubmit}
             onCancel={handleCloseForm}
             isLoading={createMutation.isPending || updateMutation.isPending}

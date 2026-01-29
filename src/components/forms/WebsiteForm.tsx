@@ -59,7 +59,6 @@ const WebsiteForm = ({ website, defaultEntityId, onSubmit, onCancel, isLoading }
   const form = useForm<EntityWebsiteFormData>({
     resolver: zodResolver(entityWebsiteSchema),
     defaultValues: {
-      entity_id: website?.entity_id ?? defaultEntityId ?? "",
       url: website?.url ?? "",
       name: website?.name ?? "",
       type: website?.type ?? "corporate",

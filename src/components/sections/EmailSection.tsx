@@ -15,8 +15,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
-import { Plus, Edit, Trash2, Search, Mail, CheckCircle2 } from "lucide-react";
+import { Plus, Edit, Trash2, Search, Mail, CheckCircle2, Building2 } from "lucide-react";
 import { useUserRole } from "@/hooks/useUserRole";
+import EmailEntityAffiliationsManager from "@/components/forms/EmailEntityAffiliationsManager";
 
 interface EmailAddress {
   id: string;
@@ -41,7 +42,6 @@ interface MailServer {
 }
 
 interface EmailFormData {
-  entity_id: string;
   email: string;
   label: string;
   purpose?: string;
@@ -78,10 +78,31 @@ const useMailServers = () => {
   });
 };
 
+// Hook to fetch all email entity links
+const useEmailEntityLinks = () => {
+  return useQuery({
+    queryKey: ["email-entity-links-all"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("email_entity_links")
+        .select(`
+          id,
+          email_id,
+          entity_id,
+          is_primary,
+          role,
+          entity:entities(id, name)
+        `);
+      if (error) throw error;
+      return data;
+    },
+  });
+};
+
 const useCreateEmailAddress = () => {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async (email: Omit<EmailAddress, "id" | "created_at" | "updated_at" | "is_verified">) => {
+    mutationFn: async (email: Omit<EmailAddress, "id" | "created_at" | "updated_at" | "is_verified" | "entity_id">) => {
       const { data, error } = await supabase.from("email_addresses").insert(email).select().single();
       if (error) throw error;
       return data;
@@ -130,19 +151,16 @@ const EmailForm = ({
   onSubmit,
   onCancel,
   isLoading,
-  entities,
   mailServers,
 }: {
   item?: EmailAddress | null;
   onSubmit: (data: EmailFormData) => void;
   onCancel: () => void;
   isLoading?: boolean;
-  entities: any[];
   mailServers: MailServer[];
 }) => {
   const form = useForm<EmailFormData>({
     defaultValues: {
-      entity_id: item?.entity_id || "",
       email: item?.email || "",
       label: item?.label || "",
       purpose: item?.purpose || "",
@@ -156,27 +174,6 @@ const EmailForm = ({
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-        <FormField control={form.control} name="entity_id" render={({ field }) => (
-          <FormItem>
-            <FormLabel>Entity *</FormLabel>
-            <Select onValueChange={field.onChange} value={field.value || ""}>
-              <FormControl>
-                <SelectTrigger className="bg-background">
-                  <SelectValue placeholder="Select an entity" />
-                </SelectTrigger>
-              </FormControl>
-              <SelectContent className="bg-background max-h-[300px]">
-                {entities?.map((entity) => (
-                  <SelectItem key={entity.id} value={entity.id}>
-                    {entity.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <FormMessage />
-          </FormItem>
-        )} />
-
         <div className="grid grid-cols-2 gap-4">
           <FormField control={form.control} name="email" render={({ field }) => (
             <FormItem>
@@ -246,6 +243,13 @@ const EmailForm = ({
           </FormItem>
         )} />
 
+        {/* Show affiliations manager only when editing existing email */}
+        {item?.id && (
+          <div className="border-t pt-4 mt-4">
+            <EmailEntityAffiliationsManager emailId={item.id} />
+          </div>
+        )}
+
         <div className="flex justify-end gap-3 pt-4">
           <Button type="button" variant="outline" onClick={onCancel}>Cancel</Button>
           <Button type="submit" disabled={isLoading}>
@@ -268,19 +272,27 @@ const EmailSection = () => {
   const { data: emailAddresses, isLoading: emailsLoading } = useEmailAddresses();
   const { data: mailServers, isLoading: serversLoading } = useMailServers();
   const { data: entities } = useEntities();
+  const { data: emailEntityLinks } = useEmailEntityLinks();
 
   const createEmail = useCreateEmailAddress();
   const updateEmail = useUpdateEmailAddress();
   const deleteEmail = useDeleteEmailAddress();
 
-  const getEntityName = (entityId: string | null) => {
-    if (!entityId) return "—";
-    return entities?.find(e => e.id === entityId)?.name || "Unknown";
-  };
-
   const getServerName = (serverId: string | null) => {
     if (!serverId) return null;
     return mailServers?.find(s => s.id === serverId)?.name || null;
+  };
+
+  // Get linked entities for an email
+  const getLinkedEntities = (emailId: string) => {
+    if (!emailEntityLinks) return [];
+    return emailEntityLinks
+      .filter(link => link.email_id === emailId)
+      .map(link => ({
+        id: link.entity_id,
+        name: (link.entity as any)?.name || "Unknown",
+        is_primary: link.is_primary,
+      }));
   };
 
   const filteredEmails = useMemo(() => {
@@ -295,16 +307,23 @@ const EmailSection = () => {
     }
 
     if (entityFilter !== "all") {
-      data = data.filter(email => email.entity_id === entityFilter);
+      // Get email IDs that are linked to the filtered entity
+      const linkedEmailIds = emailEntityLinks
+        ?.filter(link => link.entity_id === entityFilter)
+        .map(link => link.email_id) || [];
+      
+      // Also include emails with the legacy entity_id
+      data = data.filter(email => 
+        linkedEmailIds.includes(email.id) || email.entity_id === entityFilter
+      );
     }
 
     return data;
-  }, [emailAddresses, searchQuery, entityFilter]);
+  }, [emailAddresses, searchQuery, entityFilter, emailEntityLinks]);
 
   const handleSubmit = (data: EmailFormData) => {
     const payload = {
       ...data,
-      entity_id: data.entity_id || null,
       mail_server_id: data.mail_server_id === "__none__" ? null : (data.mail_server_id || null),
       purpose: data.purpose || null,
     };
@@ -380,63 +399,78 @@ const EmailSection = () => {
               <TableRow>
                 <TableHead className="text-foreground">Email</TableHead>
                 <TableHead className="text-foreground">Label</TableHead>
-                <TableHead className="text-foreground">Entity</TableHead>
+                <TableHead className="text-foreground">Entities</TableHead>
                 <TableHead className="text-foreground">Mail Server</TableHead>
                 <TableHead className="text-foreground">Status</TableHead>
                 <TableHead className="text-foreground w-[100px]">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filteredEmails.map((email) => (
-                <TableRow key={email.id}>
-                  <TableCell className="font-medium text-foreground">
-                    <div className="flex items-center gap-2">
-                      <Mail className="w-4 h-4 text-muted-foreground" />
-                      {email.email}
-                      {email.is_primary && (
-                        <Badge variant="outline" className="text-xs">Primary</Badge>
+              {filteredEmails.map((email) => {
+                const linkedEntities = getLinkedEntities(email.id);
+                
+                return (
+                  <TableRow key={email.id}>
+                    <TableCell className="font-medium text-foreground">
+                      <div className="flex items-center gap-2">
+                        <Mail className="w-4 h-4 text-muted-foreground" />
+                        {email.email}
+                        {email.is_primary && (
+                          <Badge variant="outline" className="text-xs">Primary</Badge>
+                        )}
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant="secondary">{email.label}</Badge>
+                    </TableCell>
+                    <TableCell className="text-muted-foreground">
+                      {linkedEntities.length > 0 ? (
+                        <div className="flex items-center gap-1 flex-wrap">
+                          <Building2 className="w-3.5 h-3.5 flex-shrink-0" />
+                          {linkedEntities.map((entity, idx) => (
+                            <span key={entity.id} className="text-sm">
+                              {entity.name}{idx < linkedEntities.length - 1 && ", "}
+                            </span>
+                          ))}
+                        </div>
+                      ) : "—"}
+                    </TableCell>
+                    <TableCell className="text-muted-foreground">{getServerName(email.mail_server_id) || "—"}</TableCell>
+                    <TableCell>
+                      {email.is_verified ? (
+                        <div className="flex items-center gap-1 text-green-500">
+                          <CheckCircle2 className="w-4 h-4" />
+                          Verified
+                        </div>
+                      ) : (
+                        <Badge variant="outline">Unverified</Badge>
                       )}
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <Badge variant="secondary">{email.label}</Badge>
-                  </TableCell>
-                  <TableCell className="text-muted-foreground">{getEntityName(email.entity_id)}</TableCell>
-                  <TableCell className="text-muted-foreground">{getServerName(email.mail_server_id) || "—"}</TableCell>
-                  <TableCell>
-                    {email.is_verified ? (
-                      <div className="flex items-center gap-1 text-green-500">
-                        <CheckCircle2 className="w-4 h-4" />
-                        Verified
-                      </div>
-                    ) : (
-                      <Badge variant="outline">Unverified</Badge>
-                    )}
-                  </TableCell>
-                  <TableCell>
-                    {canWrite && (
-                      <div className="flex gap-1">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-8 w-8 text-primary"
-                          onClick={() => { setEditingEmail(email); setShowForm(true); }}
-                        >
-                          <Edit className="w-4 h-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-8 w-8 text-destructive"
-                          onClick={() => setDeletingEmail(email)}
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </Button>
-                      </div>
-                    )}
-                  </TableCell>
-                </TableRow>
-              ))}
+                    </TableCell>
+                    <TableCell>
+                      {canWrite && (
+                        <div className="flex gap-1">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8 text-primary"
+                            onClick={() => { setEditingEmail(email); setShowForm(true); }}
+                          >
+                            <Edit className="w-4 h-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8 text-destructive"
+                            onClick={() => setDeletingEmail(email)}
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        </div>
+                      )}
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
               {!filteredEmails.length && (
                 <TableRow>
                   <TableCell colSpan={6} className="text-center text-muted-foreground py-8">
@@ -458,7 +492,6 @@ const EmailSection = () => {
             item={editingEmail}
             onSubmit={handleSubmit}
             onCancel={() => { setShowForm(false); setEditingEmail(null); }}
-            entities={entities || []}
             mailServers={mailServers || []}
           />
         </DialogContent>

@@ -102,7 +102,6 @@ const WebsitesSection = ({ entityFilter }: WebsitesSectionProps) => {
 
   const handleSubmit = (data: EntityWebsiteFormData) => {
     const cleanData = {
-      entity_id: data.entity_id,
       name: data.name,
       url: data.url,
       type: data.type || "corporate",
