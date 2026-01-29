@@ -1,6 +1,6 @@
 import { useState, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Plus, ExternalLink, MoreVertical, Pencil, Trash2, Building2, Calendar, ShieldCheck, AlertTriangle } from "lucide-react";
+import { Plus, ExternalLink, MoreVertical, Pencil, Trash2, Building2, Calendar, ShieldCheck, AlertTriangle, Cloud } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useEntityWebsites, useEntities, type EntityWebsite } from "@/hooks/usePortalData";
 import { useCreateEntityWebsite, useUpdateEntityWebsite, useDeleteEntityWebsite } from "@/hooks/usePortalMutations";
@@ -11,6 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import WebsiteForm from "@/components/forms/WebsiteForm";
 import DeleteConfirmDialog from "@/components/shared/DeleteConfirmDialog";
 import CompanyLogo from "@/components/shared/CompanyLogo";
+import CloudflareWebsiteImporter from "@/components/forms/CloudflareWebsiteImporter";
 import { useUserRole } from "@/hooks/useUserRole";
 import type { EntityWebsiteFormData } from "@/lib/formSchemas";
 import { format, differenceInDays, parseISO } from "date-fns";
@@ -47,6 +48,7 @@ const WebsitesSection = ({ entityFilter }: WebsitesSectionProps) => {
   const { canWrite } = useUserRole();
   
   const [isFormOpen, setIsFormOpen] = useState(false);
+  const [isImporterOpen, setIsImporterOpen] = useState(false);
   const [editingWebsite, setEditingWebsite] = useState<EntityWebsite | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   
@@ -175,10 +177,16 @@ const WebsitesSection = ({ entityFilter }: WebsitesSectionProps) => {
           <p className="text-muted-foreground">Manage websites and domains across all entities.</p>
         </div>
         {canWrite && (
-          <Button className="gap-2" onClick={() => setIsFormOpen(true)}>
-            <Plus className="w-4 h-4" />
-            Add Website
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button variant="outline" className="gap-2" onClick={() => setIsImporterOpen(true)}>
+              <Cloud className="w-4 h-4" />
+              Import from Cloudflare
+            </Button>
+            <Button className="gap-2" onClick={() => setIsFormOpen(true)}>
+              <Plus className="w-4 h-4" />
+              Add Website
+            </Button>
+          </div>
         )}
       </div>
 
@@ -342,6 +350,12 @@ const WebsitesSection = ({ entityFilter }: WebsitesSectionProps) => {
         title="Delete Website"
         description="Are you sure you want to delete this website? This action cannot be undone."
         isLoading={deleteWebsite.isPending}
+      />
+
+      {/* Cloudflare Importer */}
+      <CloudflareWebsiteImporter
+        open={isImporterOpen}
+        onOpenChange={setIsImporterOpen}
       />
     </div>
   );
