@@ -8,7 +8,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
 import type { Address } from "@/hooks/usePortalData";
-import { useEntities } from "@/hooks/usePortalData";
 import { countries } from "@/lib/countries";
 import AddressEntityAffiliationsManager from "./AddressEntityAffiliationsManager";
 
@@ -20,8 +19,6 @@ interface AddressFormProps {
 }
 
 const AddressForm = ({ address, onSubmit, onCancel, isLoading }: AddressFormProps) => {
-  const { data: entities } = useEntities();
-  
   const form = useForm<AddressFormData>({
     resolver: zodResolver(addressSchema),
     defaultValues: {
@@ -33,7 +30,6 @@ const AddressForm = ({ address, onSubmit, onCancel, isLoading }: AddressFormProp
       zip: address?.zip ?? "",
       country: address?.country ?? "United States",
       is_primary: address?.is_primary ?? false,
-      entity_id: (address as any)?.entity_id ?? "",
     },
   });
 
@@ -41,25 +37,6 @@ const AddressForm = ({ address, onSubmit, onCancel, isLoading }: AddressFormProp
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <FormField control={form.control} name="entity_id" render={({ field }) => (
-            <FormItem className="md:col-span-2">
-              <FormLabel>Primary Entity</FormLabel>
-              <Select onValueChange={(value) => field.onChange(value === "__none__" ? "" : value)} defaultValue={field.value || "__none__"}>
-                <FormControl><SelectTrigger><SelectValue placeholder="Select entity (optional)" /></SelectTrigger></FormControl>
-                <SelectContent>
-                  <SelectItem value="__none__">No entity</SelectItem>
-                  {entities?.map((entity) => (
-                    <SelectItem key={entity.id} value={entity.id}>{entity.name}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <FormDescription className="text-xs">
-                Direct entity link. Use "Linked Entities" below for multi-entity associations.
-              </FormDescription>
-              <FormMessage />
-            </FormItem>
-          )} />
-          
           <FormField control={form.control} name="label" render={({ field }) => (
             <FormItem>
               <FormLabel>Label *</FormLabel>

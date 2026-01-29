@@ -97,7 +97,6 @@ export const addressSchema = z.object({
     .max(100, "Country must be 100 characters or less")
     .regex(/^[a-zA-Z\s\-'.]+$/, "Country contains invalid characters"),
   is_primary: z.boolean().default(false),
-  entity_id: z.string().uuid().optional().or(z.literal("")),
 });
 
 export const contractSchema = z.object({
@@ -244,7 +243,6 @@ export type AddressFormData = {
   zip?: string;
   country: string;
   is_primary: boolean;
-  entity_id?: string;
 };
 
 export type ContractFormData = {

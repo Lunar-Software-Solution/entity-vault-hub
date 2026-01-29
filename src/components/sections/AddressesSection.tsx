@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Plus, MapPin, Home, Building2, Package, Pencil, Trash2, Copy, ExternalLink } from "lucide-react";
+import { Plus, MapPin, Home, Building2, Package, Pencil, Trash2, Copy, ExternalLink, Link2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAddresses, useEntities } from "@/hooks/usePortalData";
 import { useCreateAddress, useUpdateAddress, useDeleteAddress } from "@/hooks/usePortalMutations";
@@ -11,6 +11,8 @@ import { toast } from "sonner";
 import { useUserRole } from "@/hooks/useUserRole";
 import type { Address } from "@/hooks/usePortalData";
 import type { AddressFormData } from "@/lib/formSchemas";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 
 const getAddressIcon = (type: string) => {
   switch (type.toLowerCase()) {
@@ -33,6 +35,18 @@ const AddressesSection = ({ entityFilter }: AddressesSectionProps) => {
   const { data: addresses, isLoading } = useAddresses();
   const { data: entities } = useEntities();
   const { canWrite } = useUserRole();
+
+  // Fetch address-entity links for filtering and display
+  const { data: addressEntityLinks = [] } = useQuery({
+    queryKey: ["address-entity-links"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("address_entity_links")
+        .select("address_id, entity_id");
+      if (error) throw error;
+      return data as { address_id: string; entity_id: string }[];
+    },
+  });
   
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingAddress, setEditingAddress] = useState<Address | null>(null);
@@ -47,7 +61,6 @@ const AddressesSection = ({ entityFilter }: AddressesSectionProps) => {
       ...data,
       state: data.state || null,
       zip: data.zip || null,
-      entity_id: data.entity_id || null,
     };
     
     if (editingAddress) {
@@ -122,8 +135,19 @@ const AddressesSection = ({ entityFilter }: AddressesSectionProps) => {
     );
   }
 
+  // Build a map of address IDs to their linked entity IDs
+  const addressToEntitiesMap = new Map<string, string[]>();
+  addressEntityLinks.forEach(link => {
+    const existing = addressToEntitiesMap.get(link.address_id) || [];
+    addressToEntitiesMap.set(link.address_id, [...existing, link.entity_id]);
+  });
+
+  // Filter addresses: if entityFilter is set, only show addresses linked to that entity via junction table
   const filteredAddresses = entityFilter 
-    ? (addresses ?? []).filter(addr => addr.entity_id === entityFilter)
+    ? (addresses ?? []).filter(addr => {
+        const linkedEntityIds = addressToEntitiesMap.get(addr.id) || [];
+        return linkedEntityIds.includes(entityFilter);
+      })
     : (addresses ?? []);
 
   const isEmpty = filteredAddresses.length === 0;
@@ -163,7 +187,9 @@ const AddressesSection = ({ entityFilter }: AddressesSectionProps) => {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {filteredAddresses.map((address) => {
             const IconComponent = getAddressIcon(address.type);
-            const linkedEntity = entities?.find(e => e.id === address.entity_id);
+            // Get linked entities from junction table
+            const linkedEntityIds = addressToEntitiesMap.get(address.id) || [];
+            const linkedEntities = entities?.filter(e => linkedEntityIds.includes(e.id)) || [];
             
             return (
               <div key={address.id} className="glass-card rounded-xl p-6 hover:border-primary/30 transition-all duration-300">
@@ -182,10 +208,17 @@ const AddressesSection = ({ entityFilter }: AddressesSectionProps) => {
                         )}
                       </div>
                       <p className="text-sm text-muted-foreground capitalize">{address.type} Address</p>
-                      {linkedEntity && (
-                        <div className="flex items-center gap-1 mt-1">
-                          <Building2 className="w-3 h-3 text-primary" />
-                          <span className="text-xs text-primary">{linkedEntity.name}</span>
+                      {linkedEntities.length > 0 && (
+                        <div className="flex items-center gap-1 mt-1 flex-wrap">
+                          <Link2 className="w-3 h-3 text-primary" />
+                          {linkedEntities.slice(0, 2).map((entity, idx) => (
+                            <span key={entity.id} className="text-xs text-primary">
+                              {entity.name}{idx < Math.min(linkedEntities.length, 2) - 1 ? ", " : ""}
+                            </span>
+                          ))}
+                          {linkedEntities.length > 2 && (
+                            <span className="text-xs text-muted-foreground">+{linkedEntities.length - 2} more</span>
+                          )}
                         </div>
                       )}
                     </div>
