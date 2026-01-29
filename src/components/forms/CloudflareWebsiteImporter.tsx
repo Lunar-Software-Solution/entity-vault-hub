@@ -347,7 +347,7 @@ const CloudflareWebsiteImporter = ({ open, onOpenChange }: CloudflareWebsiteImpo
                               </SelectContent>
                             </Select>
                             <Input
-                              className="h-7 text-xs w-[150px] focus:absolute focus:right-2 focus:w-[300px] focus:z-10 transition-all duration-200"
+                              className="h-7 text-xs min-w-[150px] focus:min-w-[250px] focus:flex-1 transition-all duration-200"
                               placeholder="Notes..."
                               value={config.notes}
                               onChange={(e) => updateRecordConfig(record.name, "notes", e.target.value)}
