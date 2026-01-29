@@ -144,28 +144,20 @@ const Sidebar = ({
   } = useAuth();
   const [openGroups, setOpenGroups] = useState<string[]>(["main"]);
   const [profileOpen, setProfileOpen] = useState(false);
-  const handleLogout = (e: Event) => {
+  const handleLogout = () => {
     console.log("=== LOGOUT HANDLER CALLED ===");
-    console.log("Event:", e);
     
-    // Prevent default dropdown behavior to ensure our handler runs
-    e.preventDefault();
-    
-    console.log("Clearing 2FA session data...");
     // Clear any 2FA session data
     sessionStorage.removeItem("needs2FA");
     sessionStorage.removeItem("pending2FAUser");
     sessionStorage.removeItem("pendingAccessToken");
     sessionStorage.removeItem("pending2FAPassword");
     
-    console.log("Calling signOut...");
-    // Clear local auth state immediately
+    // Clear local auth state
     signOut();
     
-    console.log("Navigating to /auth...");
     // Force navigation to auth page
     window.location.href = "/auth";
-    console.log("Navigation triggered");
   };
   const userEmail = user?.email || "user@example.com";
   const userInitials = userEmail.split("@")[0].slice(0, 2).toUpperCase();
@@ -287,7 +279,10 @@ const Sidebar = ({
                 Profile
               </DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem onSelect={handleLogout} className="cursor-pointer text-destructive focus:text-destructive focus:bg-destructive/10">
+              <DropdownMenuItem 
+                onClick={() => handleLogout()} 
+                className="cursor-pointer text-destructive focus:text-destructive focus:bg-destructive/10"
+              >
                 <LogOut className="w-4 h-4 mr-2" />
                 Log out
               </DropdownMenuItem>
