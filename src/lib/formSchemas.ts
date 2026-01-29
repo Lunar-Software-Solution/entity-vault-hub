@@ -103,7 +103,10 @@ export const addressSchema = z.object({
 export const contractSchema = z.object({
   title: z.string().trim().min(1, "Title is required").max(200),
   type: z.string().min(1, "Type is required"),
-  parties: z.array(z.string()).default([]),
+  parties: z.union([
+    z.array(z.string()),
+    z.string().transform((val) => val ? val.split(',').map(p => p.trim()).filter(Boolean) : [])
+  ]).default([]),
   status: z.string().min(1, "Status is required"),
   start_date: z.string().optional().or(z.literal("")),
   end_date: z.string().optional().or(z.literal("")),
