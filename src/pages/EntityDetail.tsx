@@ -520,7 +520,7 @@ const EntityDetail = () => {
         <LinkedDirectorsUbos directorsUbos={linkedDirectorsUbos} entityId={id!} entityName={entity.name} />
         <LinkedPhoneNumbers phones={linkedPhoneNumbers} entityId={id!} />
         <LinkedTaxIds taxIds={linkedTaxIds} entityId={id!} />
-        <LinkedAddresses addresses={linkedAddresses} />
+        <LinkedAddresses addresses={linkedAddresses} entityId={id} />
         <LinkedDocuments documents={linkedDocuments} entityId={id!} />
         <LinkedContracts contracts={linkedContracts} />
         <LinkedWebsites websites={linkedWebsites} entityId={id!} />

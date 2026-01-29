@@ -6,9 +6,11 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
+import { Separator } from "@/components/ui/separator";
 import type { Address } from "@/hooks/usePortalData";
 import { useEntities } from "@/hooks/usePortalData";
 import { countries } from "@/lib/countries";
+import AddressEntityAffiliationsManager from "./AddressEntityAffiliationsManager";
 
 interface AddressFormProps {
   address?: Address | null;
@@ -41,7 +43,7 @@ const AddressForm = ({ address, onSubmit, onCancel, isLoading }: AddressFormProp
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <FormField control={form.control} name="entity_id" render={({ field }) => (
             <FormItem className="md:col-span-2">
-              <FormLabel>Linked Entity</FormLabel>
+              <FormLabel>Primary Entity</FormLabel>
               <Select onValueChange={(value) => field.onChange(value === "__none__" ? "" : value)} defaultValue={field.value || "__none__"}>
                 <FormControl><SelectTrigger><SelectValue placeholder="Select entity (optional)" /></SelectTrigger></FormControl>
                 <SelectContent>
@@ -51,6 +53,9 @@ const AddressForm = ({ address, onSubmit, onCancel, isLoading }: AddressFormProp
                   ))}
                 </SelectContent>
               </Select>
+              <FormDescription className="text-xs">
+                Direct entity link. Use "Linked Entities" below for multi-entity associations.
+              </FormDescription>
               <FormMessage />
             </FormItem>
           )} />
@@ -135,6 +140,14 @@ const AddressForm = ({ address, onSubmit, onCancel, isLoading }: AddressFormProp
             </FormItem>
           )} />
         </div>
+
+        {/* Entity Affiliations Section */}
+        {address?.id && (
+          <>
+            <Separator className="my-6" />
+            <AddressEntityAffiliationsManager addressId={address.id} />
+          </>
+        )}
 
         <div className="flex justify-end gap-3 pt-4">
           <Button type="button" variant="outline" onClick={onCancel}>Cancel</Button>

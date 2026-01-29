@@ -85,6 +85,54 @@ export type Database = {
           },
         ]
       }
+      address_entity_links: {
+        Row: {
+          address_id: string
+          created_at: string
+          entity_id: string
+          id: string
+          is_primary: boolean | null
+          notes: string | null
+          role: string | null
+          updated_at: string
+        }
+        Insert: {
+          address_id: string
+          created_at?: string
+          entity_id: string
+          id?: string
+          is_primary?: boolean | null
+          notes?: string | null
+          role?: string | null
+          updated_at?: string
+        }
+        Update: {
+          address_id?: string
+          created_at?: string
+          entity_id?: string
+          id?: string
+          is_primary?: boolean | null
+          notes?: string | null
+          role?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "address_entity_links_address_id_fkey"
+            columns: ["address_id"]
+            isOneToOne: false
+            referencedRelation: "addresses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "address_entity_links_entity_id_fkey"
+            columns: ["entity_id"]
+            isOneToOne: false
+            referencedRelation: "entities"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       addresses: {
         Row: {
           city: string
