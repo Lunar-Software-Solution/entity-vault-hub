@@ -90,7 +90,7 @@ const AddressAutocomplete = ({
         placeholder={placeholder}
         options={{
           language: "en",
-          country: "US,CA,GB,AU,NZ,IE,SG,HK,FR,DE",
+          country: "US,CA,GB,AU,NZ,IE,SG,HK,FR,DE,BG,NL",
           types: "address",
         }}
       />
