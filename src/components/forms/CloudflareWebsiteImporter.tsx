@@ -23,6 +23,7 @@ interface DnsRecord {
 interface RecordConfig {
   websiteType: string;
   platform: string;
+  notes: string;
 }
 
 interface CloudflareWebsiteImporterProps {
@@ -106,7 +107,7 @@ const CloudflareWebsiteImporter = ({ open, onOpenChange }: CloudflareWebsiteImpo
   };
 
   const getRecordConfig = (name: string): RecordConfig => {
-    return recordConfigs[name] || { websiteType: defaultType, platform: defaultPlatform };
+    return recordConfigs[name] || { websiteType: defaultType, platform: defaultPlatform, notes: "" };
   };
 
   const updateRecordConfig = (name: string, field: keyof RecordConfig, value: string) => {
@@ -161,6 +162,7 @@ const CloudflareWebsiteImporter = ({ open, onOpenChange }: CloudflareWebsiteImpo
         name: generateWebsiteName(name),
         type: config.websiteType,
         platform: config.platform === "__none__" ? null : config.platform,
+        notes: config.notes || null,
         entity_id: selectedEntityId === "__none__" ? null : selectedEntityId,
         is_active: true,
         is_primary: false,
@@ -194,7 +196,7 @@ const CloudflareWebsiteImporter = ({ open, onOpenChange }: CloudflareWebsiteImpo
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="max-w-4xl max-h-[90vh] flex flex-col">
+      <DialogContent className="max-w-5xl max-h-[90vh] flex flex-col">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Cloud className="h-5 w-5 text-primary" />
@@ -278,7 +280,7 @@ const CloudflareWebsiteImporter = ({ open, onOpenChange }: CloudflareWebsiteImpo
                     return (
                       <div
                         key={record.name}
-                        className={`grid grid-cols-[auto_1fr_60px_130px_130px] items-center gap-3 p-2 rounded-md hover:bg-muted/50 ${
+                        className={`grid grid-cols-[auto_1fr_60px_120px_120px_150px] items-center gap-3 p-2 rounded-md hover:bg-muted/50 ${
                           record.isDuplicate ? "opacity-50" : ""
                         }`}
                       >
@@ -296,7 +298,7 @@ const CloudflareWebsiteImporter = ({ open, onOpenChange }: CloudflareWebsiteImpo
                         </Badge>
                         {record.isDuplicate ? (
                           <>
-                            <Badge variant="destructive" className="text-xs justify-center col-span-2">
+                            <Badge variant="destructive" className="text-xs justify-center col-span-3">
                               Exists
                             </Badge>
                           </>
@@ -335,6 +337,13 @@ const CloudflareWebsiteImporter = ({ open, onOpenChange }: CloudflareWebsiteImpo
                                 ))}
                               </SelectContent>
                             </Select>
+                            <Input
+                              className="h-7 text-xs"
+                              placeholder="Notes..."
+                              value={config.notes}
+                              onChange={(e) => updateRecordConfig(record.name, "notes", e.target.value)}
+                              disabled={record.isDuplicate}
+                            />
                           </>
                         )}
                       </div>
