@@ -79,6 +79,7 @@ import LinkedSocialMedia from "@/components/entity-detail/LinkedSocialMedia";
 import LinkedDirectorsUbos from "@/components/entity-detail/LinkedDirectorsUbos";
 import LinkedWebsites from "@/components/entity-detail/LinkedWebsites";
 import LinkedSoftware from "@/components/entity-detail/LinkedSoftware";
+import LinkedEmailAddresses from "@/components/entity-detail/LinkedEmailAddresses";
 import type { EntityFormData } from "@/lib/formSchemas";
 
 const useDirectorsUbosForEntity = (entityId: string) => {
@@ -519,6 +520,7 @@ const EntityDetail = () => {
         <LinkedCreditCards cards={linkedCreditCards} />
         <LinkedDirectorsUbos directorsUbos={linkedDirectorsUbos} entityId={id!} entityName={entity.name} />
         <LinkedPhoneNumbers phones={linkedPhoneNumbers} entityId={id!} />
+        <LinkedEmailAddresses emails={linkedEmails} entityId={id!} />
         <LinkedTaxIds taxIds={linkedTaxIds} entityId={id!} />
         <LinkedAddresses addresses={linkedAddresses} entityId={id} />
         <LinkedDocuments documents={linkedDocuments} entityId={id!} />

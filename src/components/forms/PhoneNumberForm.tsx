@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Switch } from "@/components/ui/switch";
 import { useEntities } from "@/hooks/usePortalData";
 import type { PhoneNumber } from "@/hooks/usePortalData";
+import PhoneNumberEntityAffiliationsManager from "./PhoneNumberEntityAffiliationsManager";
 
 interface PhoneNumberFormProps {
   phoneNumber?: PhoneNumber | null;
@@ -136,14 +137,15 @@ const PhoneNumberForm = ({ phoneNumber, defaultEntityId, onSubmit, onCancel, isL
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
         <FormField control={form.control} name="entity_id" render={({ field }) => (
           <FormItem>
-            <FormLabel>Entity *</FormLabel>
+            <FormLabel>Entity</FormLabel>
             <Select onValueChange={field.onChange} defaultValue={field.value}>
               <FormControl>
                 <SelectTrigger>
-                  <SelectValue placeholder="Select entity" />
+                  <SelectValue placeholder="Select entity (optional)" />
                 </SelectTrigger>
               </FormControl>
               <SelectContent>
+                <SelectItem value="__none__">None</SelectItem>
                 {entities?.map((entity) => (
                   <SelectItem key={entity.id} value={entity.id}>
                     {entity.name}
@@ -237,6 +239,13 @@ const PhoneNumberForm = ({ phoneNumber, defaultEntityId, onSubmit, onCancel, isL
             </FormControl>
           </FormItem>
         )} />
+
+        {/* Show affiliations manager only when editing existing phone number */}
+        {phoneNumber?.id && (
+          <div className="border-t pt-4 mt-4">
+            <PhoneNumberEntityAffiliationsManager phoneNumberId={phoneNumber.id} />
+          </div>
+        )}
 
         <div className="flex justify-end gap-3 pt-4">
           <Button type="button" variant="outline" onClick={onCancel}>Cancel</Button>
