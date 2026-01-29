@@ -500,6 +500,9 @@ const Auth = () => {
               title: "Welcome back!",
               description: "Logged in from a trusted device.",
             });
+            // Force navigation to home page
+            navigate("/", { replace: true });
+            return;
           } else {
             // Set 2FA state BEFORE signing out to prevent race condition
             setPending2FAUser({ id: data.user.id, email: data.user.email || email });
