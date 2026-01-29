@@ -99,10 +99,21 @@ serve(async (req) => {
     if (!response.ok) {
       const errorText = await response.text();
       console.error("DocuSeal API error:", response.status, errorText);
-      throw new Error(`DocuSeal API error: ${response.status}`);
+      throw new Error(`DocuSeal API error: ${response.status} - ${errorText}`);
     }
 
-    const submissions: DocuSealSubmission[] = await response.json();
+    const responseData = await response.json();
+    console.log("DocuSeal API response type:", typeof responseData, Array.isArray(responseData));
+    
+    // Handle different response formats - API may return array directly or wrapped in object
+    let submissions: DocuSealSubmission[] = [];
+    if (Array.isArray(responseData)) {
+      submissions = responseData;
+    } else if (responseData && typeof responseData === 'object') {
+      // Try common wrapper keys
+      submissions = responseData.data || responseData.submissions || responseData.items || [];
+    }
+    
     console.log(`Fetched ${submissions.length} submissions from DocuSeal`);
 
     // Get existing contracts with docuseal_id to avoid duplicates
