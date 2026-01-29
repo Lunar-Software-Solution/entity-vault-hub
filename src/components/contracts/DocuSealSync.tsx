@@ -54,11 +54,11 @@ const DocuSealSync = () => {
   return (
     <div className="flex items-center gap-3">
       <Button
-        variant="outline"
+        variant="secondary"
         size="sm"
         onClick={handleSync}
         disabled={isSyncing}
-        className="gap-2"
+        className="gap-2 text-foreground"
       >
         <RefreshCw className={`w-4 h-4 ${isSyncing ? "animate-spin" : ""}`} />
         {isSyncing ? "Syncing..." : "Sync from DocuSeal"}
