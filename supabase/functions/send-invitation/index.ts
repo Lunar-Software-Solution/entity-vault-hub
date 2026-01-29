@@ -89,7 +89,7 @@ const handler = async (req: Request): Promise<Response> => {
       body: JSON.stringify({
         sender: {
           name: "Entity Hub",
-          email: "noreply@braxtech.com",
+          email: "noreply@braxtech.net",
         },
         to: [{ email }],
         subject: `You've been invited to join Entity Hub`,
