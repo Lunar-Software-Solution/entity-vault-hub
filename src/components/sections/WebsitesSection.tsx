@@ -178,7 +178,7 @@ const WebsitesSection = ({ entityFilter }: WebsitesSectionProps) => {
         </div>
         {canWrite && (
           <div className="flex items-center gap-2">
-            <Button variant="outline" className="gap-2" onClick={() => setIsImporterOpen(true)}>
+            <Button variant="secondary" className="gap-2 text-foreground" onClick={() => setIsImporterOpen(true)}>
               <Cloud className="w-4 h-4" />
               Import from Cloudflare
             </Button>
