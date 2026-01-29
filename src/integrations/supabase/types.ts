@@ -144,6 +144,7 @@ export type Database = {
           label: string
           state: string | null
           street: string
+          suite: string | null
           type: string
           updated_at: string
           zip: string | null
@@ -158,6 +159,7 @@ export type Database = {
           label: string
           state?: string | null
           street: string
+          suite?: string | null
           type?: string
           updated_at?: string
           zip?: string | null
@@ -172,6 +174,7 @@ export type Database = {
           label?: string
           state?: string | null
           street?: string
+          suite?: string | null
           type?: string
           updated_at?: string
           zip?: string | null

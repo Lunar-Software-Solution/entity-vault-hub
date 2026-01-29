@@ -90,6 +90,7 @@ const LinkedAddresses = ({ entityId }: LinkedAddressesProps) => {
               </div>
               <p className="text-sm text-muted-foreground">
                 {address.street}
+                {address.suite && `, ${address.suite}`}
               </p>
               <p className="text-sm text-muted-foreground">
                 {address.city}{address.state ? `, ${address.state}` : ""} {address.zip}
