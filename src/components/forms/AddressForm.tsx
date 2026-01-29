@@ -1,7 +1,7 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { addressSchema, AddressFormData } from "@/lib/formSchemas";
-import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -10,6 +10,7 @@ import { Separator } from "@/components/ui/separator";
 import type { Address } from "@/hooks/usePortalData";
 import { countries } from "@/lib/countries";
 import AddressEntityAffiliationsManager from "./AddressEntityAffiliationsManager";
+import AddressAutocomplete from "@/components/shared/AddressAutocomplete";
 
 interface AddressFormProps {
   address?: Address | null;
@@ -32,6 +33,24 @@ const AddressForm = ({ address, onSubmit, onCancel, isLoading }: AddressFormProp
       is_primary: address?.is_primary ?? false,
     },
   });
+
+  const handleAddressSelect = (data: { street: string; city: string; state: string; zip: string; country: string }) => {
+    form.setValue("street", data.street, { shouldValidate: true });
+    form.setValue("city", data.city, { shouldValidate: true });
+    form.setValue("state", data.state, { shouldValidate: true });
+    form.setValue("zip", data.zip, { shouldValidate: true });
+    if (data.country) {
+      // Try to match with our countries list
+      const matchedCountry = countries.find(c => 
+        c.toLowerCase() === data.country.toLowerCase() ||
+        c.toLowerCase().includes(data.country.toLowerCase()) ||
+        data.country.toLowerCase().includes(c.toLowerCase())
+      );
+      if (matchedCountry) {
+        form.setValue("country", matchedCountry, { shouldValidate: true });
+      }
+    }
+  };
 
   return (
     <Form {...form}>
@@ -65,8 +84,14 @@ const AddressForm = ({ address, onSubmit, onCancel, isLoading }: AddressFormProp
           <FormField control={form.control} name="street" render={({ field }) => (
             <FormItem className="md:col-span-2">
               <FormLabel>Street Address *</FormLabel>
-              <FormControl><Input placeholder="123 Main Street, Suite 100" {...field} /></FormControl>
-              <FormDescription className="text-xs">Include building number, street name, and suite/unit if applicable</FormDescription>
+              <FormControl>
+                <AddressAutocomplete
+                  value={field.value}
+                  onChange={field.onChange}
+                  onAddressSelect={handleAddressSelect}
+                  placeholder="Start typing an address..."
+                />
+              </FormControl>
               <FormMessage />
             </FormItem>
           )} />
@@ -98,7 +123,7 @@ const AddressForm = ({ address, onSubmit, onCancel, isLoading }: AddressFormProp
           <FormField control={form.control} name="country" render={({ field }) => (
             <FormItem>
               <FormLabel>Country *</FormLabel>
-              <Select onValueChange={field.onChange} defaultValue={field.value}>
+              <Select onValueChange={field.onChange} value={field.value}>
                 <FormControl><SelectTrigger className="text-foreground"><SelectValue placeholder="Select country" /></SelectTrigger></FormControl>
                 <SelectContent className="max-h-60">
                   {countries.map((country) => (
