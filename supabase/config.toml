@@ -46,3 +46,6 @@ verify_jwt = false
 
 [functions.analyze-contract]
 verify_jwt = false
+
+[functions.fetch-docuseal-contracts]
+verify_jwt = false
