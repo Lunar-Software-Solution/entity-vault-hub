@@ -44,6 +44,10 @@ const ShareholderForm = ({ item, entities, onSubmit, onCancel }: ShareholderForm
   const [idDocuments, setIdDocuments] = useState<IdDocument[]>([]);
   const [showAvatarDialog, setShowAvatarDialog] = useState(false);
   const queryClient = useQueryClient();
+  
+  // Use existing ID or generate a temporary one for new shareholders (for file uploads)
+  const [tempId] = useState(() => item?.id || crypto.randomUUID());
+  const recordId = item?.id || tempId;
 
   const handleAvatarChange = (newUrl: string | null, deleted: boolean) => {
     if (deleted) {
@@ -228,11 +232,8 @@ const ShareholderForm = ({ item, entities, onSubmit, onCancel }: ShareholderForm
   };
 
   const handleSubmit = async (data: ShareholderFormData) => {
-    // If editing, save ID documents first
-    if (item?.id) {
-      await saveIdDocuments(item.id);
-    }
-
+    // Pass idDocuments and tempId along with the form data
+    // The parent component will handle saving ID documents after the shareholder is created
     onSubmit({
       ...data,
       email: data.email || null,
@@ -242,7 +243,15 @@ const ShareholderForm = ({ item, entities, onSubmit, onCancel }: ShareholderForm
       tax_id: data.tax_id || null,
       bio: data.bio || null,
       notes: data.notes || null,
+      // Include ID documents and temp ID for new shareholders
+      _idDocuments: idDocuments,
+      _tempId: item?.id ? null : tempId,
     } as any);
+
+    // If editing existing shareholder, save ID documents
+    if (item?.id) {
+      await saveIdDocuments(item.id);
+    }
   };
 
   const currentEntityName = entities.find(e => e.id === form.watch("entity_id"))?.name;
@@ -436,15 +445,13 @@ const ShareholderForm = ({ item, entities, onSubmit, onCancel }: ShareholderForm
             )} />
           </div>
 
-          {/* ID Documents - only for existing shareholders */}
-          {item?.id && (
-            <IdDocumentsManager
-              recordId={item.id}
-              documents={idDocuments}
-              onChange={setIdDocuments}
-              storageFolder="shareholders"
-            />
-          )}
+          {/* ID Documents - always show, use tempId for new shareholders */}
+          <IdDocumentsManager
+            recordId={recordId}
+            documents={idDocuments}
+            onChange={setIdDocuments}
+            storageFolder="shareholders"
+          />
 
           {/* Entity Affiliations - for new shareholders only */}
           {!item?.id && (
