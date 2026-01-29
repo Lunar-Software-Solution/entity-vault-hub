@@ -13,11 +13,25 @@ import DocuSealSync from "@/components/contracts/DocuSealSync";
 import { format, differenceInDays } from "date-fns";
 import { supabase } from "@/integrations/supabase/client";
 import { useUserRole } from "@/hooks/useUserRole";
+import { useQuery } from "@tanstack/react-query";
+import { Badge } from "@/components/ui/badge";
 import type { Contract } from "@/hooks/usePortalData";
 import type { ContractFormData } from "@/lib/formSchemas";
 
 type SortField = "title" | "type" | "entity" | "file" | "start_date" | "status";
 type SortDirection = "asc" | "desc";
+
+interface ContractEntityLink {
+  id: string;
+  contract_id: string;
+  entity_id: string;
+  is_primary: boolean;
+  role: string | null;
+  entity?: {
+    id: string;
+    name: string;
+  };
+}
 
 interface ContractsSectionProps {
   entityFilter?: string | null;
@@ -27,6 +41,25 @@ const ContractsSection = ({ entityFilter }: ContractsSectionProps) => {
   const { data: contracts, isLoading } = useContracts();
   const { data: entities } = useEntities();
   const { canWrite } = useUserRole();
+  
+  // Fetch all contract entity links
+  const { data: contractEntityLinks = [] } = useQuery({
+    queryKey: ["contract-entity-links-all"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("contract_entity_links")
+        .select(`
+          id,
+          contract_id,
+          entity_id,
+          is_primary,
+          role,
+          entity:entities(id, name)
+        `);
+      if (error) throw error;
+      return data as ContractEntityLink[];
+    },
+  });
   
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingContract, setEditingContract] = useState<Contract | null>(null);
@@ -38,6 +71,11 @@ const ContractsSection = ({ entityFilter }: ContractsSectionProps) => {
   const createContract = useCreateContract();
   const updateContract = useUpdateContract();
   const deleteContract = useDeleteContract();
+
+  // Get entity links for a specific contract
+  const getContractEntities = (contractId: string) => {
+    return contractEntityLinks.filter(link => link.contract_id === contractId);
+  };
 
   const handleSubmit = (data: ContractFormData & { file_path?: string; file_name?: string; ai_summary?: string }) => {
     const cleanData = {
@@ -90,9 +128,24 @@ const ContractsSection = ({ entityFilter }: ContractsSectionProps) => {
     return entities?.find(e => e.id === entityId)?.name || "";
   };
 
+  // Get primary entity name for a contract (from links or legacy entity_id)
+  const getPrimaryEntityName = (contractId: string, legacyEntityId: string | null) => {
+    const links = getContractEntities(contractId);
+    const primaryLink = links.find(l => l.is_primary) || links[0];
+    if (primaryLink?.entity?.name) return primaryLink.entity.name;
+    return getEntityName(legacyEntityId);
+  };
+
   const sortedContracts = useMemo(() => {
+    // Filter by entity - check both legacy entity_id and contract_entity_links
     const filtered = entityFilter 
-      ? (contracts ?? []).filter(c => c.entity_id === entityFilter)
+      ? (contracts ?? []).filter(c => {
+          // Check legacy entity_id
+          if (c.entity_id === entityFilter) return true;
+          // Check new entity links
+          const links = contractEntityLinks.filter(link => link.contract_id === c.id);
+          return links.some(link => link.entity_id === entityFilter);
+        })
       : (contracts ?? []);
 
     return [...filtered].sort((a, b) => {
@@ -109,8 +162,8 @@ const ContractsSection = ({ entityFilter }: ContractsSectionProps) => {
           bVal = b.type.toLowerCase();
           break;
         case "entity":
-          aVal = getEntityName(a.entity_id).toLowerCase();
-          bVal = getEntityName(b.entity_id).toLowerCase();
+          aVal = getPrimaryEntityName(a.id, a.entity_id).toLowerCase();
+          bVal = getPrimaryEntityName(b.id, b.entity_id).toLowerCase();
           break;
         case "file":
           aVal = (a.file_name || "").toLowerCase();
@@ -130,7 +183,7 @@ const ContractsSection = ({ entityFilter }: ContractsSectionProps) => {
       if (aVal > bVal) return sortDirection === "asc" ? 1 : -1;
       return 0;
     });
-  }, [contracts, entityFilter, entities, sortField, sortDirection]);
+  }, [contracts, entityFilter, entities, sortField, sortDirection, contractEntityLinks]);
 
   const SortableHeader = ({ field, children }: { field: SortField; children: React.ReactNode }) => (
     <th 
@@ -255,7 +308,26 @@ const ContractsSection = ({ entityFilter }: ContractsSectionProps) => {
                   const daysUntilExpiry = contract.end_date 
                     ? differenceInDays(new Date(contract.end_date), new Date())
                     : null;
-                  const linkedEntity = entities?.find(e => e.id === contract.entity_id);
+                  // Get all linked entities (from new links table + legacy entity_id)
+                  const linkedEntities = getContractEntities(contract.id);
+                  const legacyEntity = entities?.find(e => e.id === contract.entity_id);
+                  
+                  // Combine and dedupe entities
+                  const allEntities: Array<{ id: string; name: string; isPrimary: boolean; role?: string | null }> = [];
+                  linkedEntities.forEach(link => {
+                    if (link.entity?.id) {
+                      allEntities.push({
+                        id: link.entity.id,
+                        name: link.entity.name,
+                        isPrimary: link.is_primary,
+                        role: link.role,
+                      });
+                    }
+                  });
+                  // Add legacy entity if not already in links
+                  if (legacyEntity && !allEntities.some(e => e.id === legacyEntity.id)) {
+                    allEntities.push({ id: legacyEntity.id, name: legacyEntity.name, isPrimary: false });
+                  }
 
                   return (
                     <tr 
@@ -277,10 +349,23 @@ const ContractsSection = ({ entityFilter }: ContractsSectionProps) => {
                         </div>
                       </td>
                       <td className="p-4">
-                        {linkedEntity ? (
-                          <div className="flex items-center gap-1.5">
-                            <Building2 className="w-4 h-4 text-primary" />
-                            <span className="text-sm text-foreground">{linkedEntity.name}</span>
+                        {allEntities.length > 0 ? (
+                          <div className="flex flex-wrap items-center gap-1">
+                            {allEntities.slice(0, 2).map((entity, idx) => (
+                              <Badge 
+                                key={entity.id} 
+                                variant={entity.isPrimary ? "default" : "secondary"}
+                                className="text-xs"
+                              >
+                                <Building2 className="w-3 h-3 mr-1" />
+                                {entity.name}
+                              </Badge>
+                            ))}
+                            {allEntities.length > 2 && (
+                              <Badge variant="outline" className="text-xs">
+                                +{allEntities.length - 2} more
+                              </Badge>
+                            )}
                           </div>
                         ) : (
                           <span className="text-sm text-muted-foreground">—</span>
