@@ -191,34 +191,6 @@ const CloudflareWebsiteImporter = ({ open, onOpenChange }: CloudflareWebsiteImpo
     resetForm();
   };
 
-  // Apply defaults to all records when changed
-  const handleDefaultTypeChange = (value: string) => {
-    setDefaultType(value);
-    // Update all records that haven't been individually configured
-    const updated: Record<string, RecordConfig> = {};
-    availableRecords.forEach((r) => {
-      if (!recordConfigs[r.name]) {
-        updated[r.name] = { websiteType: value, platform: defaultPlatform };
-      }
-    });
-    if (Object.keys(updated).length > 0) {
-      setRecordConfigs((prev) => ({ ...prev, ...updated }));
-    }
-  };
-
-  const handleDefaultPlatformChange = (value: string) => {
-    setDefaultPlatform(value);
-    // Update all records that haven't been individually configured
-    const updated: Record<string, RecordConfig> = {};
-    availableRecords.forEach((r) => {
-      if (!recordConfigs[r.name]) {
-        updated[r.name] = { websiteType: defaultType, platform: value };
-      }
-    });
-    if (Object.keys(updated).length > 0) {
-      setRecordConfigs((prev) => ({ ...prev, ...updated }));
-    }
-  };
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
@@ -281,57 +253,22 @@ const CloudflareWebsiteImporter = ({ open, onOpenChange }: CloudflareWebsiteImpo
                 )}
               </div>
 
-              {/* Default options row */}
-              <div className="flex items-center gap-4 p-2 bg-muted/30 rounded-lg">
-                <span className="text-sm font-medium text-muted-foreground">Defaults:</span>
-                <div className="flex items-center gap-2">
-                  <Label className="text-xs text-muted-foreground">Type</Label>
-                  <Select value={defaultType} onValueChange={handleDefaultTypeChange}>
-                    <SelectTrigger className="h-8 w-[130px] text-xs">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {websiteTypes?.map((type) => (
-                        <SelectItem key={type.id} value={type.code}>
-                          {type.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Label className="text-xs text-muted-foreground">Platform</Label>
-                  <Select value={defaultPlatform} onValueChange={handleDefaultPlatformChange}>
-                    <SelectTrigger className="h-8 w-[130px] text-xs">
-                      <SelectValue placeholder="None" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="__none__">None</SelectItem>
-                      {websitePlatforms?.map((platform) => (
-                        <SelectItem key={platform.id} value={platform.code}>
-                          {platform.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="flex-1" />
-                <div className="flex items-center gap-2">
-                  <Label className="text-xs text-muted-foreground">Entity</Label>
-                  <Select value={selectedEntityId} onValueChange={setSelectedEntityId}>
-                    <SelectTrigger className="h-8 w-[150px] text-xs">
-                      <SelectValue placeholder="No entity" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="__none__">No entity</SelectItem>
-                      {entities?.map((entity) => (
-                        <SelectItem key={entity.id} value={entity.id}>
-                          {entity.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
+              {/* Entity selector */}
+              <div className="flex items-center gap-2">
+                <Label className="text-sm text-muted-foreground">Link to Entity:</Label>
+                <Select value={selectedEntityId} onValueChange={setSelectedEntityId}>
+                  <SelectTrigger className="h-8 w-[180px] text-sm">
+                    <SelectValue placeholder="No entity" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="__none__">No entity</SelectItem>
+                    {entities?.map((entity) => (
+                      <SelectItem key={entity.id} value={entity.id}>
+                        {entity.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
 
               <ScrollArea className="flex-1 min-h-0 h-[350px] border rounded-lg">
