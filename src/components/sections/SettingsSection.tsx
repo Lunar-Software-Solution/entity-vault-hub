@@ -1,11 +1,12 @@
 import { useState, useMemo } from "react";
-import { useTaxIdTypes, useIssuingAuthorities, useDocumentTypes, useFilingTypes, useSoftwareCatalog, type TaxIdType, type IssuingAuthority, type DocumentType, type FilingType, type SoftwareCatalog } from "@/hooks/usePortalData";
+import { useTaxIdTypes, useIssuingAuthorities, useDocumentTypes, useFilingTypes, useSoftwareCatalog, useWebsiteTypes, type TaxIdType, type IssuingAuthority, type DocumentType, type FilingType, type SoftwareCatalog, type WebsiteType } from "@/hooks/usePortalData";
 import { 
   useCreateTaxIdType, useUpdateTaxIdType, useDeleteTaxIdType,
   useCreateIssuingAuthority, useUpdateIssuingAuthority, useDeleteIssuingAuthority,
   useCreateDocumentType, useUpdateDocumentType, useDeleteDocumentType,
   useCreateFilingType, useUpdateFilingType, useDeleteFilingType,
-  useCreateSoftwareCatalog, useUpdateSoftwareCatalog, useDeleteSoftwareCatalog
+  useCreateSoftwareCatalog, useUpdateSoftwareCatalog, useDeleteSoftwareCatalog,
+  useCreateWebsiteType, useUpdateWebsiteType, useDeleteWebsiteType
 } from "@/hooks/usePortalMutations";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -17,7 +18,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 
 import { Badge } from "@/components/ui/badge";
 import DeleteConfirmDialog from "@/components/shared/DeleteConfirmDialog";
-import { Plus, Edit, Trash2, FileText, Building2, Search, ArrowUpDown, ArrowUp, ArrowDown, FolderOpen, Calendar, Monitor } from "lucide-react";
+import { Plus, Edit, Trash2, FileText, Building2, Search, ArrowUpDown, ArrowUp, ArrowDown, FolderOpen, Calendar, Monitor, Globe } from "lucide-react";
 import { useUserRole } from "@/hooks/useUserRole";
 import { useForm } from "react-hook-form";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
@@ -236,6 +237,7 @@ type TypeSortKey = "code" | "label" | "description";
 type DocTypeSortKey = "code" | "name" | "category" | "description";
 type FilingTypeSortKey = "code" | "name" | "category" | "default_frequency" | "description";
 type SoftwareSortKey = "name" | "category" | "vendor" | "website";
+type WebsiteTypeSortKey = "code" | "name" | "description";
 type SortDirection = "asc" | "desc";
 
 // Filing Type Form
@@ -580,6 +582,67 @@ const SoftwareCatalogForm = ({
   );
 };
 
+// Website Type Form
+interface WebsiteTypeFormData {
+  code: string;
+  name: string;
+  description?: string;
+}
+
+const WebsiteTypeForm = ({ 
+  item, 
+  onSubmit, 
+  onCancel, 
+  isLoading
+}: { 
+  item?: WebsiteType | null; 
+  onSubmit: (data: WebsiteTypeFormData) => void; 
+  onCancel: () => void; 
+  isLoading?: boolean;
+}) => {
+  const form = useForm<WebsiteTypeFormData>({
+    defaultValues: {
+      code: item?.code ?? "",
+      name: item?.name ?? "",
+      description: item?.description ?? "",
+    },
+  });
+
+  return (
+    <Form {...form}>
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+        <FormField control={form.control} name="code" render={({ field }) => (
+          <FormItem>
+            <FormLabel>Code *</FormLabel>
+            <FormControl><Input placeholder="e.g., corporate, blog" {...field} /></FormControl>
+            <FormMessage />
+          </FormItem>
+        )} />
+        <FormField control={form.control} name="name" render={({ field }) => (
+          <FormItem>
+            <FormLabel>Name *</FormLabel>
+            <FormControl><Input placeholder="e.g., Corporate Website, Blog" {...field} /></FormControl>
+            <FormMessage />
+          </FormItem>
+        )} />
+        <FormField control={form.control} name="description" render={({ field }) => (
+          <FormItem>
+            <FormLabel>Description</FormLabel>
+            <FormControl><Textarea placeholder="Optional description..." rows={2} {...field} /></FormControl>
+            <FormMessage />
+          </FormItem>
+        )} />
+        <div className="flex justify-end gap-3 pt-4">
+          <Button type="button" variant="outline" onClick={onCancel}>Cancel</Button>
+          <Button type="submit" disabled={isLoading}>
+            {isLoading ? "Saving..." : item ? "Update" : "Add Type"}
+          </Button>
+        </div>
+      </form>
+    </Form>
+  );
+};
+
 const SettingsSection = () => {
   const { canWrite } = useUserRole();
   
@@ -602,6 +665,10 @@ const SettingsSection = () => {
   const [showSoftwareForm, setShowSoftwareForm] = useState(false);
   const [editingSoftware, setEditingSoftware] = useState<SoftwareCatalog | null>(null);
   const [deletingSoftware, setDeletingSoftware] = useState<SoftwareCatalog | null>(null);
+
+  const [showWebsiteTypeForm, setShowWebsiteTypeForm] = useState(false);
+  const [editingWebsiteType, setEditingWebsiteType] = useState<WebsiteType | null>(null);
+  const [deletingWebsiteType, setDeletingWebsiteType] = useState<WebsiteType | null>(null);
   
   // Search and sort state for Tax ID Types
   const [typeSearch, setTypeSearch] = useState("");
@@ -628,11 +695,17 @@ const SettingsSection = () => {
   const [softwareSortKey, setSoftwareSortKey] = useState<SoftwareSortKey>("name");
   const [softwareSortDirection, setSoftwareSortDirection] = useState<SortDirection>("asc");
 
+  // Search and sort state for Website Types
+  const [websiteTypeSearch, setWebsiteTypeSearch] = useState("");
+  const [websiteTypeSortKey, setWebsiteTypeSortKey] = useState<WebsiteTypeSortKey>("code");
+  const [websiteTypeSortDirection, setWebsiteTypeSortDirection] = useState<SortDirection>("asc");
+
   const { data: taxIdTypes, isLoading: typesLoading } = useTaxIdTypes();
   const { data: issuingAuthorities, isLoading: authoritiesLoading } = useIssuingAuthorities();
   const { data: documentTypes, isLoading: docTypesLoading } = useDocumentTypes();
   const { data: filingTypes, isLoading: filingTypesLoading } = useFilingTypes();
   const { data: softwareCatalog, isLoading: softwareLoading } = useSoftwareCatalog();
+  const { data: websiteTypes, isLoading: websiteTypesLoading } = useWebsiteTypes();
 
   const createTypeMutation = useCreateTaxIdType();
   const updateTypeMutation = useUpdateTaxIdType();
@@ -653,6 +726,11 @@ const SettingsSection = () => {
   const createSoftwareMutation = useCreateSoftwareCatalog();
   const updateSoftwareMutation = useUpdateSoftwareCatalog();
   const deleteSoftwareMutation = useDeleteSoftwareCatalog();
+
+  const createWebsiteTypeMutation = useCreateWebsiteType();
+  const updateWebsiteTypeMutation = useUpdateWebsiteType();
+  const deleteWebsiteTypeMutation = useDeleteWebsiteType();
+
   // Get authority name for a tax id type
   const getAuthorityName = (authorityId: string | null | undefined) => {
     if (!authorityId) return null;
@@ -807,6 +885,35 @@ const SettingsSection = () => {
       }
     });
   }, [softwareCatalog, softwareSearch, softwareSortKey, softwareSortDirection]);
+
+  // Filter and sort Website Types
+  const filteredAndSortedWebsiteTypes = useMemo(() => {
+    if (!websiteTypes) return [];
+    
+    let filtered = websiteTypes;
+    
+    // Apply search filter
+    if (websiteTypeSearch.trim()) {
+      const searchLower = websiteTypeSearch.toLowerCase();
+      filtered = websiteTypes.filter((type) => 
+        type.code.toLowerCase().includes(searchLower) ||
+        type.name.toLowerCase().includes(searchLower) ||
+        (type.description || "").toLowerCase().includes(searchLower)
+      );
+    }
+    
+    // Apply sort
+    return [...filtered].sort((a, b) => {
+      const aVal = (a[websiteTypeSortKey] || "").toLowerCase();
+      const bVal = (b[websiteTypeSortKey] || "").toLowerCase();
+      
+      if (websiteTypeSortDirection === "asc") {
+        return aVal.localeCompare(bVal);
+      } else {
+        return bVal.localeCompare(aVal);
+      }
+    });
+  }, [websiteTypes, websiteTypeSearch, websiteTypeSortKey, websiteTypeSortDirection]);
 
   const handleTypeSort = (key: TypeSortKey) => {
     if (typeSortKey === key) {
@@ -976,7 +1083,39 @@ const SettingsSection = () => {
     }
   };
 
-  if (typesLoading || authoritiesLoading || filingTypesLoading || docTypesLoading) {
+  const handleWebsiteTypeSort = (key: WebsiteTypeSortKey) => {
+    if (websiteTypeSortKey === key) {
+      setWebsiteTypeSortDirection(prev => prev === "asc" ? "desc" : "asc");
+    } else {
+      setWebsiteTypeSortKey(key);
+      setWebsiteTypeSortDirection("asc");
+    }
+  };
+
+  const getWebsiteTypeSortIcon = (key: WebsiteTypeSortKey) => {
+    if (websiteTypeSortKey !== key) return <ArrowUpDown className="w-4 h-4 ml-1 opacity-50" />;
+    return websiteTypeSortDirection === "asc" 
+      ? <ArrowUp className="w-4 h-4 ml-1" /> 
+      : <ArrowDown className="w-4 h-4 ml-1" />;
+  };
+
+  const handleWebsiteTypeSubmit = (data: WebsiteTypeFormData) => {
+    const payload = { 
+      ...data, 
+      description: data.description || null,
+    };
+    if (editingWebsiteType) {
+      updateWebsiteTypeMutation.mutate({ id: editingWebsiteType.id, ...payload }, {
+        onSuccess: () => { setShowWebsiteTypeForm(false); setEditingWebsiteType(null); },
+      });
+    } else {
+      createWebsiteTypeMutation.mutate(payload, {
+        onSuccess: () => setShowWebsiteTypeForm(false),
+      });
+    }
+  };
+
+  if (typesLoading || authoritiesLoading || filingTypesLoading || docTypesLoading || websiteTypesLoading) {
     return (
       <div className="space-y-6">
         <Skeleton className="h-8 w-48" />
@@ -989,11 +1128,11 @@ const SettingsSection = () => {
     <div className="space-y-6">
       <div>
         <h2 className="text-2xl font-bold text-foreground">Settings</h2>
-        <p className="text-muted-foreground">Manage lookup tables for Tax ID Types, Issuing Authorities, Document Types, Filing Types, and Software Catalog</p>
+        <p className="text-muted-foreground">Manage lookup tables for Tax ID Types, Issuing Authorities, Document Types, Filing Types, Software, and Website Types</p>
       </div>
 
       <Tabs defaultValue="tax-id-types" className="w-full">
-        <TabsList className="grid w-full max-w-3xl grid-cols-5">
+        <TabsList className="grid w-full max-w-4xl grid-cols-6">
           <TabsTrigger value="tax-id-types" className="gap-2">
             <FileText className="w-4 h-4" />
             <span className="hidden sm:inline">Tax ID Types</span>
@@ -1018,6 +1157,11 @@ const SettingsSection = () => {
             <Monitor className="w-4 h-4" />
             <span className="hidden sm:inline">Software</span>
             <span className="sm:hidden">SW</span>
+          </TabsTrigger>
+          <TabsTrigger value="website-types" className="gap-2">
+            <Globe className="w-4 h-4" />
+            <span className="hidden sm:inline">Website Types</span>
+            <span className="sm:hidden">Web</span>
           </TabsTrigger>
         </TabsList>
 
@@ -1532,6 +1676,69 @@ const SettingsSection = () => {
             </div>
           </div>
         </TabsContent>
+
+        {/* Website Types Tab */}
+        <TabsContent value="website-types" className="mt-6">
+          <div className="glass-card rounded-xl p-6">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-4">
+              <h3 className="text-lg font-semibold text-foreground">Website Types</h3>
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full sm:w-auto">
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                  <Input
+                    placeholder="Search types..."
+                    value={websiteTypeSearch}
+                    onChange={(e) => setWebsiteTypeSearch(e.target.value)}
+                    className="pl-9 w-full sm:w-64 text-foreground"
+                  />
+                </div>
+                {canWrite && (
+                  <Button onClick={() => setShowWebsiteTypeForm(true)} size="sm" className="gap-2">
+                    <Plus className="w-4 h-4" />
+                    Add Type
+                  </Button>
+                )}
+              </div>
+            </div>
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="cursor-pointer" onClick={() => handleWebsiteTypeSort("code")}>
+                      <div className="flex items-center">Code {getWebsiteTypeSortIcon("code")}</div>
+                    </TableHead>
+                    <TableHead className="cursor-pointer" onClick={() => handleWebsiteTypeSort("name")}>
+                      <div className="flex items-center">Name {getWebsiteTypeSortIcon("name")}</div>
+                    </TableHead>
+                    <TableHead className="cursor-pointer" onClick={() => handleWebsiteTypeSort("description")}>
+                      <div className="flex items-center">Description {getWebsiteTypeSortIcon("description")}</div>
+                    </TableHead>
+                    <TableHead className="w-[100px]">Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {filteredAndSortedWebsiteTypes.length === 0 ? (
+                    <TableRow><TableCell colSpan={4} className="text-center text-muted-foreground py-8">No website types found</TableCell></TableRow>
+                  ) : filteredAndSortedWebsiteTypes.map((type) => (
+                    <TableRow key={type.id}>
+                      <TableCell className="font-medium font-mono">{type.code}</TableCell>
+                      <TableCell>{type.name}</TableCell>
+                      <TableCell className="text-muted-foreground max-w-xs truncate">{type.description || "-"}</TableCell>
+                      <TableCell>
+                        {canWrite && (
+                          <div className="flex items-center gap-1">
+                            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => { setEditingWebsiteType(type); setShowWebsiteTypeForm(true); }}><Edit className="w-4 h-4" /></Button>
+                            <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => setDeletingWebsiteType(type)}><Trash2 className="w-4 h-4" /></Button>
+                          </div>
+                        )}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          </div>
+        </TabsContent>
       </Tabs>
 
       {/* Tax ID Type Dialog */}
@@ -1617,6 +1824,21 @@ const SettingsSection = () => {
         </DialogContent>
       </Dialog>
 
+      {/* Website Type Dialog */}
+      <Dialog open={showWebsiteTypeForm} onOpenChange={() => { setShowWebsiteTypeForm(false); setEditingWebsiteType(null); }}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>{editingWebsiteType ? "Edit Website Type" : "Add Website Type"}</DialogTitle>
+          </DialogHeader>
+          <WebsiteTypeForm
+            item={editingWebsiteType}
+            onSubmit={handleWebsiteTypeSubmit}
+            onCancel={() => { setShowWebsiteTypeForm(false); setEditingWebsiteType(null); }}
+            isLoading={createWebsiteTypeMutation.isPending || updateWebsiteTypeMutation.isPending}
+          />
+        </DialogContent>
+      </Dialog>
+
       {/* Delete Confirmations */}
       <DeleteConfirmDialog
         open={!!deletingType}
@@ -1671,6 +1893,17 @@ const SettingsSection = () => {
         title="Delete Software"
         description={`Are you sure you want to delete "${deletingSoftware?.name}"? Entities using this software will show custom name instead.`}
         isLoading={deleteSoftwareMutation.isPending}
+      />
+
+      <DeleteConfirmDialog
+        open={!!deletingWebsiteType}
+        onOpenChange={() => setDeletingWebsiteType(null)}
+        onConfirm={() => {
+          if (deletingWebsiteType) deleteWebsiteTypeMutation.mutate(deletingWebsiteType.id, { onSuccess: () => setDeletingWebsiteType(null) });
+        }}
+        title="Delete Website Type"
+        description={`Are you sure you want to delete "${deletingWebsiteType?.code} - ${deletingWebsiteType?.name}"? This may affect existing websites using this type.`}
+        isLoading={deleteWebsiteTypeMutation.isPending}
       />
     </div>
   );

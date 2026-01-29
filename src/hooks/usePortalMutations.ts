@@ -1319,3 +1319,51 @@ export const useBulkCreateEntityWebsites = () => {
     onError: (error) => toast.error(`Failed to import websites: ${error.message}`),
   });
 };
+
+// Website Type mutations
+export const useCreateWebsiteType = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (type: TablesInsert<"website_types">) => {
+      const { data, error } = await supabase.from("website_types").insert(type).select().single();
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["website_types"] });
+      toast.success("Website type added successfully");
+    },
+    onError: (error) => toast.error(`Failed to add website type: ${error.message}`),
+  });
+};
+
+export const useUpdateWebsiteType = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, ...type }: TablesUpdate<"website_types"> & { id: string }) => {
+      const { data, error } = await supabase.from("website_types").update(type).eq("id", id).select().single();
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["website_types"] });
+      toast.success("Website type updated successfully");
+    },
+    onError: (error) => toast.error(`Failed to update website type: ${error.message}`),
+  });
+};
+
+export const useDeleteWebsiteType = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from("website_types").delete().eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["website_types"] });
+      toast.success("Website type deleted successfully");
+    },
+    onError: (error) => toast.error(`Failed to delete website type: ${error.message}`),
+  });
+};

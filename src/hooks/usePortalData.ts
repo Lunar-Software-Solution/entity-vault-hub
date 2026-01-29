@@ -31,6 +31,7 @@ export type DirectorUbo = Tables<"directors_ubos">;
 export type EntityWebsite = Tables<"entity_websites">;
 export type SoftwareCatalog = Tables<"software_catalog">;
 export type EntitySoftware = Tables<"entity_software">;
+export type WebsiteType = Tables<"website_types">;
 
 // Recent audit logs hook
 export const useRecentAuditLogs = (limit: number = 10) => {
@@ -589,6 +590,21 @@ export const useEntitySoftware = () => {
         .select("*, software_catalog(*)");
       if (error) throw error;
       return data;
+    },
+  });
+};
+
+// Website Types hook
+export const useWebsiteTypes = () => {
+  return useQuery({
+    queryKey: ["website_types"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("website_types")
+        .select("*")
+        .order("code");
+      if (error) throw error;
+      return data as WebsiteType[];
     },
   });
 };
