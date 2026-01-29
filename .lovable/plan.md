@@ -1,112 +1,120 @@
 
-# Remove Primary Entity Field from Address Form
+# Auto-Create Website Records from Cloudflare DNS
 
-## Summary
+## Overview
+Transform the current Cloudflare DNS integration from a display-only feature into a bulk website creation tool. When a user enters a root domain (e.g., `braxtech.net`) and fetches DNS records, the system will identify all A and CNAME records (subdomains like `support.braxtech.net`, `sales.braxtech.net`) and allow batch creation of website records.
 
-Remove the "Primary Entity" dropdown field from the Address form and transition to using only the "Linked Entities" concept via the `address_entity_links` junction table. This simplifies the address-entity relationship to a single, consistent many-to-many pattern.
+## User Flow
 
----
+1. User navigates to the **Websites** section
+2. Clicks **"Import from Cloudflare"** button (new)
+3. Enters root domain (e.g., `braxtech.net`)
+4. System fetches all A/CNAME records from Cloudflare
+5. User sees a list of discovered domains with checkboxes
+6. User selects which domains to import
+7. Optionally links them to an entity
+8. Clicks **"Create Websites"** to bulk-create records
 
-## Current State
+## Implementation Details
 
-The Address form currently has two ways to link an address to an entity:
+### 1. New Component: CloudflareWebsiteImporter
+Create a new dialog component for the import workflow:
 
-1. **Primary Entity field** (line 44-61 in AddressForm.tsx): A dropdown that sets the `entity_id` column directly on the `addresses` table
-2. **Linked Entities section** (AddressEntityAffiliationsManager): A junction table approach that allows many-to-many relationships with roles
+**File**: `src/components/forms/CloudflareWebsiteImporter.tsx`
 
-This creates confusion and redundancy. The plan is to remove option 1 and rely solely on the junction table approach.
+Features:
+- Domain input field with fetch button
+- List of discovered DNS records as selectable items
+- Each record shows: subdomain name, record type (A/CNAME), target IP/hostname
+- "Select All" / "Deselect All" toggle
+- Optional entity selector to link all imported websites
+- Website type selector (default: "other")
+- Progress indicator during bulk creation
 
----
+### 2. New Mutation Hook: useBulkCreateEntityWebsites
+Add a bulk creation mutation to handle multiple website inserts efficiently.
 
-## Implementation Steps
+**File**: `src/hooks/usePortalMutations.ts`
 
-### Step 1: Update AddressForm.tsx
+```text
+export const useBulkCreateEntityWebsites = () => {
+  // Insert multiple websites in a single transaction
+  // Show success toast with count of created records
+}
+```
 
-Remove the "Primary Entity" field and its associated logic:
+### 3. Update WebsitesSection
+Add an "Import from Cloudflare" button alongside the existing "Add Website" button.
 
-- Remove the `entity_id` FormField (lines 44-61)
-- Remove `entity_id` from the form's defaultValues
-- Remove the `useEntities` import (no longer needed in form)
-- Keep the `AddressEntityAffiliationsManager` section for linking entities
+**File**: `src/components/sections/WebsitesSection.tsx`
 
----
+Changes:
+- Add import button with Cloud icon
+- Add state for import dialog visibility
+- Render the new `CloudflareWebsiteImporter` dialog
 
-### Step 2: Update Form Schema
-
-Modify `addressSchema` in `formSchemas.ts`:
-
-- Remove the `entity_id` field from the schema
-- Remove `entity_id` from the `AddressFormData` type
-
----
-
-### Step 3: Update AddressesSection.tsx
-
-Update the section to handle the removal of direct `entity_id`:
-
-- Update the `handleSubmit` function to not include `entity_id`
-- Update the `filteredAddresses` logic to also check the junction table for entity filtering
-- Update the entity display logic on cards to use junction table data
-
----
-
-### Step 4: Update LinkedAddresses.tsx
-
-Simplify the component since addresses will only come from the junction table:
-
-- Remove the legacy `addresses` prop that relied on direct `entity_id`
-- Query only from `address_entity_links` junction table
-- Update the component interface to only require `entityId`
-
----
-
-### Step 5: Database Migration (Optional - For Cleanup)
-
-**Note:** The `entity_id` column in the `addresses` table can be kept for backward compatibility with existing data. Alternatively, a migration can:
-
-- Set all existing `addresses.entity_id` values to create corresponding `address_entity_links` entries
-- Then set `entity_id` to null on all addresses
-
-This step is optional and can be done later if full migration is desired.
+### 4. Intelligent Record Processing
+The importer will:
+- Filter out duplicate entries (records already existing in entity_websites)
+- Auto-generate website names from subdomain (e.g., `support.braxtech.net` becomes "Support")
+- Construct full URLs with https:// prefix
+- Set sensible defaults (type: "other", is_active: true)
 
 ---
 
 ## Technical Details
 
-### Files to Modify
+### Component Structure
+```text
+src/components/forms/CloudflareWebsiteImporter.tsx
+├── Domain input + fetch button
+├── Loading state
+├── Error display
+├── DNS Records list (with checkboxes)
+│   └── Each record: checkbox, name badge, type badge, target
+├── Entity selector (optional)
+├── Website type selector
+└── Action buttons: Cancel, Create Selected
+```
 
-1. `src/components/forms/AddressForm.tsx`
-   - Remove the Primary Entity select field
-   - Remove `entity_id` from defaultValues
-   - Remove unused `useEntities` hook
+### Data Flow
+```text
+1. User enters domain
+2. Call fetch-cloudflare-dns edge function
+3. Receive DNS records array
+4. Filter against existing websites (prevent duplicates)
+5. User selects records to import
+6. Generate website objects from selected records
+7. Bulk insert via useBulkCreateEntityWebsites
+8. Invalidate queries and close dialog
+```
 
-2. `src/lib/formSchemas.ts`
-   - Remove `entity_id` from `addressSchema`
-   - Remove `entity_id` from `AddressFormData` type
-
-3. `src/components/sections/AddressesSection.tsx`
-   - Update `handleSubmit` to not pass `entity_id`
-   - Update filtering logic to query junction table
-   - Update card display to show entities from junction table
-
-4. `src/components/entity-detail/LinkedAddresses.tsx`
-   - Remove the `addresses` prop
-   - Simplify to only query junction table
+### Website Generation Logic
+For each selected DNS record:
+```text
+- url: `https://${record.name}`
+- name: Capitalize first segment (e.g., "support" → "Support") or use domain if root
+- type: User-selected or "other"
+- platform: null
+- is_primary: false (first one could be true for root domain)
+- is_active: true
+- entity_id: From optional entity selector
+```
 
 ---
 
-## Impact on Entity Filtering
+## Files to Create/Modify
 
-Currently, the Addresses section can filter by entity using the direct `entity_id`. After this change:
-
-- Filtering will query the `address_entity_links` table instead
-- An address will appear for an entity if it has a link in the junction table
-- This is consistent with how the LinkedAddresses component already works
+| File | Action |
+|------|--------|
+| `src/components/forms/CloudflareWebsiteImporter.tsx` | Create new |
+| `src/hooks/usePortalMutations.ts` | Add bulk mutation |
+| `src/components/sections/WebsitesSection.tsx` | Add import button |
 
 ---
 
-## Backward Compatibility
-
-- Existing addresses with `entity_id` set will need to be migrated to the junction table
-- The LinkedAddresses component already handles both sources, so existing data will still display correctly in entity detail view
-- After migration, all new entity associations will use the junction table exclusively
+## Edge Cases Handled
+- Duplicate detection: Skip records where URL already exists in database
+- Root domain handling: `braxtech.net` A record treated as main website
+- Wildcard records: Skip `*.domain.com` entries (not valid URLs)
+- Error handling: Show clear messages if Cloudflare API fails
