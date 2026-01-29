@@ -278,7 +278,7 @@ const CloudflareWebsiteImporter = ({ open, onOpenChange }: CloudflareWebsiteImpo
                     return (
                       <div
                         key={record.name}
-                        className={`flex items-center gap-2 p-2 rounded-md hover:bg-muted/50 ${
+                        className={`grid grid-cols-[auto_1fr_60px_130px_130px] items-center gap-3 p-2 rounded-md hover:bg-muted/50 ${
                           record.isDuplicate ? "opacity-50" : ""
                         }`}
                       >
@@ -287,17 +287,19 @@ const CloudflareWebsiteImporter = ({ open, onOpenChange }: CloudflareWebsiteImpo
                           onCheckedChange={() => toggleRecord(record.name)}
                           disabled={record.isDuplicate}
                         />
-                        <div className="flex-1 min-w-0 max-w-[200px]">
+                        <div className="min-w-0">
                           <p className="text-sm font-medium truncate">{record.name}</p>
                           <p className="text-xs text-muted-foreground truncate">{record.content}</p>
                         </div>
-                        <Badge variant="outline" className="text-xs shrink-0">
+                        <Badge variant="outline" className="text-xs justify-center">
                           {record.type}
                         </Badge>
                         {record.isDuplicate ? (
-                          <Badge variant="destructive" className="text-xs shrink-0">
-                            Exists
-                          </Badge>
+                          <>
+                            <Badge variant="destructive" className="text-xs justify-center col-span-2">
+                              Exists
+                            </Badge>
+                          </>
                         ) : (
                           <>
                             <Select
@@ -305,7 +307,7 @@ const CloudflareWebsiteImporter = ({ open, onOpenChange }: CloudflareWebsiteImpo
                               onValueChange={(v) => updateRecordConfig(record.name, "websiteType", v)}
                               disabled={record.isDuplicate}
                             >
-                              <SelectTrigger className="h-7 w-[120px] text-xs">
+                              <SelectTrigger className="h-7 text-xs">
                                 <SelectValue />
                               </SelectTrigger>
                               <SelectContent>
@@ -321,7 +323,7 @@ const CloudflareWebsiteImporter = ({ open, onOpenChange }: CloudflareWebsiteImpo
                               onValueChange={(v) => updateRecordConfig(record.name, "platform", v)}
                               disabled={record.isDuplicate}
                             >
-                              <SelectTrigger className="h-7 w-[120px] text-xs">
+                              <SelectTrigger className="h-7 text-xs">
                                 <SelectValue placeholder="Platform" />
                               </SelectTrigger>
                               <SelectContent>
