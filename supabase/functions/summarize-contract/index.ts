@@ -60,17 +60,36 @@ serve(async (req) => {
     // Use service role for data operations
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    // Download the file from storage
-    const { data: fileData, error: downloadError } = await supabase.storage
-      .from("contract-files")
-      .download(filePath);
+    let fileData: Blob;
+    
+    // Check if filePath is an external URL or a storage path
+    if (filePath.startsWith("http://") || filePath.startsWith("https://")) {
+      // Fetch from external URL (e.g., DocuSeal)
+      console.log("Fetching from external URL:", filePath);
+      const externalResponse = await fetch(filePath);
+      if (!externalResponse.ok) {
+        console.error("External fetch error:", externalResponse.status, externalResponse.statusText);
+        return new Response(
+          JSON.stringify({ error: "Failed to download file from external source" }),
+          { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+      fileData = await externalResponse.blob();
+    } else {
+      // Download from Supabase storage
+      console.log("Downloading from storage:", filePath);
+      const { data: storageData, error: downloadError } = await supabase.storage
+        .from("contract-files")
+        .download(filePath);
 
-    if (downloadError || !fileData) {
-      console.error("Download error:", downloadError);
-      return new Response(
-        JSON.stringify({ error: "Failed to download file" }),
-        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
+      if (downloadError || !storageData) {
+        console.error("Download error:", downloadError);
+        return new Response(
+          JSON.stringify({ error: "Failed to download file" }),
+          { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+      fileData = storageData;
     }
 
     // Extract text from PDF (basic approach - works for text-based PDFs)
