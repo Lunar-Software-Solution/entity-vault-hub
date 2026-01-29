@@ -20,14 +20,18 @@ interface DocuSealSubmission {
   template: {
     id: number;
     name: string;
+    folder_name?: string;
   };
   status: string;
   created_at: string;
   completed_at: string | null;
-  documents?: Array<{
-    name: string;
-    url: string;
-  }>;
+  audit_log_url?: string;
+  combined_document_url?: string;
+}
+
+interface DocuSealDocument {
+  name: string;
+  url: string;
 }
 
 serve(async (req) => {
@@ -115,13 +119,6 @@ serve(async (req) => {
     }
     
     console.log(`Fetched ${submissions.length} submissions from DocuSeal`);
-    
-    // Log full metadata for debugging specific contracts
-    for (const sub of submissions) {
-      if (sub.template?.name?.includes("PHONE") || sub.id === 23) {
-        console.log("Full metadata for PHONE contract:", JSON.stringify(sub, null, 2));
-      }
-    }
 
     // Get existing contracts with docuseal_id to avoid duplicates
     const { data: existingContracts } = await supabase
@@ -152,9 +149,56 @@ serve(async (req) => {
         contractStatus = "terminated";
       }
 
+      // Fetch documents for this submission
+      let documentUrl: string | null = null;
+      let documentName: string | null = null;
+      
+      try {
+        const docsResponse = await fetch(`${docusealUrl}/api/submissions/${submission.id}/documents`, {
+          headers: {
+            "X-Auth-Token": DOCUSEAL_API_KEY,
+            "Content-Type": "application/json",
+          },
+        });
+        
+        if (docsResponse.ok) {
+          const docsData = await docsResponse.json();
+          console.log(`Docs API response for ${submission.id}:`, JSON.stringify(docsData));
+          
+          // Handle array or object with documents key
+          const documents: DocuSealDocument[] = Array.isArray(docsData) 
+            ? docsData 
+            : (docsData?.documents || docsData?.data || []);
+          
+          console.log(`Submission ${submission.id} has ${documents.length} documents`);
+          
+          if (documents.length > 0) {
+            documentUrl = documents[0].url;
+            documentName = documents[0].name;
+            console.log(`Document URL for ${submission.id}: ${documentUrl}`);
+          }
+        } else {
+          const errorText = await docsResponse.text();
+          console.log(`Failed to fetch documents for submission ${submission.id}: ${docsResponse.status} - ${errorText}`);
+        }
+      } catch (docError) {
+        console.error(`Error fetching documents for submission ${submission.id}:`, docError);
+      }
+
+      // Determine contract type from folder_name if available
+      let contractType = "General";
+      const folderName = submission.template?.folder_name?.toLowerCase() || "";
+      if (folderName.includes("hr") || folderName.includes("human")) {
+        contractType = "HR";
+      } else if (folderName.includes("business") || folderName.includes("commercial")) {
+        contractType = "Business";
+      } else if (folderName.includes("nda") || folderName.includes("confidential")) {
+        contractType = "NDA";
+      }
+
       const contractData = {
         title: submission.template?.name || `DocuSeal Contract #${submission.id}`,
-        type: "General",
+        type: contractType,
         parties,
         status: contractStatus,
         start_date: submission.completed_at
@@ -163,6 +207,8 @@ serve(async (req) => {
         docuseal_id: submission.id.toString(),
         docuseal_status: submission.status,
         docuseal_synced_at: new Date().toISOString(),
+        file_path: documentUrl,
+        file_name: documentName,
       };
 
       if (existingDocusealIds.has(submission.id.toString())) {
@@ -171,14 +217,23 @@ serve(async (req) => {
           (c) => c.docuseal_id === submission.id.toString()
         );
         if (existing) {
+          const updateData: Record<string, unknown> = {
+            status: contractStatus,
+            docuseal_status: submission.status,
+            docuseal_synced_at: new Date().toISOString(),
+            parties,
+            type: contractType,
+          };
+          
+          // Only update file info if we have it
+          if (documentUrl) {
+            updateData.file_path = documentUrl;
+            updateData.file_name = documentName;
+          }
+          
           const { error: updateError } = await supabase
             .from("contracts")
-            .update({
-              status: contractStatus,
-              docuseal_status: submission.status,
-              docuseal_synced_at: new Date().toISOString(),
-              parties,
-            })
+            .update(updateData)
             .eq("id", existing.id);
 
           if (!updateError) {
