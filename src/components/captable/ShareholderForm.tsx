@@ -13,7 +13,17 @@ import { supabase } from "@/integrations/supabase/client";
 import ShareholderEntityAffiliationsManager from "./ShareholderEntityAffiliationsManager";
 import GravatarAvatar from "@/components/shared/GravatarAvatar";
 import AvatarEditDialog from "@/components/shared/AvatarEditDialog";
-import IdDocumentsManager, { IdDocument } from "@/components/shared/IdDocumentsManager";
+import IdDocumentsManager, { IdDocument, ExtractedPersonData } from "@/components/shared/IdDocumentsManager";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 interface ShareholderFormData {
   entity_id: string;
@@ -43,6 +53,8 @@ const ShareholderForm = ({ item, entities, onSubmit, onCancel }: ShareholderForm
   const [avatarDeleted, setAvatarDeleted] = useState(false);
   const [idDocuments, setIdDocuments] = useState<IdDocument[]>([]);
   const [showAvatarDialog, setShowAvatarDialog] = useState(false);
+  const [extractedPersonData, setExtractedPersonData] = useState<ExtractedPersonData | null>(null);
+  const [showPersonDataDialog, setShowPersonDataDialog] = useState(false);
   const queryClient = useQueryClient();
   
   // Use existing ID or generate a temporary one for new shareholders (for file uploads)
@@ -451,6 +463,16 @@ const ShareholderForm = ({ item, entities, onSubmit, onCancel }: ShareholderForm
             documents={idDocuments}
             onChange={setIdDocuments}
             storageFolder="shareholders"
+            onPersonDataExtracted={(data) => {
+              // Check if any fields would benefit from the extracted data
+              const name = form.getValues("name");
+              const address = form.getValues("address");
+              
+              if ((!name && data.holder_name) || (!address && data.holder_address)) {
+                setExtractedPersonData(data);
+                setShowPersonDataDialog(true);
+              }
+            }}
           />
 
           {/* Entity Affiliations - for new shareholders only */}
@@ -469,6 +491,48 @@ const ShareholderForm = ({ item, entities, onSubmit, onCancel }: ShareholderForm
           <Button type="submit">{item ? "Update" : "Create"}</Button>
         </div>
       </form>
+
+      {/* Dialog to apply extracted person data */}
+      <AlertDialog open={showPersonDataDialog} onOpenChange={setShowPersonDataDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Apply Extracted Information?</AlertDialogTitle>
+            <AlertDialogDescription>
+              The AI extracted the following information from the ID document. Would you like to fill in the empty fields?
+              <div className="mt-3 space-y-2 text-sm">
+                {extractedPersonData?.holder_name && !form.getValues("name") && (
+                  <div><strong>Name:</strong> {extractedPersonData.holder_name}</div>
+                )}
+                {extractedPersonData?.holder_address && !form.getValues("address") && (
+                  <div><strong>Address:</strong> {extractedPersonData.holder_address}</div>
+                )}
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Skip</AlertDialogCancel>
+            <AlertDialogAction onClick={() => {
+              if (extractedPersonData) {
+                let fieldsUpdated = 0;
+                if (extractedPersonData.holder_name && !form.getValues("name")) {
+                  form.setValue("name", extractedPersonData.holder_name);
+                  fieldsUpdated++;
+                }
+                if (extractedPersonData.holder_address && !form.getValues("address")) {
+                  form.setValue("address", extractedPersonData.holder_address);
+                  fieldsUpdated++;
+                }
+                if (fieldsUpdated > 0) {
+                  toast.success(`Applied ${fieldsUpdated} field${fieldsUpdated > 1 ? "s" : ""} from ID document`);
+                }
+              }
+              setExtractedPersonData(null);
+            }}>
+              Apply
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Form>
   );
 };

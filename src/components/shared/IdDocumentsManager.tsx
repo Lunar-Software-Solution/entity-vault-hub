@@ -1,5 +1,5 @@
 import { useState, useRef } from "react";
-import { Plus, Trash2, Upload, FileText, Image, Loader2, X } from "lucide-react";
+import { Plus, Trash2, Upload, FileText, Image, Loader2, X, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -12,6 +12,13 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+
+export interface ExtractedPersonData {
+  holder_name?: string;
+  holder_address?: string;
+  date_of_birth?: string;
+  nationality?: string;
+}
 
 const ID_DOCUMENT_TYPES = [
   { value: "passport", label: "Passport" },
@@ -42,6 +49,7 @@ interface IdDocumentsManagerProps {
   documents: IdDocument[];
   onChange: (documents: IdDocument[]) => void;
   storageFolder?: string; // e.g., "directors" or "shareholders"
+  onPersonDataExtracted?: (data: ExtractedPersonData) => void;
 }
 
 const IdDocumentsManager = ({
@@ -49,8 +57,10 @@ const IdDocumentsManager = ({
   documents,
   onChange,
   storageFolder = "records",
+  onPersonDataExtracted,
 }: IdDocumentsManagerProps) => {
   const [uploadingIndex, setUploadingIndex] = useState<number | null>(null);
+  const [analyzingIndex, setAnalyzingIndex] = useState<number | null>(null);
   const fileInputRefs = useRef<(HTMLInputElement | null)[]>([]);
 
   const addDocument = () => {
@@ -148,6 +158,88 @@ const IdDocumentsManager = ({
     } catch (error) {
       console.error("Remove error:", error);
       toast.error("Failed to remove file");
+    }
+  };
+
+  // Analyze document with AI
+  const handleAnalyzeDocument = async (index: number) => {
+    const doc = documents[index];
+    if (!doc.file_path) {
+      toast.error("Please upload a document first");
+      return;
+    }
+
+    setAnalyzingIndex(index);
+
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.access_token) {
+        toast.error("Please sign in to analyze documents");
+        return;
+      }
+
+      const { data, error } = await supabase.functions.invoke("analyze-id-document", {
+        body: { filePath: doc.file_path },
+        headers: {
+          Authorization: `Bearer ${session.access_token}`,
+        },
+      });
+
+      if (error) {
+        console.error("Analysis error:", error);
+        toast.error("Failed to analyze document");
+        return;
+      }
+
+      if (data?.success && data?.data) {
+        const extracted = data.data;
+        let fieldsUpdated = 0;
+        const updates: Partial<IdDocument> = {};
+
+        // Update document fields
+        if (extracted.document_type && !doc.document_type) {
+          updates.document_type = extracted.document_type;
+          fieldsUpdated++;
+        }
+        if (extracted.document_number && !doc.document_number) {
+          updates.document_number = extracted.document_number;
+          fieldsUpdated++;
+        }
+        if (extracted.expiry_date && !doc.expiry_date) {
+          updates.expiry_date = extracted.expiry_date;
+          fieldsUpdated++;
+        }
+
+        if (Object.keys(updates).length > 0) {
+          updateDocument(index, updates);
+        }
+
+        // Pass person data to parent if callback provided
+        if (onPersonDataExtracted) {
+          const personData: ExtractedPersonData = {};
+          if (extracted.holder_name) personData.holder_name = extracted.holder_name;
+          if (extracted.holder_address) personData.holder_address = extracted.holder_address;
+          if (extracted.date_of_birth) personData.date_of_birth = extracted.date_of_birth;
+          if (extracted.nationality) personData.nationality = extracted.nationality;
+
+          if (Object.keys(personData).length > 0) {
+            onPersonDataExtracted(personData);
+          }
+        }
+
+        if (fieldsUpdated > 0) {
+          toast.success(`Extracted ${fieldsUpdated} field${fieldsUpdated > 1 ? "s" : ""} from document`);
+        } else {
+          toast.info("No new fields extracted (fields may already be filled)");
+        }
+      } else {
+        toast.error("No data could be extracted from the document");
+      }
+    } catch (err) {
+      console.error("Analysis failed:", err);
+      toast.error("Failed to analyze document");
+    } finally {
+      setAnalyzingIndex(null);
     }
   };
 
@@ -253,6 +345,22 @@ const IdDocumentsManager = ({
             <div className="flex items-center gap-2 p-2 rounded bg-background border border-border">
               {getFileIcon(doc.file_name)}
               <span className="flex-1 text-xs truncate">{doc.file_name}</span>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => handleAnalyzeDocument(index)}
+                disabled={analyzingIndex === index}
+                className="h-6 px-2 gap-1"
+                title="Analyze with AI"
+              >
+                {analyzingIndex === index ? (
+                  <Loader2 className="w-3 h-3 animate-spin" />
+                ) : (
+                  <Sparkles className="w-3 h-3 text-primary" />
+                )}
+                <span className="text-xs">Analyze</span>
+              </Button>
               <Button
                 type="button"
                 variant="ghost"

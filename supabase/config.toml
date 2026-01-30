@@ -52,3 +52,6 @@ verify_jwt = false
 
 [functions.fetch-cloudflare-dns]
 verify_jwt = false
+
+[functions.analyze-id-document]
+verify_jwt = false
