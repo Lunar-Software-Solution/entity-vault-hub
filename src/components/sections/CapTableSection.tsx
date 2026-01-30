@@ -266,7 +266,9 @@ const CapTableSection = () => {
 
   const updateShareholder = useMutation({
     mutationFn: async ({ id, ...data }: any) => {
-      const { error } = await supabase.from("shareholders").update(data).eq("id", id);
+      // Strip out internal form properties that aren't database columns
+      const { _idDocuments, _tempId, ...shareholderData } = data;
+      const { error } = await supabase.from("shareholders").update(shareholderData).eq("id", id);
       if (error) throw error;
     },
     onSuccess: () => {
