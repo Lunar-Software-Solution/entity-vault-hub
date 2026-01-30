@@ -26,8 +26,18 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { countries } from "@/lib/countries";
-import MultipleIdDocuments, { type IdDocument } from "./MultipleIdDocuments";
+import MultipleIdDocuments, { type IdDocument, type ExtractedPersonData } from "./MultipleIdDocuments";
 import EntityAffiliationsManager from "./EntityAffiliationsManager";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -96,7 +106,8 @@ export const DirectorUboForm = ({
   const [avatarDeleted, setAvatarDeleted] = useState(false);
   const [enrichedAvatarUrl, setEnrichedAvatarUrl] = useState<string | null>(null);
   const [showAvatarDialog, setShowAvatarDialog] = useState(false);
-
+  const [extractedPersonData, setExtractedPersonData] = useState<ExtractedPersonData | null>(null);
+  const [showApplyDataDialog, setShowApplyDataDialog] = useState(false);
   const handleAvatarChange = (newUrl: string | null, deleted: boolean) => {
     if (deleted) {
       setAvatarDeleted(true);
@@ -272,6 +283,55 @@ export const DirectorUboForm = ({
 
   const handleFormSubmit = (data: z.infer<typeof directorUboSchema>) => {
     onSubmit({ ...data, id_documents: idDocuments });
+  };
+
+  const handlePersonDataExtracted = (data: ExtractedPersonData) => {
+    // Check if any director fields are empty that we could fill
+    const currentName = form.getValues("name");
+    const currentAddress = form.getValues("address");
+    const currentDob = form.getValues("date_of_birth");
+    const currentNationality = form.getValues("nationality");
+
+    const hasEmptyFields = 
+      (!currentName && data.holder_name) ||
+      (!currentAddress && data.holder_address) ||
+      (!currentDob && data.date_of_birth) ||
+      (!currentNationality && data.nationality);
+
+    if (hasEmptyFields) {
+      setExtractedPersonData(data);
+      setShowApplyDataDialog(true);
+    }
+  };
+
+  const applyExtractedData = () => {
+    if (!extractedPersonData) return;
+    
+    let fieldsUpdated = 0;
+    
+    if (extractedPersonData.holder_name && !form.getValues("name")) {
+      form.setValue("name", extractedPersonData.holder_name);
+      fieldsUpdated++;
+    }
+    if (extractedPersonData.holder_address && !form.getValues("address")) {
+      form.setValue("address", extractedPersonData.holder_address);
+      fieldsUpdated++;
+    }
+    if (extractedPersonData.date_of_birth && !form.getValues("date_of_birth")) {
+      form.setValue("date_of_birth", extractedPersonData.date_of_birth);
+      fieldsUpdated++;
+    }
+    if (extractedPersonData.nationality && !form.getValues("nationality")) {
+      form.setValue("nationality", extractedPersonData.nationality);
+      fieldsUpdated++;
+    }
+
+    setShowApplyDataDialog(false);
+    setExtractedPersonData(null);
+    
+    if (fieldsUpdated > 0) {
+      toast.success(`Applied ${fieldsUpdated} field${fieldsUpdated > 1 ? "s" : ""} from ID`);
+    }
   };
 
   return (
@@ -628,6 +688,7 @@ export const DirectorUboForm = ({
           directorId={item?.id || "new"}
           documents={idDocuments}
           onChange={setIdDocuments}
+          onPersonDataExtracted={handlePersonDataExtracted}
         />
 
 
@@ -721,6 +782,36 @@ export const DirectorUboForm = ({
           </Button>
         </div>
       </form>
+
+      {/* Apply Extracted Data Dialog */}
+      <AlertDialog open={showApplyDataDialog} onOpenChange={setShowApplyDataDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Apply Extracted Data?</AlertDialogTitle>
+            <AlertDialogDescription>
+              We found personal information in the ID document. Would you like to fill the following empty fields?
+              <ul className="mt-2 list-disc list-inside text-sm">
+                {extractedPersonData?.holder_name && !form.getValues("name") && (
+                  <li>Name: {extractedPersonData.holder_name}</li>
+                )}
+                {extractedPersonData?.holder_address && !form.getValues("address") && (
+                  <li>Address: {extractedPersonData.holder_address}</li>
+                )}
+                {extractedPersonData?.date_of_birth && !form.getValues("date_of_birth") && (
+                  <li>Date of Birth: {extractedPersonData.date_of_birth}</li>
+                )}
+                {extractedPersonData?.nationality && !form.getValues("nationality") && (
+                  <li>Nationality: {extractedPersonData.nationality}</li>
+                )}
+              </ul>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Skip</AlertDialogCancel>
+            <AlertDialogAction onClick={applyExtractedData}>Apply</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Form>
   );
 };
