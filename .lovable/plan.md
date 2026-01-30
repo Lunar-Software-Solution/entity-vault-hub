@@ -1,120 +1,131 @@
 
-# Auto-Create Website Records from Cloudflare DNS
+
+# AI-Powered ID Document Analysis for Shareholders
 
 ## Overview
-Transform the current Cloudflare DNS integration from a display-only feature into a bulk website creation tool. When a user enters a root domain (e.g., `braxtech.net`) and fetches DNS records, the system will identify all A and CNAME records (subdomains like `support.braxtech.net`, `sales.braxtech.net`) and allow batch creation of website records.
 
-## User Flow
+This feature will add AI analysis of uploaded ID documents (passports, national IDs, driver's licenses, etc.) to automatically extract information and populate fields in both the ID document form and the shareholder form.
 
-1. User navigates to the **Websites** section
-2. Clicks **"Import from Cloudflare"** button (new)
-3. Enters root domain (e.g., `braxtech.net`)
-4. System fetches all A/CNAME records from Cloudflare
-5. User sees a list of discovered domains with checkboxes
-6. User selects which domains to import
-7. Optionally links them to an entity
-8. Clicks **"Create Websites"** to bulk-create records
+## What It Does
 
-## Implementation Details
+When a user uploads an ID document scan (PDF or image), the system will:
+1. Analyze the document using AI vision capabilities
+2. Auto-fill the ID document fields (document type, number, expiry date)
+3. Optionally extract and suggest shareholder-level information (name, address)
 
-### 1. New Component: CloudflareWebsiteImporter
-Create a new dialog component for the import workflow:
+## User Experience
 
-**File**: `src/components/forms/CloudflareWebsiteImporter.tsx`
+1. User clicks "Upload scan" in an ID document row
+2. After file upload, an "Analyze with AI" button appears (sparkle icon)
+3. User clicks the button, triggering AI analysis
+4. A loading spinner shows during analysis
+5. Upon completion:
+   - ID document fields auto-populate (type, number, expiry)
+   - If shareholder fields are empty, a prompt offers to fill them (name, address)
+   - Toast notification confirms which fields were updated
 
-Features:
-- Domain input field with fetch button
-- List of discovered DNS records as selectable items
-- Each record shows: subdomain name, record type (A/CNAME), target IP/hostname
-- "Select All" / "Deselect All" toggle
-- Optional entity selector to link all imported websites
-- Website type selector (default: "other")
-- Progress indicator during bulk creation
+## Technical Implementation
 
-### 2. New Mutation Hook: useBulkCreateEntityWebsites
-Add a bulk creation mutation to handle multiple website inserts efficiently.
+### 1. New Backend Function
 
-**File**: `src/hooks/usePortalMutations.ts`
+**File: `supabase/functions/analyze-id-document/index.ts`**
+
+- Accepts: `filePath`, `storageFolder` (bucket path), optional `currentFormData` (to know which fields are already filled)
+- Downloads the uploaded file from `id-documents` storage bucket
+- Sends to Lovable AI (Gemini 3 Flash) with vision capabilities
+- Uses tool calling for structured output extraction
+- Returns extracted data:
+  - `document_type`: Mapped to existing types (passport, national_id, drivers_license, etc.)
+  - `document_number`: The ID number on the document
+  - `expiry_date`: Expiration date in YYYY-MM-DD format
+  - `holder_name`: Full name of the document holder
+  - `holder_address`: Address if present on document
+  - `date_of_birth`: DOB if present
+  - `nationality`: Nationality/country if present
+  - `confidence`: Analysis confidence score
+
+### 2. Frontend Changes
+
+**File: `src/components/shared/IdDocumentsManager.tsx`**
+
+- Add `isAnalyzing` state to track per-document analysis status
+- Add "Analyze" button (Sparkles icon) next to uploaded file
+- Add `onPersonDataExtracted` callback prop to communicate with parent form
+- Handle AI API call and populate document fields
+- Show toast with extraction results
+
+**File: `src/components/captable/ShareholderForm.tsx`**
+
+- Pass callback to `IdDocumentsManager` for extracted person data
+- When AI extracts name/address, offer to fill empty form fields
+- Only suggest filling fields that are currently empty
+
+### 3. Configuration
+
+**File: `supabase/config.toml`**
+
+- Add entry for the new edge function with `verify_jwt = false`
+
+## Data Flow Diagram
 
 ```text
-export const useBulkCreateEntityWebsites = () => {
-  // Insert multiple websites in a single transaction
-  // Show success toast with count of created records
-}
+[User uploads ID scan]
+         |
+         v
+[File stored in id-documents bucket]
+         |
+         v
+[User clicks "Analyze" button]
+         |
+         v
+[Edge Function: analyze-id-document]
+    |-- Download file from storage
+    |-- Convert to base64
+    |-- Send to Lovable AI Gateway
+    |-- Extract structured data via tool calling
+         |
+         v
+[Return extracted data to frontend]
+         |
+         v
+[IdDocumentsManager: Auto-fill document fields]
+         |
+         v
+[ShareholderForm: Offer to fill name/address if empty]
 ```
 
-### 3. Update WebsitesSection
-Add an "Import from Cloudflare" button alongside the existing "Add Website" button.
+## AI Prompt Strategy
 
-**File**: `src/components/sections/WebsitesSection.tsx`
+The AI will receive the document image and be instructed to:
+1. Identify the document type (passport, national ID, driver's license, etc.)
+2. Extract the document number/ID
+3. Find the expiration date
+4. Read the holder's full name
+5. Extract address if visible (common on driver's licenses)
+6. Note nationality/issuing country
 
-Changes:
-- Add import button with Cloud icon
-- Add state for import dialog visibility
-- Render the new `CloudflareWebsiteImporter` dialog
-
-### 4. Intelligent Record Processing
-The importer will:
-- Filter out duplicate entries (records already existing in entity_websites)
-- Auto-generate website names from subdomain (e.g., `support.braxtech.net` becomes "Support")
-- Construct full URLs with https:// prefix
-- Set sensible defaults (type: "other", is_active: true)
-
----
-
-## Technical Details
-
-### Component Structure
-```text
-src/components/forms/CloudflareWebsiteImporter.tsx
-├── Domain input + fetch button
-├── Loading state
-├── Error display
-├── DNS Records list (with checkboxes)
-│   └── Each record: checkbox, name badge, type badge, target
-├── Entity selector (optional)
-├── Website type selector
-└── Action buttons: Cancel, Create Selected
-```
-
-### Data Flow
-```text
-1. User enters domain
-2. Call fetch-cloudflare-dns edge function
-3. Receive DNS records array
-4. Filter against existing websites (prevent duplicates)
-5. User selects records to import
-6. Generate website objects from selected records
-7. Bulk insert via useBulkCreateEntityWebsites
-8. Invalidate queries and close dialog
-```
-
-### Website Generation Logic
-For each selected DNS record:
-```text
-- url: `https://${record.name}`
-- name: Capitalize first segment (e.g., "support" → "Support") or use domain if root
-- type: User-selected or "other"
-- platform: null
-- is_primary: false (first one could be true for root domain)
-- is_active: true
-- entity_id: From optional entity selector
-```
-
----
+The response uses tool calling for reliable structured output with the following schema:
+- `document_type`: enum matching existing types
+- `document_number`: string
+- `expiry_date`: YYYY-MM-DD format
+- `holder_name`: string
+- `holder_address`: string (optional)
+- `date_of_birth`: YYYY-MM-DD format (optional)
+- `nationality`: string (optional)
 
 ## Files to Create/Modify
 
 | File | Action |
 |------|--------|
-| `src/components/forms/CloudflareWebsiteImporter.tsx` | Create new |
-| `src/hooks/usePortalMutations.ts` | Add bulk mutation |
-| `src/components/sections/WebsitesSection.tsx` | Add import button |
+| `supabase/functions/analyze-id-document/index.ts` | Create |
+| `supabase/config.toml` | Modify (add function config) |
+| `src/components/shared/IdDocumentsManager.tsx` | Modify (add analyze button + logic) |
+| `src/components/captable/ShareholderForm.tsx` | Modify (handle extracted person data) |
 
----
+## Security Considerations
 
-## Edge Cases Handled
-- Duplicate detection: Skip records where URL already exists in database
-- Root domain handling: `braxtech.net` A record treated as main website
-- Wildcard records: Skip `*.domain.com` entries (not valid URLs)
-- Error handling: Show clear messages if Cloudflare API fails
+- Authentication required via Authorization header
+- User token validated before processing
+- Service role key used only for storage access
+- Rate limiting handled (429) and credit exhaustion (402)
+
