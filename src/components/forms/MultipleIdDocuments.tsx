@@ -1,5 +1,5 @@
 import { useState, useRef } from "react";
-import { Plus, Trash2, Upload, FileText, Image, Loader2, X } from "lucide-react";
+import { Plus, Trash2, Upload, FileText, Image, Loader2, X, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -37,18 +37,28 @@ export interface IdDocument {
   notes?: string;
 }
 
+export interface ExtractedPersonData {
+  holder_name?: string;
+  holder_address?: string;
+  date_of_birth?: string;
+  nationality?: string;
+}
+
 interface MultipleIdDocumentsProps {
   directorId: string;
   documents: IdDocument[];
   onChange: (documents: IdDocument[]) => void;
+  onPersonDataExtracted?: (data: ExtractedPersonData) => void;
 }
 
 const MultipleIdDocuments = ({
   directorId,
   documents,
   onChange,
+  onPersonDataExtracted,
 }: MultipleIdDocumentsProps) => {
   const [uploadingIndex, setUploadingIndex] = useState<number | null>(null);
+  const [analyzingIndex, setAnalyzingIndex] = useState<number | null>(null);
   const fileInputRefs = useRef<(HTMLInputElement | null)[]>([]);
 
   const addDocument = () => {
@@ -146,6 +156,86 @@ const MultipleIdDocuments = ({
     } catch (error) {
       console.error("Remove error:", error);
       toast.error("Failed to remove file");
+    }
+  };
+
+  const handleAnalyzeDocument = async (index: number) => {
+    const doc = documents[index];
+    if (!doc.file_path) {
+      toast.error("Please upload a file first");
+      return;
+    }
+
+    setAnalyzingIndex(index);
+
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.access_token) {
+        toast.error("Please sign in to use AI analysis");
+        return;
+      }
+
+      const { data, error } = await supabase.functions.invoke("analyze-id-document", {
+        body: { filePath: doc.file_path },
+        headers: {
+          Authorization: `Bearer ${session.access_token}`,
+        },
+      });
+
+      if (error) {
+        console.error("Analysis error:", error);
+        toast.error("Failed to analyze document");
+        return;
+      }
+
+      if (data?.success && data?.data) {
+        const extracted = data.data;
+        let fieldsUpdated = 0;
+
+        // Update document fields
+        const docUpdates: Partial<IdDocument> = {};
+        
+        if (extracted.document_type) {
+          docUpdates.document_type = extracted.document_type;
+          fieldsUpdated++;
+        }
+        if (extracted.document_number) {
+          docUpdates.document_number = extracted.document_number;
+          fieldsUpdated++;
+        }
+        if (extracted.expiry_date) {
+          docUpdates.expiry_date = extracted.expiry_date;
+          fieldsUpdated++;
+        }
+
+        if (Object.keys(docUpdates).length > 0) {
+          updateDocument(index, docUpdates);
+        }
+
+        // Check if person data was extracted and notify parent
+        const personData: ExtractedPersonData = {};
+        if (extracted.holder_name) personData.holder_name = extracted.holder_name;
+        if (extracted.holder_address) personData.holder_address = extracted.holder_address;
+        if (extracted.date_of_birth) personData.date_of_birth = extracted.date_of_birth;
+        if (extracted.nationality) personData.nationality = extracted.nationality;
+
+        if (Object.keys(personData).length > 0 && onPersonDataExtracted) {
+          onPersonDataExtracted(personData);
+        }
+
+        if (fieldsUpdated > 0) {
+          toast.success(`Analyzed! Updated ${fieldsUpdated} document field${fieldsUpdated > 1 ? "s" : ""}`);
+        } else {
+          toast.info("No document fields could be extracted");
+        }
+      } else {
+        toast.error("No data returned from analysis");
+      }
+    } catch (err) {
+      console.error("Analysis failed:", err);
+      toast.error("Failed to analyze document");
+    } finally {
+      setAnalyzingIndex(null);
     }
   };
 
@@ -248,9 +338,24 @@ const MultipleIdDocuments = ({
           />
 
           {doc.file_path && doc.file_name ? (
-            <div className="flex items-center gap-3 p-2 rounded-lg bg-background border border-border">
+            <div className="flex items-center gap-2 p-2 rounded-lg bg-background border border-border">
               {getFileIcon(doc.file_name)}
               <span className="flex-1 text-sm truncate">{doc.file_name}</span>
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                onClick={() => handleAnalyzeDocument(index)}
+                disabled={analyzingIndex === index}
+                title="Analyze with AI"
+                className="h-7 w-7"
+              >
+                {analyzingIndex === index ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  <Sparkles className="w-4 h-4" />
+                )}
+              </Button>
               <Button
                 type="button"
                 variant="ghost"
