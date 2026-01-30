@@ -76,9 +76,9 @@ const MultipleIdDocuments = ({
     onChange(documents.filter((_, i) => i !== index));
   };
 
-  const updateDocument = (index: number, field: keyof IdDocument, value: string) => {
+  const updateDocument = (index: number, updates: Partial<IdDocument>) => {
     const updated = [...documents];
-    updated[index] = { ...updated[index], [field]: value };
+    updated[index] = { ...updated[index], ...updates };
     onChange(updated);
   };
 
@@ -125,8 +125,7 @@ const MultipleIdDocuments = ({
 
       if (uploadError) throw uploadError;
 
-      updateDocument(index, "file_path", filePath);
-      updateDocument(index, "file_name", file.name);
+      updateDocument(index, { file_path: filePath, file_name: file.name });
       toast.success("File uploaded successfully");
     } catch (error) {
       console.error("Upload error:", error);
@@ -142,8 +141,7 @@ const MultipleIdDocuments = ({
 
     try {
       await supabase.storage.from("id-documents").remove([doc.file_path]);
-      updateDocument(index, "file_path", "");
-      updateDocument(index, "file_name", "");
+      updateDocument(index, { file_path: "", file_name: "" });
       toast.success("File removed");
     } catch (error) {
       console.error("Remove error:", error);
@@ -199,7 +197,7 @@ const MultipleIdDocuments = ({
               <Select
                 value={doc.document_type}
                 onValueChange={(value) =>
-                  updateDocument(index, "document_type", value)
+                  updateDocument(index, { document_type: value })
                 }
               >
                 <SelectTrigger>
@@ -223,7 +221,7 @@ const MultipleIdDocuments = ({
                 placeholder="ABC123456"
                 value={doc.document_number}
                 onChange={(e) =>
-                  updateDocument(index, "document_number", e.target.value)
+                  updateDocument(index, { document_number: e.target.value })
                 }
               />
             </div>
@@ -234,7 +232,7 @@ const MultipleIdDocuments = ({
                 type="date"
                 value={doc.expiry_date}
                 onChange={(e) =>
-                  updateDocument(index, "expiry_date", e.target.value)
+                  updateDocument(index, { expiry_date: e.target.value })
                 }
               />
             </div>
