@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { LayoutDashboard, Building2, CreditCard, Wallet, Share2, MapPin, FileText, Settings, LogOut, User, ChevronUp, ChevronDown, ChevronRight, Phone, Receipt, Calendar, Briefcase, Mail, Users, PieChart, Globe, PanelLeftClose, PanelLeft, Monitor } from "lucide-react";
+import { LayoutDashboard, Building2, CreditCard, Wallet, Share2, MapPin, FileText, Settings, LogOut, User, ChevronUp, ChevronDown, ChevronRight, Phone, Receipt, Calendar, Briefcase, Mail, Users, PieChart, Globe, PanelLeftClose, PanelLeft, Monitor, Store } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
 import braxLogo from "@/assets/brax-logo.svg";
@@ -70,6 +70,10 @@ const menuGroups: MenuGroup[] = [{
     id: "credit-cards",
     label: "Credit Cards",
     icon: CreditCard
+  }, {
+    id: "merchant-accounts",
+    label: "Merchant Accounts",
+    icon: Store
   }, {
     id: "tax-ids",
     label: "Tax IDs",
