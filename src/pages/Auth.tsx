@@ -18,15 +18,36 @@ interface Invitation {
   expires_at: string;
 }
 
-// Generate a unique device token for this browser
+// Generate a unique device token for this browser - cached at module level
+const DEVICE_TOKEN_KEY = "trusted_device_token";
+let cachedDeviceToken: string | null = null;
+
 const getDeviceToken = (): string => {
-  const STORAGE_KEY = "trusted_device_token";
-  let token = localStorage.getItem(STORAGE_KEY);
-  if (!token) {
-    token = crypto.randomUUID() + "-" + Date.now();
-    localStorage.setItem(STORAGE_KEY, token);
+  // Return cached value if already loaded this session
+  if (cachedDeviceToken) {
+    return cachedDeviceToken;
   }
-  return token;
+  
+  try {
+    let token = localStorage.getItem(DEVICE_TOKEN_KEY);
+    if (!token) {
+      // Generate a stable token without timestamp to avoid duplicates
+      token = crypto.randomUUID();
+      localStorage.setItem(DEVICE_TOKEN_KEY, token);
+      console.log("Created new device token:", token);
+    } else {
+      console.log("Loaded existing device token:", token);
+    }
+    cachedDeviceToken = token;
+    return token;
+  } catch (e) {
+    // Fallback if localStorage is unavailable (e.g., private browsing)
+    console.warn("localStorage unavailable, using session-only token");
+    if (!cachedDeviceToken) {
+      cachedDeviceToken = crypto.randomUUID();
+    }
+    return cachedDeviceToken;
+  }
 };
 
 // Get a simple device name
