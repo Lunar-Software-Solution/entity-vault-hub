@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-import { useTaxIdTypes, useIssuingAuthorities, useDocumentTypes, useFilingTypes, useSoftwareCatalog, useWebsiteTypes, useWebsitePlatforms, type TaxIdType, type IssuingAuthority, type DocumentType, type FilingType, type SoftwareCatalog, type WebsiteType, type WebsitePlatform } from "@/hooks/usePortalData";
+import { useTaxIdTypes, useIssuingAuthorities, useDocumentTypes, useFilingTypes, useSoftwareCatalog, useWebsiteTypes, useWebsitePlatforms, usePaymentProviders, type TaxIdType, type IssuingAuthority, type DocumentType, type FilingType, type SoftwareCatalog, type WebsiteType, type WebsitePlatform, type PaymentProvider } from "@/hooks/usePortalData";
 import { 
   useCreateTaxIdType, useUpdateTaxIdType, useDeleteTaxIdType,
   useCreateIssuingAuthority, useUpdateIssuingAuthority, useDeleteIssuingAuthority,
@@ -7,7 +7,8 @@ import {
   useCreateFilingType, useUpdateFilingType, useDeleteFilingType,
   useCreateSoftwareCatalog, useUpdateSoftwareCatalog, useDeleteSoftwareCatalog,
   useCreateWebsiteType, useUpdateWebsiteType, useDeleteWebsiteType,
-  useCreateWebsitePlatform, useUpdateWebsitePlatform, useDeleteWebsitePlatform
+  useCreateWebsitePlatform, useUpdateWebsitePlatform, useDeleteWebsitePlatform,
+  useCreatePaymentProvider, useUpdatePaymentProvider, useDeletePaymentProvider
 } from "@/hooks/usePortalMutations";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -19,7 +20,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 
 import { Badge } from "@/components/ui/badge";
 import DeleteConfirmDialog from "@/components/shared/DeleteConfirmDialog";
-import { Plus, Edit, Trash2, FileText, Building2, Search, ArrowUpDown, ArrowUp, ArrowDown, FolderOpen, Calendar, Monitor, Globe, Server } from "lucide-react";
+import { Plus, Edit, Trash2, FileText, Building2, Search, ArrowUpDown, ArrowUp, ArrowDown, FolderOpen, Calendar, Monitor, Globe, Server, CreditCard, ExternalLink } from "lucide-react";
 import { useUserRole } from "@/hooks/useUserRole";
 import { useForm } from "react-hook-form";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
@@ -240,6 +241,7 @@ type FilingTypeSortKey = "code" | "name" | "category" | "default_frequency" | "d
 type SoftwareSortKey = "name" | "category" | "vendor" | "website";
 type WebsiteTypeSortKey = "code" | "name" | "description";
 type WebsitePlatformSortKey = "code" | "name" | "description";
+type PaymentProviderSortKey = "code" | "name" | "website" | "description";
 type SortDirection = "asc" | "desc";
 
 // Filing Type Form
@@ -706,6 +708,76 @@ const WebsitePlatformForm = ({
   );
 };
 
+// Payment Provider Form
+interface PaymentProviderFormData {
+  code: string;
+  name: string;
+  website?: string;
+  description?: string;
+}
+
+const PaymentProviderForm = ({ 
+  item, 
+  onSubmit, 
+  onCancel, 
+  isLoading
+}: { 
+  item?: PaymentProvider | null; 
+  onSubmit: (data: PaymentProviderFormData) => void; 
+  onCancel: () => void; 
+  isLoading?: boolean;
+}) => {
+  const form = useForm<PaymentProviderFormData>({
+    defaultValues: {
+      code: item?.code ?? "",
+      name: item?.name ?? "",
+      website: item?.website ?? "",
+      description: item?.description ?? "",
+    },
+  });
+
+  return (
+    <Form {...form}>
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+        <FormField control={form.control} name="code" render={({ field }) => (
+          <FormItem>
+            <FormLabel>Code *</FormLabel>
+            <FormControl><Input placeholder="e.g., stripe, paypal" {...field} /></FormControl>
+            <FormMessage />
+          </FormItem>
+        )} />
+        <FormField control={form.control} name="name" render={({ field }) => (
+          <FormItem>
+            <FormLabel>Name *</FormLabel>
+            <FormControl><Input placeholder="e.g., Stripe, PayPal" {...field} /></FormControl>
+            <FormMessage />
+          </FormItem>
+        )} />
+        <FormField control={form.control} name="website" render={({ field }) => (
+          <FormItem>
+            <FormLabel>Website</FormLabel>
+            <FormControl><Input placeholder="https://stripe.com" {...field} /></FormControl>
+            <FormMessage />
+          </FormItem>
+        )} />
+        <FormField control={form.control} name="description" render={({ field }) => (
+          <FormItem>
+            <FormLabel>Description</FormLabel>
+            <FormControl><Textarea placeholder="Optional description..." rows={2} {...field} /></FormControl>
+            <FormMessage />
+          </FormItem>
+        )} />
+        <div className="flex justify-end gap-3 pt-4">
+          <Button type="button" variant="outline" onClick={onCancel}>Cancel</Button>
+          <Button type="submit" disabled={isLoading}>
+            {isLoading ? "Saving..." : item ? "Update" : "Add Provider"}
+          </Button>
+        </div>
+      </form>
+    </Form>
+  );
+};
+
 const SettingsSection = () => {
   const { canWrite } = useUserRole();
 
@@ -772,6 +844,15 @@ const SettingsSection = () => {
   const [editingPlatform, setEditingPlatform] = useState<WebsitePlatform | null>(null);
   const [deletingPlatform, setDeletingPlatform] = useState<WebsitePlatform | null>(null);
 
+  // Search and sort state for Payment Providers
+  const [providerSearch, setProviderSearch] = useState("");
+  const [providerSortKey, setProviderSortKey] = useState<PaymentProviderSortKey>("name");
+  const [providerSortDirection, setProviderSortDirection] = useState<SortDirection>("asc");
+
+  const [showProviderForm, setShowProviderForm] = useState(false);
+  const [editingProvider, setEditingProvider] = useState<PaymentProvider | null>(null);
+  const [deletingProvider, setDeletingProvider] = useState<PaymentProvider | null>(null);
+
   const { data: taxIdTypes, isLoading: typesLoading } = useTaxIdTypes();
   const { data: issuingAuthorities, isLoading: authoritiesLoading } = useIssuingAuthorities();
   const { data: documentTypes, isLoading: docTypesLoading } = useDocumentTypes();
@@ -779,6 +860,7 @@ const SettingsSection = () => {
   const { data: softwareCatalog, isLoading: softwareLoading } = useSoftwareCatalog();
   const { data: websiteTypes, isLoading: websiteTypesLoading } = useWebsiteTypes();
   const { data: websitePlatforms, isLoading: platformsLoading } = useWebsitePlatforms();
+  const { data: paymentProviders, isLoading: providersLoading } = usePaymentProviders();
 
   const createTypeMutation = useCreateTaxIdType();
   const updateTypeMutation = useUpdateTaxIdType();
@@ -807,6 +889,10 @@ const SettingsSection = () => {
   const createPlatformMutation = useCreateWebsitePlatform();
   const updatePlatformMutation = useUpdateWebsitePlatform();
   const deletePlatformMutation = useDeleteWebsitePlatform();
+
+  const createProviderMutation = useCreatePaymentProvider();
+  const updateProviderMutation = useUpdatePaymentProvider();
+  const deleteProviderMutation = useDeletePaymentProvider();
 
   // Get authority name for a tax id type
   const getAuthorityName = (authorityId: string | null | undefined) => {
@@ -1251,7 +1337,70 @@ const SettingsSection = () => {
     }
   };
 
-  if (typesLoading || authoritiesLoading || filingTypesLoading || docTypesLoading || websiteTypesLoading || platformsLoading) {
+  // Filter and sort Payment Providers
+  const filteredAndSortedProviders = useMemo(() => {
+    if (!paymentProviders) return [];
+    
+    let filtered = paymentProviders;
+    
+    // Apply search filter
+    if (providerSearch.trim()) {
+      const searchLower = providerSearch.toLowerCase();
+      filtered = paymentProviders.filter((provider) => 
+        provider.code.toLowerCase().includes(searchLower) ||
+        provider.name.toLowerCase().includes(searchLower) ||
+        (provider.website || "").toLowerCase().includes(searchLower) ||
+        (provider.description || "").toLowerCase().includes(searchLower)
+      );
+    }
+    
+    // Apply sort
+    return [...filtered].sort((a, b) => {
+      const aVal = ((a as any)[providerSortKey] || "").toLowerCase();
+      const bVal = ((b as any)[providerSortKey] || "").toLowerCase();
+      
+      if (providerSortDirection === "asc") {
+        return aVal.localeCompare(bVal);
+      } else {
+        return bVal.localeCompare(aVal);
+      }
+    });
+  }, [paymentProviders, providerSearch, providerSortKey, providerSortDirection]);
+
+  const handleProviderSort = (key: PaymentProviderSortKey) => {
+    if (providerSortKey === key) {
+      setProviderSortDirection(prev => prev === "asc" ? "desc" : "asc");
+    } else {
+      setProviderSortKey(key);
+      setProviderSortDirection("asc");
+    }
+  };
+
+  const getProviderSortIcon = (key: PaymentProviderSortKey) => {
+    if (providerSortKey !== key) return <ArrowUpDown className="w-4 h-4 ml-1 opacity-50" />;
+    return providerSortDirection === "asc" 
+      ? <ArrowUp className="w-4 h-4 ml-1" /> 
+      : <ArrowDown className="w-4 h-4 ml-1" />;
+  };
+
+  const handleProviderSubmit = (data: PaymentProviderFormData) => {
+    const payload = { 
+      ...data, 
+      website: data.website || null,
+      description: data.description || null,
+    };
+    if (editingProvider) {
+      updateProviderMutation.mutate({ id: editingProvider.id, ...payload }, {
+        onSuccess: () => { setShowProviderForm(false); setEditingProvider(null); },
+      });
+    } else {
+      createProviderMutation.mutate(payload, {
+        onSuccess: () => setShowProviderForm(false),
+      });
+    }
+  };
+
+  if (typesLoading || authoritiesLoading || filingTypesLoading || docTypesLoading || websiteTypesLoading || platformsLoading || providersLoading) {
     return (
       <div className="space-y-6">
         <Skeleton className="h-8 w-48" />
@@ -1264,11 +1413,11 @@ const SettingsSection = () => {
     <div className="space-y-6">
       <div>
         <h2 className="text-2xl font-bold text-foreground">Settings</h2>
-        <p className="text-muted-foreground">Manage lookup tables for Tax ID Types, Authorities, Document Types, Filing Types, Software, Website Types, and Platforms</p>
+        <p className="text-muted-foreground">Manage lookup tables for Tax ID Types, Authorities, Document Types, Filing Types, Software, Website Types, Platforms, and Payment Providers</p>
       </div>
 
       <Tabs defaultValue="tax-id-types" className="w-full">
-        <TabsList className="grid w-full max-w-5xl grid-cols-7">
+        <TabsList className="grid w-full max-w-6xl grid-cols-8">
           <TabsTrigger value="tax-id-types" className="gap-1 text-xs sm:text-sm">
             <FileText className="w-4 h-4" />
             <span className="hidden md:inline">Tax IDs</span>
@@ -1296,6 +1445,10 @@ const SettingsSection = () => {
           <TabsTrigger value="platforms" className="gap-1 text-xs sm:text-sm">
             <Server className="w-4 h-4" />
             <span className="hidden md:inline">Platforms</span>
+          </TabsTrigger>
+          <TabsTrigger value="providers" className="gap-1 text-xs sm:text-sm">
+            <CreditCard className="w-4 h-4" />
+            <span className="hidden md:inline">Providers</span>
           </TabsTrigger>
         </TabsList>
 
@@ -1936,6 +2089,85 @@ const SettingsSection = () => {
             </div>
           </div>
         </TabsContent>
+
+        <TabsContent value="providers" className="mt-6">
+          <div className="glass-card rounded-xl p-6">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-4">
+              <h3 className="text-lg font-semibold text-foreground">Payment Providers</h3>
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full sm:w-auto">
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                  <Input
+                    placeholder="Search providers..."
+                    value={providerSearch}
+                    onChange={(e) => setProviderSearch(e.target.value)}
+                    className="pl-9 w-full sm:w-64"
+                  />
+                </div>
+                {canWrite && (
+                  <Button onClick={() => setShowProviderForm(true)} size="sm" className="gap-2">
+                    <Plus className="w-4 h-4" />
+                    Add Provider
+                  </Button>
+                )}
+              </div>
+            </div>
+            
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="cursor-pointer" onClick={() => handleProviderSort("code")}>
+                      <div className="flex items-center">Code {getProviderSortIcon("code")}</div>
+                    </TableHead>
+                    <TableHead className="cursor-pointer" onClick={() => handleProviderSort("name")}>
+                      <div className="flex items-center">Name {getProviderSortIcon("name")}</div>
+                    </TableHead>
+                    <TableHead className="cursor-pointer" onClick={() => handleProviderSort("website")}>
+                      <div className="flex items-center">Website {getProviderSortIcon("website")}</div>
+                    </TableHead>
+                    <TableHead className="cursor-pointer" onClick={() => handleProviderSort("description")}>
+                      <div className="flex items-center">Description {getProviderSortIcon("description")}</div>
+                    </TableHead>
+                    <TableHead className="w-[100px]">Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {filteredAndSortedProviders.length === 0 ? (
+                    <TableRow><TableCell colSpan={5} className="text-center text-muted-foreground py-8">No payment providers found</TableCell></TableRow>
+                  ) : filteredAndSortedProviders.map((provider) => (
+                    <TableRow key={provider.id}>
+                      <TableCell className="font-medium font-mono">{provider.code}</TableCell>
+                      <TableCell>{provider.name}</TableCell>
+                      <TableCell>
+                        {provider.website ? (
+                          <a 
+                            href={provider.website} 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            className="text-primary hover:underline inline-flex items-center gap-1"
+                          >
+                            {provider.website.replace(/^https?:\/\//, '').split('/')[0]}
+                            <ExternalLink className="w-3 h-3" />
+                          </a>
+                        ) : "-"}
+                      </TableCell>
+                      <TableCell className="text-muted-foreground max-w-xs truncate">{provider.description || "-"}</TableCell>
+                      <TableCell>
+                        {canWrite && (
+                          <div className="flex items-center gap-1">
+                            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => { setEditingProvider(provider); setShowProviderForm(true); }}><Edit className="w-4 h-4" /></Button>
+                            <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => setDeletingProvider(provider)}><Trash2 className="w-4 h-4" /></Button>
+                          </div>
+                        )}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          </div>
+        </TabsContent>
       </Tabs>
 
       {/* Tax ID Type Dialog */}
@@ -2128,6 +2360,32 @@ const SettingsSection = () => {
           />
         </DialogContent>
       </Dialog>
+
+      {/* Payment Provider Dialog */}
+      <Dialog open={showProviderForm} onOpenChange={() => { setShowProviderForm(false); setEditingProvider(null); }}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>{editingProvider ? "Edit Payment Provider" : "Add Payment Provider"}</DialogTitle>
+          </DialogHeader>
+          <PaymentProviderForm
+            item={editingProvider}
+            onSubmit={handleProviderSubmit}
+            onCancel={() => { setShowProviderForm(false); setEditingProvider(null); }}
+            isLoading={createProviderMutation.isPending || updateProviderMutation.isPending}
+          />
+        </DialogContent>
+      </Dialog>
+
+      <DeleteConfirmDialog
+        open={!!deletingProvider}
+        onOpenChange={() => setDeletingProvider(null)}
+        onConfirm={() => {
+          if (deletingProvider) deleteProviderMutation.mutate(deletingProvider.id, { onSuccess: () => setDeletingProvider(null) });
+        }}
+        title="Delete Payment Provider"
+        description={`Are you sure you want to delete "${deletingProvider?.name}"? This may affect existing merchant accounts using this provider.`}
+        isLoading={deleteProviderMutation.isPending}
+      />
     </div>
   );
 };

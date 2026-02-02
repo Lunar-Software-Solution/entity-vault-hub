@@ -1415,3 +1415,51 @@ export const useDeleteWebsitePlatform = () => {
     onError: (error) => toast.error(`Failed to delete platform: ${error.message}`),
   });
 };
+
+// Payment Provider mutations
+export const useCreatePaymentProvider = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (provider: TablesInsert<"payment_providers">) => {
+      const { data, error } = await supabase.from("payment_providers").insert(provider).select().single();
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["payment_providers"] });
+      toast.success("Payment provider added successfully");
+    },
+    onError: (error) => toast.error(`Failed to add payment provider: ${error.message}`),
+  });
+};
+
+export const useUpdatePaymentProvider = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, ...provider }: TablesUpdate<"payment_providers"> & { id: string }) => {
+      const { data, error } = await supabase.from("payment_providers").update(provider).eq("id", id).select().single();
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["payment_providers"] });
+      toast.success("Payment provider updated successfully");
+    },
+    onError: (error) => toast.error(`Failed to update payment provider: ${error.message}`),
+  });
+};
+
+export const useDeletePaymentProvider = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from("payment_providers").delete().eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["payment_providers"] });
+      toast.success("Payment provider deleted successfully");
+    },
+    onError: (error) => toast.error(`Failed to delete payment provider: ${error.message}`),
+  });
+};
