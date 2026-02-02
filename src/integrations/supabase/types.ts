@@ -1826,6 +1826,82 @@ export type Database = {
         }
         Relationships: []
       }
+      merchant_accounts: {
+        Row: {
+          api_key_masked: string | null
+          created_at: string
+          entity_id: string | null
+          fee_structure: string | null
+          id: string
+          is_active: boolean | null
+          is_primary: boolean | null
+          merchant_id: string | null
+          name: string
+          notes: string | null
+          processing_currencies: string[] | null
+          provider_id: string | null
+          settlement_bank_account_id: string | null
+          settlement_currency: string | null
+          updated_at: string
+        }
+        Insert: {
+          api_key_masked?: string | null
+          created_at?: string
+          entity_id?: string | null
+          fee_structure?: string | null
+          id?: string
+          is_active?: boolean | null
+          is_primary?: boolean | null
+          merchant_id?: string | null
+          name: string
+          notes?: string | null
+          processing_currencies?: string[] | null
+          provider_id?: string | null
+          settlement_bank_account_id?: string | null
+          settlement_currency?: string | null
+          updated_at?: string
+        }
+        Update: {
+          api_key_masked?: string | null
+          created_at?: string
+          entity_id?: string | null
+          fee_structure?: string | null
+          id?: string
+          is_active?: boolean | null
+          is_primary?: boolean | null
+          merchant_id?: string | null
+          name?: string
+          notes?: string | null
+          processing_currencies?: string[] | null
+          provider_id?: string | null
+          settlement_bank_account_id?: string | null
+          settlement_currency?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "merchant_accounts_entity_id_fkey"
+            columns: ["entity_id"]
+            isOneToOne: false
+            referencedRelation: "entities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "merchant_accounts_provider_id_fkey"
+            columns: ["provider_id"]
+            isOneToOne: false
+            referencedRelation: "payment_providers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "merchant_accounts_settlement_bank_account_id_fkey"
+            columns: ["settlement_bank_account_id"]
+            isOneToOne: false
+            referencedRelation: "bank_accounts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       option_grants: {
         Row: {
           acceleration_double_trigger: boolean | null

@@ -1463,3 +1463,51 @@ export const useDeletePaymentProvider = () => {
     onError: (error) => toast.error(`Failed to delete payment provider: ${error.message}`),
   });
 };
+
+// Merchant Account mutations
+export const useCreateMerchantAccount = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (account: TablesInsert<"merchant_accounts">) => {
+      const { data, error } = await supabase.from("merchant_accounts").insert(account).select().single();
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["merchant_accounts"] });
+      toast.success("Merchant account added successfully");
+    },
+    onError: (error) => toast.error(`Failed to add merchant account: ${error.message}`),
+  });
+};
+
+export const useUpdateMerchantAccount = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, ...account }: TablesUpdate<"merchant_accounts"> & { id: string }) => {
+      const { data, error } = await supabase.from("merchant_accounts").update(account).eq("id", id).select().single();
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["merchant_accounts"] });
+      toast.success("Merchant account updated successfully");
+    },
+    onError: (error) => toast.error(`Failed to update merchant account: ${error.message}`),
+  });
+};
+
+export const useDeleteMerchantAccount = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from("merchant_accounts").delete().eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["merchant_accounts"] });
+      toast.success("Merchant account deleted successfully");
+    },
+    onError: (error) => toast.error(`Failed to delete merchant account: ${error.message}`),
+  });
+};
