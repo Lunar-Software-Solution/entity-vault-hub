@@ -34,6 +34,7 @@ export type EntitySoftware = Tables<"entity_software">;
 export type WebsiteType = Tables<"website_types">;
 export type WebsitePlatform = Tables<"website_platforms">;
 export type PaymentProvider = Tables<"payment_providers">;
+export type MerchantAccount = Tables<"merchant_accounts">;
 
 // Recent audit logs hook
 export const useRecentAuditLogs = (limit: number = 10) => {
@@ -637,6 +638,21 @@ export const usePaymentProviders = () => {
         .order("name");
       if (error) throw error;
       return data as PaymentProvider[];
+    },
+  });
+};
+
+// Merchant Accounts hook
+export const useMerchantAccounts = () => {
+  return useQuery({
+    queryKey: ["merchant_accounts"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("merchant_accounts")
+        .select("*")
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+      return data as MerchantAccount[];
     },
   });
 };

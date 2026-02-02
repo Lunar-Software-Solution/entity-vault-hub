@@ -6,6 +6,7 @@ import DashboardSection from "@/components/dashboard/DashboardSection";
 import EntitySection from "@/components/sections/EntitySection";
 import BankAccountsSection from "@/components/sections/BankAccountsSection";
 import CreditCardsSection from "@/components/sections/CreditCardsSection";
+import MerchantAccountsSection from "@/components/sections/MerchantAccountsSection";
 import SocialMediaSection from "@/components/sections/SocialMediaSection";
 import AddressesSection from "@/components/sections/AddressesSection";
 import ContractsSection from "@/components/sections/ContractsSection";
@@ -31,7 +32,7 @@ const Index = () => {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
   // Sections that support entity filtering
-  const filterableSections = ["bank-accounts", "credit-cards", "addresses", "contracts", "phone-numbers", "tax-ids", "documents", "filings", "social-media", "directors-ubo", "websites", "software"];
+  const filterableSections = ["bank-accounts", "credit-cards", "merchant-accounts", "addresses", "contracts", "phone-numbers", "tax-ids", "documents", "filings", "social-media", "directors-ubo", "websites", "software"];
   const showFilter = filterableSections.includes(activeSection);
 
   const renderSection = () => {
@@ -52,6 +53,8 @@ const Index = () => {
         return <BankAccountsSection entityFilter={selectedEntityId} />;
       case "credit-cards":
         return <CreditCardsSection entityFilter={selectedEntityId} />;
+      case "merchant-accounts":
+        return <MerchantAccountsSection entityFilter={selectedEntityId} />;
       case "phone-numbers":
         return <PhoneNumbersSection entityFilter={selectedEntityId} />;
       case "tax-ids":
