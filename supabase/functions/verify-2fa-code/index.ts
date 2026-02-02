@@ -9,6 +9,7 @@ const corsHeaders = {
 interface VerifyRequest {
   userId: string;
   code: string;
+  email?: string; // Optional fallback for lookup
 }
 
 const handler = async (req: Request): Promise<Response> => {
@@ -22,26 +23,55 @@ const handler = async (req: Request): Promise<Response> => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
     );
 
-    const { userId, code }: VerifyRequest = await req.json();
+    const { userId, code, email }: VerifyRequest = await req.json();
 
-    if (!userId || !code) {
+    console.log("Verify 2FA request received:", { userId, code: code?.substring(0, 2) + "****", email });
+
+    if (!code || code.length !== 6) {
+      console.log("Invalid code format");
+      return new Response(JSON.stringify({ error: "Invalid code format", valid: false }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    if (!userId && !email) {
+      console.log("Missing userId and email");
       return new Response(JSON.stringify({ error: "Missing required fields", valid: false }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    // Find the code
-    const { data: codeRecord, error: findError } = await supabase
+    // Build the query - try userId first, fallback to email
+    let query = supabase
       .from("email_2fa_codes")
       .select("*")
-      .eq("user_id", userId)
       .eq("code", code)
-      .eq("used", false)
-      .single();
+      .eq("used", false);
+
+    // Prefer userId if available, otherwise use email
+    if (userId) {
+      query = query.eq("user_id", userId);
+    } else if (email) {
+      query = query.eq("email", email.toLowerCase());
+    }
+
+    const { data: codeRecord, error: findError } = await query.single();
 
     if (findError || !codeRecord) {
-      console.log("Code not found for user:", userId);
+      console.log("Code not found. userId:", userId, "email:", email, "error:", findError?.message);
+      
+      // Debug: Check if any code exists for this user
+      if (userId) {
+        const { data: debugData } = await supabase
+          .from("email_2fa_codes")
+          .select("user_id, email, code, used, expires_at")
+          .eq("user_id", userId)
+          .limit(5);
+        console.log("Debug - codes for userId:", debugData);
+      }
+      
       return new Response(JSON.stringify({ error: "Invalid code", valid: false }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -50,7 +80,7 @@ const handler = async (req: Request): Promise<Response> => {
 
     // Check if code is expired
     if (new Date(codeRecord.expires_at) < new Date()) {
-      console.log("Code expired for user:", userId);
+      console.log("Code expired for user:", codeRecord.user_id, "expired at:", codeRecord.expires_at);
       return new Response(JSON.stringify({ error: "Code expired", valid: false }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -63,7 +93,7 @@ const handler = async (req: Request): Promise<Response> => {
       .delete()
       .eq("id", codeRecord.id);
 
-    console.log("2FA code verified successfully for user:", userId);
+    console.log("2FA code verified successfully for user:", codeRecord.user_id);
 
     return new Response(JSON.stringify({ valid: true }), {
       status: 200,

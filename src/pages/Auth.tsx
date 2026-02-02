@@ -386,7 +386,7 @@ const Auth = () => {
     
     try {
       const { data, error } = await supabase.functions.invoke("verify-2fa-code", {
-        body: { userId: pending2FAUser.id, code: otpCode },
+        body: { userId: pending2FAUser.id, code: otpCode, email: pending2FAUser.email },
       });
       
       if (error || !data?.valid) {
