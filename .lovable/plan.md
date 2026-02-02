@@ -1,97 +1,147 @@
 
 
-# Add AI Analysis Feature to Director/UBO ID Documents
+# Add Payment Providers Management to Settings
 
 ## Overview
 
-This feature will add AI-powered document analysis to the Director/UBO form's ID Documents section, matching the functionality already implemented in the ShareholderForm. When a user uploads an ID document, they can click an "Analyze" button to automatically extract document details and personal information.
+This feature adds a new "Payment Providers" tab to the Settings section, allowing administrators to manage the list of payment processing providers (Stripe, Square, PayPal, etc.) that can be selected when adding Merchant Accounts. This follows the same pattern as existing lookup tables like Website Types, Website Platforms, Software Catalog, etc.
 
-## What It Does
+## Why This Approach?
 
-After uploading an ID document scan (passport, driver's license, etc.):
-1. An "Analyze" button with a sparkle icon appears next to the uploaded file
-2. Clicking it triggers AI analysis via the existing `analyze-id-document` edge function
-3. Document fields (type, number, expiry date) are auto-filled
-4. If personal data is extracted (name, address, DOB, nationality), the form offers to fill empty fields
+The Settings section already manages several lookup/master data tables:
+- Tax ID Types
+- Issuing Authorities  
+- Document Types
+- Filing Types
+- Software Catalog
+- Website Types
+- Website Platforms
 
-## User Experience
+Adding "Payment Providers" follows this established pattern, making the codebase consistent and the feature familiar to users.
 
-1. User adds an ID document in the Director/UBO form
-2. User uploads a scan (PDF or image)
-3. The file appears with an "Analyze" button (sparkle icon)
-4. User clicks Analyze → loading spinner shows
-5. Upon completion:
-   - Document type, number, and expiry date are auto-filled
-   - If director fields are empty and data was extracted, an alert dialog prompts to apply the data
-   - Toast notification confirms which fields were updated
+## Database Schema
 
-## Technical Changes
+Create a new `payment_providers` lookup table:
 
-### File 1: `src/components/forms/MultipleIdDocuments.tsx`
+| Column | Type | Required | Default | Description |
+|--------|------|----------|---------|-------------|
+| id | uuid | Yes | gen_random_uuid() | Primary key |
+| code | text | Yes | - | Short code (e.g., "stripe", "square") |
+| name | text | Yes | - | Display name (e.g., "Stripe", "Square") |
+| website | text | No | - | Provider website URL |
+| description | text | No | - | Optional description |
+| created_at | timestamptz | Yes | now() | Creation timestamp |
+| updated_at | timestamptz | Yes | now() | Last update timestamp |
 
-Add AI analysis functionality by:
+RLS policies will follow the same pattern as other lookup tables:
+- Authenticated users can SELECT
+- Users with write access (admin role) can INSERT, UPDATE, DELETE
 
-1. **Add new imports**: `Sparkles` icon and `AlertDialog` components
-2. **Add new prop**: `onPersonDataExtracted?: (data: ExtractedPersonData) => void`
-3. **Add state**: `analyzingIndex` to track which document is being analyzed
-4. **Add `handleAnalyzeDocument` function**: Calls the `analyze-id-document` edge function and updates document fields
-5. **Update UI**: Add "Analyze" button next to uploaded files (matching the IdDocumentsManager style)
-6. **Export `ExtractedPersonData` type**: For use by parent components
+Seed data will include common payment providers:
+- Stripe
+- Square
+- PayPal
+- Adyen
+- Braintree
+- Authorize.Net
+- Worldpay
+- Shopify Payments
+- Checkout.com
+- 2Checkout
 
-### File 2: `src/components/forms/DirectorUboForm.tsx`
+## Technical Implementation
 
-Handle extracted person data by:
+### File 1: Database Migration
 
-1. **Add state**: `extractedPersonData` and `showApplyDataDialog`
-2. **Add callback handler**: Receives extracted data from `MultipleIdDocuments`
-3. **Add AlertDialog**: Prompts user to apply extracted name, address, DOB, or nationality to empty form fields
-4. **Pass callback to `MultipleIdDocuments`**: Wire up the `onPersonDataExtracted` prop
+Create `payment_providers` table with:
+- Standard columns (id, code, name, website, description, timestamps)
+- RLS policies matching the pattern of `website_platforms`
+- `updated_at` trigger
+- Audit trigger
+- Seed common providers
 
-## Data Flow
+### File 2: `src/hooks/usePortalData.ts`
 
-```text
-[User uploads ID scan]
-         |
-         v
-[User clicks "Analyze" button]
-         |
-         v
-[analyze-id-document edge function]
-    |-- Downloads file from storage
-    |-- AI vision analysis (Gemini 3 Flash)
-    |-- Returns structured data
-         |
-         v
-[MultipleIdDocuments component]
-    |-- Auto-fills document_type, document_number, expiry_date
-    |-- Calls onPersonDataExtracted with holder_name, address, etc.
-         |
-         v
-[DirectorUboForm component]
-    |-- Shows AlertDialog if any director fields are empty
-    |-- User can apply extracted data or dismiss
+Add:
+- `PaymentProvider` type export
+- `usePaymentProviders` hook
+
+```typescript
+export type PaymentProvider = Tables<"payment_providers">;
+
+export const usePaymentProviders = () => {
+  return useQuery({
+    queryKey: ["payment_providers"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("payment_providers")
+        .select("*")
+        .order("name");
+      if (error) throw error;
+      return data as PaymentProvider[];
+    },
+  });
+};
 ```
+
+### File 3: `src/hooks/usePortalMutations.ts`
+
+Add CRUD mutation hooks:
+- `useCreatePaymentProvider`
+- `useUpdatePaymentProvider`
+- `useDeletePaymentProvider`
+
+### File 4: `src/components/sections/SettingsSection.tsx`
+
+Add:
+1. Import `usePaymentProviders` and mutation hooks
+2. Form component `PaymentProviderForm` with fields:
+   - Code (required)
+   - Name (required)
+   - Website (optional URL)
+   - Description (optional)
+3. State variables for:
+   - `showProviderForm`
+   - `editingProvider`
+   - `deletingProvider`
+   - `providerSearch`
+   - `providerSortKey`
+   - `providerSortDirection`
+4. New tab: "Providers" with CreditCard icon
+5. TabContent with searchable/sortable table
+6. Dialog for add/edit form
+7. Delete confirmation dialog
+
+## UI Design
+
+The new "Providers" tab will appear in the Settings tabs:
+
+```
+[Tax IDs] [Authorities] [Docs] [Filings] [Software] [Web Types] [Platforms] [Providers]
+```
+
+Table columns:
+| Code | Name | Website | Description | Actions |
+
+Each row will show:
+- Code in monospace font
+- Provider name
+- Website as clickable link (if provided)
+- Description (truncated)
+- Edit/Delete buttons (for admin users)
 
 ## Files to Modify
 
 | File | Changes |
 |------|---------|
-| `src/components/forms/MultipleIdDocuments.tsx` | Add Analyze button, AI logic, callback prop |
-| `src/components/forms/DirectorUboForm.tsx` | Handle extracted person data, add apply dialog |
+| Database Migration | Create `payment_providers` table with RLS, triggers, and seed data |
+| `src/hooks/usePortalData.ts` | Add `PaymentProvider` type and `usePaymentProviders` hook |
+| `src/hooks/usePortalMutations.ts` | Add Create/Update/Delete mutation hooks |
+| `src/components/sections/SettingsSection.tsx` | Add tab, form, table, dialogs for Payment Providers |
 
-## Visual Reference
+## Future Integration
 
-The Analyze button will appear inline with the uploaded file, similar to how it looks in the shareholder form:
-
-```
-[📄 ID Dominic Gingras.jpg] [✨ Analyze] [✕]
-```
-
-When clicked, a loading spinner replaces the sparkle icon during analysis.
-
-## Reuses Existing Infrastructure
-
-- Uses the existing `analyze-id-document` edge function (no backend changes needed)
-- Follows the same pattern as `IdDocumentsManager` for consistency
-- Leverages the same AI model (Gemini 3 Flash) already configured
+Once this lookup table exists, the Merchant Accounts feature can use it:
+- The MerchantAccountForm will have a dropdown populated from `payment_providers`
+- Users can select from the managed list or the Merchant Account can reference the provider_id
 
