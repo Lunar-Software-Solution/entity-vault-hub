@@ -33,6 +33,7 @@ export type SoftwareCatalog = Tables<"software_catalog">;
 export type EntitySoftware = Tables<"entity_software">;
 export type WebsiteType = Tables<"website_types">;
 export type WebsitePlatform = Tables<"website_platforms">;
+export type PaymentProvider = Tables<"payment_providers">;
 
 // Recent audit logs hook
 export const useRecentAuditLogs = (limit: number = 10) => {
@@ -621,6 +622,21 @@ export const useWebsitePlatforms = () => {
         .order("code");
       if (error) throw error;
       return data as WebsitePlatform[];
+    },
+  });
+};
+
+// Payment Providers hook
+export const usePaymentProviders = () => {
+  return useQuery({
+    queryKey: ["payment_providers"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("payment_providers")
+        .select("*")
+        .order("name");
+      if (error) throw error;
+      return data as PaymentProvider[];
     },
   });
 };
