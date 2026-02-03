@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { LayoutDashboard, Building2, CreditCard, Wallet, Share2, MapPin, FileText, Settings, LogOut, User, ChevronUp, ChevronDown, ChevronRight, Phone, Receipt, Calendar, Briefcase, Mail, Users, PieChart, Globe, PanelLeftClose, PanelLeft, Monitor, Store } from "lucide-react";
+import { LayoutDashboard, Building2, CreditCard, Wallet, Share2, MapPin, FileText, Settings, LogOut, User, ChevronUp, ChevronDown, ChevronRight, Phone, Receipt, Calendar, Briefcase, Mail, Users, PieChart, Globe, PanelLeftClose, PanelLeft, Monitor, Store, Inbox } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
 import braxLogo from "@/assets/brax-logo.svg";
@@ -122,6 +122,10 @@ const menuGroups: MenuGroup[] = [{
     id: "contracts",
     label: "Contracts",
     icon: FileText
+  }, {
+    id: "inbound-queue",
+    label: "Inbound Queue",
+    icon: Inbox
   }]
 }, {
   id: "admin",

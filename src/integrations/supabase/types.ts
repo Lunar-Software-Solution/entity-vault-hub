@@ -1674,6 +1674,75 @@ export type Database = {
         }
         Relationships: []
       }
+      inbound_document_queue: {
+        Row: {
+          ai_analysis: Json | null
+          created_at: string
+          email_from: string
+          email_received_at: string
+          email_subject: string | null
+          file_name: string
+          file_path: string
+          id: string
+          processed_at: string | null
+          processed_by: string | null
+          rejection_reason: string | null
+          status: string
+          suggested_doc_type_id: string | null
+          suggested_entity_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          ai_analysis?: Json | null
+          created_at?: string
+          email_from: string
+          email_received_at?: string
+          email_subject?: string | null
+          file_name: string
+          file_path: string
+          id?: string
+          processed_at?: string | null
+          processed_by?: string | null
+          rejection_reason?: string | null
+          status?: string
+          suggested_doc_type_id?: string | null
+          suggested_entity_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          ai_analysis?: Json | null
+          created_at?: string
+          email_from?: string
+          email_received_at?: string
+          email_subject?: string | null
+          file_name?: string
+          file_path?: string
+          id?: string
+          processed_at?: string | null
+          processed_by?: string | null
+          rejection_reason?: string | null
+          status?: string
+          suggested_doc_type_id?: string | null
+          suggested_entity_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "inbound_document_queue_suggested_doc_type_id_fkey"
+            columns: ["suggested_doc_type_id"]
+            isOneToOne: false
+            referencedRelation: "document_types"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inbound_document_queue_suggested_entity_id_fkey"
+            columns: ["suggested_entity_id"]
+            isOneToOne: false
+            referencedRelation: "entities"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       issuing_authorities: {
         Row: {
           country: string
