@@ -21,145 +21,153 @@ Implement an email ingestion system where users can forward documents to an emai
 └─────────────────────┘     └──────────────────────┘     └─────────────────────────┘
 ```
 
-## Implementation Components
+## Implementation Status: ✅ COMPLETE
 
-### 1. Database Schema
+### 1. Database Schema ✅
 
-Create `inbound_document_queue` table to store pending documents:
+Created `inbound_document_queue` table with:
+- `email_from`, `email_subject`, `email_received_at`
+- `file_name`, `file_path` (storage path)
+- `ai_analysis` (JSONB with extracted metadata)
+- `suggested_entity_id`, `suggested_doc_type_id` (AI suggestions)
+- `status` (pending/approved/rejected)
+- `rejection_reason`, `processed_by`, `processed_at`
+- RLS policies using `can_write()` for admin/editor access
 
-| Column | Type | Description |
-|--------|------|-------------|
-| id | uuid | Primary key |
-| email_from | text | Sender email address |
-| email_subject | text | Original email subject |
-| email_received_at | timestamptz | When email was received |
-| file_name | text | Original attachment filename |
-| file_path | text | Storage path in entity-documents bucket |
-| ai_analysis | jsonb | AI-extracted metadata |
-| suggested_entity_id | uuid | AI-suggested entity match |
-| suggested_doc_type_id | uuid | AI-suggested document type |
-| status | text | pending / approved / rejected |
-| processed_by | uuid | User who approved/rejected |
-| processed_at | timestamptz | When processed |
-| created_at / updated_at | timestamptz | Timestamps |
+### 2. Edge Function: `receive-inbound-email` ✅
 
-RLS policies will restrict access to authenticated users with admin role.
+Webhook handler that:
+- Validates webhook secret (optional `INBOUND_EMAIL_WEBHOOK_SECRET`)
+- Accepts POST with `from`, `subject`, `filename`, `content` (base64 PDF)
+- Uploads PDF to `entity-documents` storage bucket
+- Runs AI analysis using Lovable AI to extract metadata
+- Inserts record into queue with status "pending"
 
-### 2. Cloudflare Email Worker
+### 3. Admin UI: Inbound Queue Section ✅
 
-A Cloudflare Worker script that:
-- Receives inbound emails via the `email()` event handler
-- Parses email content using `postal-mime` library
-- Extracts PDF attachments (validates file type)
-- Forwards attachment data to Supabase Edge Function via HTTP POST
-- Logs success/failure for monitoring
+- Added "Inbound Queue" to sidebar under "Legal & Docs" group
+- Stats cards showing pending/approved/rejected/total counts
+- Table with search and status filters
+- Actions: Preview PDF, Approve, Reject, Delete
+- Approval dialog with AI suggestions pre-filled
+- Entity and document type selection
+
+### 4. Hooks ✅
+
+Created `src/hooks/useInboundQueue.ts` with:
+- `useInboundQueue(status?)` - Query queue items
+- `useInboundQueueCounts()` - Get status counts
+- `useApproveInboundDocument()` - Approve and move to entity_documents
+- `useRejectInboundDocument()` - Reject with optional reason
+- `useDeleteInboundDocument()` - Delete from queue and storage
+
+---
+
+## Cloudflare Setup Required (User Action)
+
+### Step 1: Create Cloudflare Email Worker
+
+Create a new Worker in your Cloudflare dashboard with this code:
 
 ```javascript
-// Simplified example structure
+// Cloudflare Email Worker for Entity Hub
+// Deploy this as an Email Worker in Cloudflare dashboard
+
 import PostalMime from 'postal-mime';
 
 export default {
   async email(message, env, ctx) {
-    const email = await PostalMime.parse(message.raw);
-    
-    for (const attachment of email.attachments) {
-      if (attachment.mimeType === 'application/pdf') {
-        await fetch(env.SUPABASE_INBOUND_WEBHOOK, {
+    try {
+      // Parse the incoming email
+      const rawEmail = await new Response(message.raw).arrayBuffer();
+      const parser = new PostalMime();
+      const email = await parser.parse(rawEmail);
+      
+      console.log(`Processing email from: ${message.from}, subject: ${email.subject}`);
+      
+      // Process PDF attachments only
+      const pdfAttachments = (email.attachments || []).filter(
+        att => att.mimeType === 'application/pdf' || 
+               att.filename?.toLowerCase().endsWith('.pdf')
+      );
+      
+      if (pdfAttachments.length === 0) {
+        console.log('No PDF attachments found, skipping');
+        return;
+      }
+      
+      for (const attachment of pdfAttachments) {
+        // Convert to base64
+        const base64Content = btoa(
+          String.fromCharCode(...new Uint8Array(attachment.content))
+        );
+        
+        // Send to Supabase Edge Function
+        const response = await fetch(env.SUPABASE_INBOUND_WEBHOOK, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: {
+            'Content-Type': 'application/json',
+            'x-webhook-secret': env.WEBHOOK_SECRET || '',
+          },
           body: JSON.stringify({
             from: message.from,
-            subject: email.subject,
-            filename: attachment.filename,
-            content: attachment.content, // base64
-          })
+            subject: email.subject || '',
+            filename: attachment.filename || 'document.pdf',
+            content: base64Content,
+            receivedAt: new Date().toISOString(),
+          }),
         });
+        
+        if (!response.ok) {
+          console.error(`Failed to process attachment: ${await response.text()}`);
+        } else {
+          console.log(`Successfully queued: ${attachment.filename}`);
+        }
       }
+    } catch (error) {
+      console.error('Error processing email:', error);
     }
   }
-}
+};
 ```
 
-### 3. Supabase Edge Function: `receive-inbound-email`
+### Step 2: Configure Worker Environment Variables
 
-Create new Edge Function to:
-- Receive webhook POST from Cloudflare Worker
-- Validate payload structure
-- Upload PDF to `entity-documents` storage bucket
-- Call existing AI analysis logic (reuse from `analyze-bulk-documents`)
-- Insert record into `inbound_document_queue` with status "pending"
-- Optionally send confirmation email to sender
+In your Cloudflare Worker settings, add these environment variables:
 
-### 4. Admin UI: Inbound Queue Section
+| Variable | Value |
+|----------|-------|
+| `SUPABASE_INBOUND_WEBHOOK` | `https://xxaynwfseusnxlpukwnq.supabase.co/functions/v1/receive-inbound-email` |
+| `WEBHOOK_SECRET` | (Optional) A secret string for request validation |
 
-Create new section in the portal for reviewing queued documents:
+### Step 3: Set Up Email Routing
 
-**Sidebar Addition:**
-- Add "Inbound Queue" item under the "Legal & Docs" group with an Inbox icon
+1. Go to Cloudflare Dashboard → Your Domain → Email → Email Routing
+2. Enable Email Routing if not already enabled
+3. Add MX records as prompted by Cloudflare
+4. Create a custom address rule:
+   - Custom address: `documents@yourdomain.com`
+   - Action: Send to Worker
+   - Destination: Select your Email Worker
 
-**Queue List View:**
-- Display pending documents with sender, subject, filename, AI suggestions
-- Show confidence scores for entity/type matching
-- Filter by status (pending/approved/rejected)
+### Step 4: (Optional) Add Webhook Secret
 
-**Review Actions:**
-- Preview PDF in modal
-- Override AI suggestions for entity and document type
-- Approve (moves to entity_documents table)
-- Reject (marks as rejected with optional reason)
-- Bulk approve selected items
+If you set a `WEBHOOK_SECRET` in the Worker, also add it to your backend secrets:
 
-**Approval Flow:**
-1. Select entity (defaults to AI suggestion)
-2. Select document type (defaults to AI suggestion)
-3. Add optional notes
-4. Click Approve → document inserted into `entity_documents`
+1. Go to Settings → Connectors → Lovable Cloud
+2. Add secret: `INBOUND_EMAIL_WEBHOOK_SECRET` with the same value
 
-## Files to Create
+---
 
-| File | Purpose |
-|------|---------|
-| `supabase/functions/receive-inbound-email/index.ts` | Webhook handler for Cloudflare Worker |
-| `src/components/documents/InboundQueueSection.tsx` | Main queue UI component |
-| `src/components/documents/InboundQueueItem.tsx` | Individual queue item display |
-| `src/components/documents/InboundApprovalDialog.tsx` | Approval modal with entity/type selection |
-| `src/hooks/useInboundQueue.ts` | Query and mutation hooks |
-| Database migration | Create `inbound_document_queue` table |
+## Testing
 
-## Files to Modify
+1. Send an email with a PDF attachment to `documents@yourdomain.com`
+2. The document should appear in the Inbound Queue within seconds
+3. Review AI suggestions and approve to add to entity documents
 
-| File | Changes |
-|------|---------|
-| `src/components/layout/Sidebar.tsx` | Add "Inbound Queue" menu item |
-| `src/pages/Index.tsx` | Add section routing for inbound-queue |
-| `supabase/config.toml` | Add function configuration |
+## Security Notes
 
-## Cloudflare Setup Required (User Action)
-
-After implementation, you will need to configure Cloudflare:
-
-1. **Enable Email Routing** on your domain in Cloudflare dashboard
-2. **Create Email Worker** using the provided script
-3. **Create Email Rule** to route `documents@yourdomain.com` to the Worker
-4. **Set Environment Variables** in Worker settings:
-   - `SUPABASE_INBOUND_WEBHOOK`: Your Edge Function URL
-   - `WEBHOOK_SECRET`: Shared secret for request validation
-
-## Security Considerations
-
-- Validate webhook requests using shared secret
-- Restrict accepted sender addresses (optional whitelist)
-- File type validation (PDF only)
-- Maximum attachment size: 10MB
-- Rate limiting on Edge Function
-- RLS policies restrict queue access to admin users
-
-## Implementation Sequence
-
-1. **Database** - Create `inbound_document_queue` table with RLS
-2. **Edge Function** - Build `receive-inbound-email` webhook handler
-3. **Hooks** - Create data fetching and mutation hooks
-4. **UI** - Build InboundQueueSection with list and approval flow
-5. **Sidebar** - Add navigation link
-6. **Documentation** - Provide Cloudflare setup instructions
-
+- Webhook secret is optional but recommended for production
+- Only PDF files are accepted (validated on both Worker and Edge Function)
+- Maximum file size: 10MB
+- RLS policies restrict queue access to authenticated users with write permission

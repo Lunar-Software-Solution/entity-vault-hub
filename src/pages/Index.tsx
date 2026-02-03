@@ -23,6 +23,7 @@ import DirectorsUboSection from "@/components/sections/DirectorsUboSection";
 import WebsitesSection from "@/components/sections/WebsitesSection";
 import SoftwareSection from "@/components/sections/SoftwareSection";
 import AIChatAssistant from "@/components/ai/AIChatAssistant";
+import InboundQueueSection from "@/components/documents/InboundQueueSection";
 import FeedbackButton from "@/components/feedback/FeedbackButton";
 import { cn } from "@/lib/utils";
 
@@ -69,6 +70,8 @@ const Index = () => {
         return <DocumentsSection entityFilter={selectedEntityId} />;
       case "contracts":
         return <ContractsSection entityFilter={selectedEntityId} />;
+      case "inbound-queue":
+        return <InboundQueueSection />;
       case "websites":
         return <WebsitesSection entityFilter={selectedEntityId} />;
       case "software":
