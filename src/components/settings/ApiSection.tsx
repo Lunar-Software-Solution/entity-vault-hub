@@ -261,11 +261,11 @@ const ApiSection = () => {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                <TableRow><TableCell className="font-mono text-xs">limit</TableCell><TableCell>integer</TableCell><TableCell>100</TableCell><TableCell>Max items per page (up to 1000)</TableCell></TableRow>
-                <TableRow><TableCell className="font-mono text-xs">offset</TableCell><TableCell>integer</TableCell><TableCell>0</TableCell><TableCell>Number of items to skip</TableCell></TableRow>
-                <TableRow><TableCell className="font-mono text-xs">order_by</TableCell><TableCell>string</TableCell><TableCell>created_at</TableCell><TableCell>Column to sort by</TableCell></TableRow>
-                <TableRow><TableCell className="font-mono text-xs">order</TableCell><TableCell>string</TableCell><TableCell>desc</TableCell><TableCell>Sort direction (asc or desc)</TableCell></TableRow>
-                <TableRow><TableCell className="font-mono text-xs">entity_id</TableCell><TableCell>uuid</TableCell><TableCell>—</TableCell><TableCell>Filter results by entity (where applicable)</TableCell></TableRow>
+                <TableRow><TableCell className="font-mono text-xs text-foreground">limit</TableCell><TableCell className="text-foreground">integer</TableCell><TableCell className="text-foreground">100</TableCell><TableCell className="text-foreground">Max items per page (up to 1000)</TableCell></TableRow>
+                <TableRow><TableCell className="font-mono text-xs text-foreground">offset</TableCell><TableCell className="text-foreground">integer</TableCell><TableCell className="text-foreground">0</TableCell><TableCell className="text-foreground">Number of items to skip</TableCell></TableRow>
+                <TableRow><TableCell className="font-mono text-xs text-foreground">order_by</TableCell><TableCell className="text-foreground">string</TableCell><TableCell className="text-foreground">created_at</TableCell><TableCell className="text-foreground">Column to sort by</TableCell></TableRow>
+                <TableRow><TableCell className="font-mono text-xs text-foreground">order</TableCell><TableCell className="text-foreground">string</TableCell><TableCell className="text-foreground">desc</TableCell><TableCell className="text-foreground">Sort direction (asc or desc)</TableCell></TableRow>
+                <TableRow><TableCell className="font-mono text-xs text-foreground">entity_id</TableCell><TableCell className="text-foreground">uuid</TableCell><TableCell className="text-foreground">—</TableCell><TableCell className="text-foreground">Filter results by entity (where applicable)</TableCell></TableRow>
               </TableBody>
             </Table>
           </div>
