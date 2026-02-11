@@ -20,7 +20,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 
 import { Badge } from "@/components/ui/badge";
 import DeleteConfirmDialog from "@/components/shared/DeleteConfirmDialog";
-import { Plus, Edit, Trash2, FileText, Building2, Search, ArrowUpDown, ArrowUp, ArrowDown, FolderOpen, Calendar, Monitor, Globe, Server, CreditCard, ExternalLink } from "lucide-react";
+import { Plus, Edit, Trash2, FileText, Building2, Search, ArrowUpDown, ArrowUp, ArrowDown, FolderOpen, Calendar, Monitor, Globe, Server, CreditCard, ExternalLink, Code } from "lucide-react";
+import ApiSection from "@/components/settings/ApiSection";
 import { useUserRole } from "@/hooks/useUserRole";
 import { useForm } from "react-hook-form";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
@@ -1417,7 +1418,7 @@ const SettingsSection = () => {
       </div>
 
       <Tabs defaultValue="tax-id-types" className="w-full">
-        <TabsList className="grid w-full max-w-6xl grid-cols-8">
+        <TabsList className="grid w-full max-w-6xl grid-cols-9">
           <TabsTrigger value="tax-id-types" className="gap-1 text-xs sm:text-sm">
             <FileText className="w-4 h-4" />
             <span className="hidden md:inline">Tax IDs</span>
@@ -1449,6 +1450,10 @@ const SettingsSection = () => {
           <TabsTrigger value="providers" className="gap-1 text-xs sm:text-sm">
             <CreditCard className="w-4 h-4" />
             <span className="hidden md:inline">Providers</span>
+          </TabsTrigger>
+          <TabsTrigger value="api" className="gap-1 text-xs sm:text-sm">
+            <Code className="w-4 h-4" />
+            <span className="hidden md:inline">API</span>
           </TabsTrigger>
         </TabsList>
 
@@ -2167,6 +2172,10 @@ const SettingsSection = () => {
               </Table>
             </div>
           </div>
+        </TabsContent>
+
+        <TabsContent value="api" className="mt-6">
+          <ApiSection />
         </TabsContent>
       </Tabs>
 
