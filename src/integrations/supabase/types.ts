@@ -1617,6 +1617,41 @@ export type Database = {
           },
         ]
       }
+      filing_task_documents: {
+        Row: {
+          created_at: string
+          file_name: string
+          file_path: string
+          file_size: number | null
+          id: string
+          task_id: string
+        }
+        Insert: {
+          created_at?: string
+          file_name: string
+          file_path: string
+          file_size?: number | null
+          id?: string
+          task_id: string
+        }
+        Update: {
+          created_at?: string
+          file_name?: string
+          file_path?: string
+          file_size?: number | null
+          id?: string
+          task_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "filing_task_documents_task_id_fkey"
+            columns: ["task_id"]
+            isOneToOne: false
+            referencedRelation: "filing_tasks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       filing_tasks: {
         Row: {
           assigned_to: string | null
