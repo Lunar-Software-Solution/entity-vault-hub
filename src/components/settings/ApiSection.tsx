@@ -216,11 +216,11 @@ const ApiSection = () => {
               <p className="text-sm text-muted-foreground">Read-only REST API for accessing your entity data programmatically.</p>
             </div>
             <div className="flex gap-2">
-              <Button variant="outline" size="sm" onClick={downloadJson} className="gap-2">
+              <Button variant="outline" size="sm" onClick={downloadJson} className="gap-2 text-foreground">
                 <FileJson className="w-4 h-4" />
                 OpenAPI JSON
               </Button>
-              <Button variant="outline" size="sm" onClick={downloadMd} className="gap-2">
+              <Button variant="outline" size="sm" onClick={downloadMd} className="gap-2 text-foreground">
                 <FileText className="w-4 h-4" />
                 Markdown
               </Button>
