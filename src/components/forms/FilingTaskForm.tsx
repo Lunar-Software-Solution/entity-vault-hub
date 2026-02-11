@@ -1,3 +1,4 @@
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useQuery } from "@tanstack/react-query";
@@ -23,6 +24,7 @@ import {
 import { useEntities, useEntityFilings } from "@/hooks/usePortalData";
 import { TASK_STATUS_OPTIONS, TASK_PRIORITY_OPTIONS } from "@/lib/filingUtils";
 import { supabase } from "@/integrations/supabase/client";
+import TaskDocumentUpload, { TaskFile } from "@/components/forms/TaskDocumentUpload";
 
 // Hook to fetch admin users
 const useAdminUsers = () => {
@@ -55,11 +57,12 @@ const useAdminUsers = () => {
 
 interface FilingTaskFormProps {
   defaultValues?: Partial<FilingTaskFormData>;
-  onSubmit: (data: FilingTaskFormData) => void;
+  onSubmit: (data: FilingTaskFormData, attachments?: TaskFile[]) => void;
   onCancel: () => void;
   isLoading?: boolean;
   preselectedEntityId?: string;
   preselectedFilingId?: string;
+  existingTaskId?: string;
 }
 
 const FilingTaskForm = ({ 
@@ -68,11 +71,25 @@ const FilingTaskForm = ({
   onCancel, 
   isLoading,
   preselectedEntityId,
-  preselectedFilingId
+  preselectedFilingId,
+  existingTaskId,
 }: FilingTaskFormProps) => {
   const { data: entities } = useEntities();
   const { data: filings } = useEntityFilings();
   const { data: adminUsers } = useAdminUsers();
+  const [attachments, setAttachments] = useState<TaskFile[]>([]);
+
+  // Load existing attachments when editing
+  useEffect(() => {
+    if (!existingTaskId) return;
+    supabase
+      .from("filing_task_documents")
+      .select("file_path, file_name, file_size")
+      .eq("task_id", existingTaskId)
+      .then(({ data }) => {
+        if (data) setAttachments(data as TaskFile[]);
+      });
+  }, [existingTaskId]);
 
   const form = useForm<FilingTaskFormData>({
     resolver: zodResolver(filingTaskSchema),
@@ -89,12 +106,16 @@ const FilingTaskForm = ({
     },
   });
 
+  const handleFormSubmit = (data: FilingTaskFormData) => {
+    onSubmit(data, attachments);
+  };
+
   const selectedEntityId = form.watch("entity_id");
   const entityFilings = filings?.filter(f => f.entity_id === selectedEntityId) ?? [];
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+      <form onSubmit={form.handleSubmit(handleFormSubmit)} className="space-y-4">
         <div className="grid grid-cols-2 gap-4">
           <FormField
             control={form.control}
@@ -277,6 +298,12 @@ const FilingTaskForm = ({
               <FormMessage />
             </FormItem>
           )}
+        />
+
+        <TaskDocumentUpload
+          taskId={existingTaskId}
+          files={attachments}
+          onChange={setAttachments}
         />
 
         <div className="flex justify-end gap-3 pt-4">

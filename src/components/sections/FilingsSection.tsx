@@ -308,7 +308,7 @@ const FilingsSection = ({ entityFilter }: FilingsSectionProps) => {
     setPreselectedDate("");
   };
 
-  const handleTaskSubmit = async (data: any) => {
+  const handleTaskSubmit = async (data: any, attachments?: any[]) => {
     const payload = {
       ...data,
       filing_id: data.filing_id || null,
@@ -316,11 +316,26 @@ const FilingsSection = ({ entityFilter }: FilingsSectionProps) => {
       assigned_to: data.assigned_to || null,
     };
 
+    let taskId: string | undefined;
     if (editingTask) {
       await updateTask.mutateAsync({ ...payload, id: editingTask.id });
+      taskId = editingTask.id;
     } else {
-      await createTask.mutateAsync(payload);
+      const result = await createTask.mutateAsync(payload);
+      taskId = result?.id;
     }
+
+    // Save document attachments
+    if (taskId && attachments && attachments.length > 0) {
+      const docs = attachments.map((a: any) => ({
+        task_id: taskId!,
+        file_path: a.file_path,
+        file_name: a.file_name,
+        file_size: a.file_size || null,
+      }));
+      await supabase.from("filing_task_documents").insert(docs);
+    }
+
     setShowTaskForm(false);
     setEditingTask(null);
   };
@@ -976,6 +991,7 @@ const FilingsSection = ({ entityFilter }: FilingsSectionProps) => {
               status: editingTask.status as "pending" | "in_progress" | "completed" | "cancelled",
               assigned_to: editingTask.assigned_to || "",
             } : undefined}
+            existingTaskId={editingTask?.id}
             onSubmit={handleTaskSubmit}
             onCancel={() => {
               setShowTaskForm(false);
