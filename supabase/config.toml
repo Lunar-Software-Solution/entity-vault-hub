@@ -55,3 +55,6 @@ verify_jwt = false
 
 [functions.analyze-id-document]
 verify_jwt = false
+
+[functions.public-api]
+verify_jwt = false
