@@ -1,5 +1,5 @@
 import { useState, useRef } from "react";
-import { Plus, Trash2, Upload, FileText, Image, Loader2, X, Sparkles } from "lucide-react";
+import { Plus, Trash2, Upload, FileText, Image, Loader2, X, Sparkles, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -341,6 +341,34 @@ const MultipleIdDocuments = ({
             <div className="flex items-center gap-2 p-2 rounded-lg bg-background border border-border">
               {getFileIcon(doc.file_name)}
               <span className="flex-1 text-sm truncate">{doc.file_name}</span>
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                onClick={async () => {
+                  try {
+                    const { data, error } = await supabase.storage
+                      .from("id-documents")
+                      .download(doc.file_path);
+                    if (error) throw error;
+                    const url = URL.createObjectURL(data);
+                    const link = document.createElement("a");
+                    link.href = url;
+                    link.download = doc.file_name || "document";
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                    URL.revokeObjectURL(url);
+                  } catch (err) {
+                    console.error("Download error:", err);
+                    toast.error("Failed to download file");
+                  }
+                }}
+                title="Download"
+                className="h-7 w-7 text-emerald-600 hover:text-emerald-500"
+              >
+                <Download className="w-4 h-4" />
+              </Button>
               <Button
                 type="button"
                 variant="ghost"
