@@ -12,17 +12,25 @@ description: "Project architecture and technology stack for entity-vault-hub"
 | **Primary Language** | TypeScript |
 | **Framework** | Next.js |
 | **Framework** | React |
+| **Framework** | Supabase |
 | **Framework** | Tailwind CSS |
 | **Framework** | Vite |
 | **Framework** | Vitest |
 | **Package Manager** | npm/yarn |
+| **API Type** | REST, Serverless (Supabase Edge Functions) |
 
 ## Project Structure Overview
 
 ```
 entity-vault-hub/
 ├── docs/
-│   └── DOCUMENTATION.md
+│   ├── DOCUMENTATION.md
+│   ├── architecture.md
+│   ├── configuration.md
+│   ├── contributing.md
+│   ├── getting-started.md
+│   ├── index.md
+│   └── project-structure.md
 ├── public/
 │   ├── favicon.ico
 │   ├── favicon.png
@@ -428,6 +436,38 @@ entity-vault-hub/
 - `supabase/functions/verify-2fa-code/index.ts`
 - `npm run dev: vite`
 
+## API Architecture
+
+The project exposes a **REST, Serverless (Supabase Edge Functions)** API.
+
+### Endpoint Summary
+
+| Method | Path | Handler |
+|--------|------|---------|
+| ANY | `/ai-assistant` | supabase/functions/ai-assistant/index.ts |
+| ANY | `/analyze-bulk-documents` | supabase/functions/analyze-bulk-documents/index.ts |
+| ANY | `/analyze-contract` | supabase/functions/analyze-contract/index.ts |
+| ANY | `/analyze-id-document` | supabase/functions/analyze-id-document/index.ts |
+| ANY | `/check-trusted-device` | supabase/functions/check-trusted-device/index.ts |
+| ANY | `/enrich-profile` | supabase/functions/enrich-profile/index.ts |
+| ANY | `/fetch-cloudflare-dns` | supabase/functions/fetch-cloudflare-dns/index.ts |
+| ANY | `/fetch-docuseal-contracts` | supabase/functions/fetch-docuseal-contracts/index.ts |
+| ANY | `/fetch-social-profile` | supabase/functions/fetch-social-profile/index.ts |
+| ANY | `/generate-recurring-tasks` | supabase/functions/generate-recurring-tasks/index.ts |
+| ANY | `/list-cron-jobs` | supabase/functions/list-cron-jobs/index.ts |
+| ANY | `/list-trusted-devices` | supabase/functions/list-trusted-devices/index.ts |
+| ANY | `/public-api` | supabase/functions/public-api/index.ts |
+| ANY | `/receive-inbound-email` | supabase/functions/receive-inbound-email/index.ts |
+| ANY | `/register-trusted-device` | supabase/functions/register-trusted-device/index.ts |
+| ANY | `/revoke-trusted-device` | supabase/functions/revoke-trusted-device/index.ts |
+| ANY | `/send-2fa-code` | supabase/functions/send-2fa-code/index.ts |
+| ANY | `/send-invitation` | supabase/functions/send-invitation/index.ts |
+| ANY | `/send-task-reminders` | supabase/functions/send-task-reminders/index.ts |
+| ANY | `/submit-feedback` | supabase/functions/submit-feedback/index.ts |
+| ANY | `/summarize-contract` | supabase/functions/summarize-contract/index.ts |
+| ANY | `/summarize-document` | supabase/functions/summarize-document/index.ts |
+| ANY | `/toggle-cron-job` | supabase/functions/toggle-cron-job/index.ts |
+| ANY | `/verify-2fa-code` | supabase/functions/verify-2fa-code/index.ts |
 
 ## Testing
 

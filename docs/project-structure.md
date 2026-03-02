@@ -10,7 +10,13 @@ description: "Detailed file and folder map for entity-vault-hub"
 ```
 entity-vault-hub/
 ├── docs/
-│   └── DOCUMENTATION.md
+│   ├── DOCUMENTATION.md
+│   ├── architecture.md
+│   ├── configuration.md
+│   ├── contributing.md
+│   ├── getting-started.md
+│   ├── index.md
+│   └── project-structure.md
 ├── public/
 │   ├── favicon.ico
 │   ├── favicon.png

@@ -12,13 +12,15 @@ description: "**URL**: https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID"
 | Attribute | Value |
 |-----------|-------|
 | **Primary Language** | TypeScript |
-| **Frameworks** | Next.js, React, Tailwind CSS, Vite, Vitest |
+| **Frameworks** | Next.js, React, Supabase, Tailwind CSS, Vite, Vitest |
 | **Package Managers** | npm/yarn |
+| **API** | REST, Serverless (Supabase Edge Functions) |
 
 ## Documentation
 
 - [Getting Started](getting-started.md) - Setup & installation guide
 - [Architecture](architecture.md) - Project architecture & structure
+- [API Reference](api-reference.md) - API endpoint reference
 - [Configuration](configuration.md) - Configuration guide
 - [Contributing](contributing.md) - Contributing guidelines
 - [Project Structure](project-structure.md) - File & folder map
