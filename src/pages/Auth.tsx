@@ -695,7 +695,6 @@ const Auth = () => {
                 <button
                   type="button"
                   onClick={async () => {
-                    // Use stored password from sessionStorage (form state may be lost after signOut)
                     const storedPassword = pending2FAPassword || password;
                     if (!storedPassword || !pending2FAUser) {
                       toast({
@@ -706,11 +705,13 @@ const Auth = () => {
                       clear2FAState();
                       return;
                     }
-                    // Re-authenticate to get fresh token for resending
-                    const { data, error } = await supabase.auth.signInWithPassword({
+
+                    const ephemeralAuth = createEphemeralAuthClient();
+                    const { data, error } = await ephemeralAuth.auth.signInWithPassword({
                       email: pending2FAUser.email,
                       password: storedPassword,
                     });
+
                     if (error) {
                       toast({
                         variant: "destructive",
@@ -719,9 +720,9 @@ const Auth = () => {
                       });
                       return;
                     }
+
                     if (data.session?.access_token) {
                       await send2FACode(data.session.access_token);
-                      await supabase.auth.signOut();
                     }
                   }}
                   className="text-sm text-primary hover:underline"
