@@ -58,3 +58,6 @@ verify_jwt = false
 
 [functions.public-api]
 verify_jwt = false
+
+[functions.login-2fa-check]
+verify_jwt = false
