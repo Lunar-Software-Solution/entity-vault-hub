@@ -347,24 +347,14 @@ const Auth = () => {
     return <Navigate to="/" replace />;
   }
 
-  // Check if device is trusted
-  const checkTrustedDevice = async (userId: string): Promise<boolean> => {
-    try {
-      const deviceToken = getDeviceToken();
-      const { data, error } = await supabase.functions.invoke("check-trusted-device", {
-        body: { userId, deviceToken },
-      });
-      
-      if (error) {
-        console.error("Error checking trusted device:", error);
-        return false;
-      }
-      
-      return data?.trusted === true;
-    } catch (err) {
-      console.error("Error checking trusted device:", err);
-      return false;
-    }
+  const runLogin2FACheck = async (accessToken: string, deviceToken?: string) => {
+    const { data, error } = await supabase.functions.invoke("login-2fa-check", {
+      body: deviceToken ? { deviceToken } : {},
+      headers: { Authorization: `Bearer ${accessToken}` },
+    });
+
+    if (error) throw error;
+    return data as { trusted?: boolean; codeSent?: boolean; error?: string };
   };
 
   // Register device as trusted
@@ -389,11 +379,10 @@ const Auth = () => {
   // Send 2FA code
   const send2FACode = async (accessToken: string) => {
     try {
-      const { error } = await supabase.functions.invoke("send-2fa-code", {
-        headers: { Authorization: `Bearer ${accessToken}` },
-      });
-      
-      if (error) throw error;
+      const result = await runLogin2FACheck(accessToken);
+      if (!result?.codeSent) {
+        throw new Error(result?.error || "Failed to send verification code");
+      }
       
       toast({
         title: "Verification code sent",
