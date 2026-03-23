@@ -512,28 +512,57 @@ const Auth = () => {
             description: error.message,
           });
         } else if (data.user && data.session) {
-          // Check if this device is trusted
-          const isTrusted = await checkTrustedDevice(data.user.id);
-          
-          if (isTrusted) {
-            // Device is trusted, skip 2FA - user stays logged in
+          // Capture token and user info immediately before any re-renders
+          const accessToken = data.session.access_token;
+          const userId = data.user.id;
+          const userEmail = data.user.email || email;
+          const deviceToken = getDeviceToken();
+
+          // Single combined call: check trusted device + send 2FA if needed
+          try {
+            const { data: checkResult, error: checkError } = await supabase.functions.invoke("login-2fa-check", {
+              body: { deviceToken },
+              headers: { Authorization: `Bearer ${accessToken}` },
+            });
+
+            if (checkError) {
+              console.error("login-2fa-check error:", checkError);
+            }
+
+            if (checkResult?.trusted) {
+              // Device is trusted, skip 2FA - user stays logged in
+              toast({
+                title: "Welcome back!",
+                description: "Logged in from a trusted device.",
+              });
+              navigate("/", { replace: true });
+              return;
+            } else {
+              // Set 2FA state BEFORE signing out to prevent race condition
+              setPending2FAUser({ id: userId, email: userEmail });
+              setPendingAccessToken(accessToken);
+              setPending2FAPassword(password);
+              setNeeds2FA(true);
+              
+              if (checkResult?.codeSent) {
+                toast({
+                  title: "Verification code sent",
+                  description: "Check your email for the 6-digit code.",
+                });
+              }
+              
+              // Sign out to require 2FA verification
+              await supabase.auth.signOut();
+            }
+          } catch (err) {
+            console.error("Error in login 2FA check:", err);
+            // Fallback: proceed without 2FA on error
             toast({
               title: "Welcome back!",
-              description: "Logged in from a trusted device.",
+              description: "Logged in successfully.",
             });
-            // Force navigation to home page
             navigate("/", { replace: true });
             return;
-          } else {
-            // Set 2FA state BEFORE signing out to prevent race condition
-            setPending2FAUser({ id: data.user.id, email: data.user.email || email });
-            setPendingAccessToken(data.session.access_token);
-            setPending2FAPassword(password); // Store password for re-auth after 2FA
-            setNeeds2FA(true);
-            // Send 2FA code before signing out
-            await send2FACode(data.session.access_token);
-            // Sign out to require 2FA verification
-            await supabase.auth.signOut();
           }
         }
       } else {
