@@ -499,7 +499,8 @@ const Auth = () => {
           setIsForgotPassword(false);
         }
       } else if (isLogin) {
-        const { data, error } = await supabase.auth.signInWithPassword({
+        const ephemeralAuth = createEphemeralAuthClient();
+        const { data, error } = await ephemeralAuth.auth.signInWithPassword({
           email,
           password,
         });
@@ -511,57 +512,46 @@ const Auth = () => {
             description: error.message,
           });
         } else if (data.user && data.session) {
-          // Capture token and user info immediately before any re-renders
           const accessToken = data.session.access_token;
+          const refreshToken = data.session.refresh_token;
           const userId = data.user.id;
           const userEmail = data.user.email || email;
           const deviceToken = getDeviceToken();
 
-          // Single combined call: check trusted device + send 2FA if needed
           try {
-            const { data: checkResult, error: checkError } = await supabase.functions.invoke("login-2fa-check", {
-              body: { deviceToken },
-              headers: { Authorization: `Bearer ${accessToken}` },
-            });
-
-            if (checkError) {
-              console.error("login-2fa-check error:", checkError);
-            }
+            const checkResult = await runLogin2FACheck(accessToken, deviceToken);
 
             if (checkResult?.trusted) {
-              // Device is trusted, skip 2FA - user stays logged in
+              await supabase.auth.setSession({
+                access_token: accessToken,
+                refresh_token: refreshToken,
+              });
               toast({
                 title: "Welcome back!",
                 description: "Logged in from a trusted device.",
               });
               navigate("/", { replace: true });
               return;
-            } else {
-              // Set 2FA state BEFORE signing out to prevent race condition
-              setPending2FAUser({ id: userId, email: userEmail });
-              setPendingAccessToken(accessToken);
-              setPending2FAPassword(password);
-              setNeeds2FA(true);
-              
-              if (checkResult?.codeSent) {
-                toast({
-                  title: "Verification code sent",
-                  description: "Check your email for the 6-digit code.",
-                });
-              }
-              
-              // Sign out to require 2FA verification
-              await supabase.auth.signOut();
+            }
+
+            setPending2FAUser({ id: userId, email: userEmail });
+            setPendingAccessToken(accessToken);
+            setPending2FAPassword(password);
+            setNeeds2FA(true);
+
+            if (checkResult?.codeSent) {
+              toast({
+                title: "Verification code sent",
+                description: "Check your email for the 6-digit code.",
+              });
             }
           } catch (err) {
             console.error("Error in login 2FA check:", err);
-            // Fallback: proceed without 2FA on error
             toast({
-              title: "Welcome back!",
-              description: "Logged in successfully.",
+              variant: "destructive",
+              title: "Login failed",
+              description: err instanceof Error ? err.message : "Unable to complete login.",
             });
-            navigate("/", { replace: true });
-            return;
           }
         }
       } else {
