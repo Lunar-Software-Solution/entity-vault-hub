@@ -1,3 +1,4 @@
+import { createClient } from "@supabase/supabase-js";
 import { useState, useEffect } from "react";
 import { Navigate, useSearchParams, useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
@@ -59,6 +60,15 @@ const getDeviceName = (): string => {
   if (ua.includes("Edge")) return "Edge Browser";
   return "Web Browser";
 };
+
+const createEphemeralAuthClient = () =>
+  createClient(import.meta.env.VITE_SUPABASE_URL, import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY, {
+    auth: {
+      persistSession: false,
+      autoRefreshToken: false,
+      detectSessionInUrl: false,
+    },
+  });
 
 const Auth = () => {
   const [searchParams] = useSearchParams();
