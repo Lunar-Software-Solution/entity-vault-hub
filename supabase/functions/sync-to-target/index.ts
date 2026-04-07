@@ -85,7 +85,10 @@ Deno.serve(async (req) => {
       for (let i = 0; i < allRows.length; i += batchSize) {
         const batch = allRows.slice(i, i + batchSize);
         const { error } = await target.from(table).insert(batch as Record<string, unknown>[]);
-        if (error) errors.push(error.message);
+        if (error) {
+          console.error(`Insert error for ${table}:`, error.message, error.details, error.hint);
+          errors.push(error.message);
+        }
         else inserted += batch.length;
       }
 
