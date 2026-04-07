@@ -86,19 +86,18 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Auth: accept either user JWT or service role key
+    // Auth: accept user JWT or apikey matching service role
     const authHeader = req.headers.get("Authorization");
-    if (!authHeader) {
-      return new Response(JSON.stringify({ error: "Unauthorized" }), {
-        status: 401,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-
-    const token = authHeader.replace("Bearer ", "");
-    const isServiceRole = token === sourceServiceKey;
+    const apiKey = req.headers.get("apikey");
+    const isServiceRole = apiKey === sourceServiceKey;
 
     if (!isServiceRole) {
+      if (!authHeader) {
+        return new Response(JSON.stringify({ error: "Unauthorized" }), {
+          status: 401,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
       const authClient = createClient(sourceUrl, sourceAnonKey, {
         global: { headers: { Authorization: authHeader } },
       });
