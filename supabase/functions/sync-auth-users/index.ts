@@ -20,18 +20,22 @@ Deno.serve(async (req) => {
       return json({ error: "Target credentials not configured" }, 500);
     }
 
-    // Auth check
-    const authHeader = req.headers.get("Authorization");
-    if (!authHeader) {
-      return json({ error: "Unauthorized" }, 401);
-    }
-    const sourceAnonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
-    const authClient = createClient(sourceUrl, sourceAnonKey, {
-      global: { headers: { Authorization: authHeader } },
-    });
-    const { data: { user }, error: authError } = await authClient.auth.getUser();
-    if (authError || !user) {
-      return json({ error: "Unauthorized" }, 401);
+    // Auth: accept service role key via x-service-key header
+    const serviceKeyHeader = req.headers.get("x-service-key");
+    if (serviceKeyHeader !== sourceServiceKey) {
+      // Fallback: try JWT auth
+      const authHeader = req.headers.get("Authorization");
+      if (!authHeader) {
+        return json({ error: "Unauthorized" }, 401);
+      }
+      const sourceAnonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
+      const authClient = createClient(sourceUrl, sourceAnonKey, {
+        global: { headers: { Authorization: authHeader } },
+      });
+      const { data: { user }, error: authError } = await authClient.auth.getUser();
+      if (authError || !user) {
+        return json({ error: "Unauthorized" }, 401);
+      }
     }
 
     const body = await req.json().catch(() => ({}));
