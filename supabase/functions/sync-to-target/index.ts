@@ -73,15 +73,6 @@ Deno.serve(async (req) => {
   }
 
   try {
-    // Auth check
-    const authHeader = req.headers.get("Authorization");
-    if (!authHeader) {
-      return new Response(JSON.stringify({ error: "Unauthorized" }), {
-        status: 401,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-
     const sourceUrl = Deno.env.get("SUPABASE_URL")!;
     const sourceServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const sourceAnonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
@@ -95,16 +86,29 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Verify user is authenticated and admin
-    const authClient = createClient(sourceUrl, sourceAnonKey, {
-      global: { headers: { Authorization: authHeader } },
-    });
-    const { data: { user }, error: authError } = await authClient.auth.getUser();
-    if (authError || !user) {
+    // Auth: accept either user JWT or service role key
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader) {
       return new Response(JSON.stringify({ error: "Unauthorized" }), {
         status: 401,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
+    }
+
+    const token = authHeader.replace("Bearer ", "");
+    const isServiceRole = token === sourceServiceKey;
+
+    if (!isServiceRole) {
+      const authClient = createClient(sourceUrl, sourceAnonKey, {
+        global: { headers: { Authorization: authHeader } },
+      });
+      const { data: { user }, error: authError } = await authClient.auth.getUser();
+      if (authError || !user) {
+        return new Response(JSON.stringify({ error: "Unauthorized" }), {
+          status: 401,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
     }
 
     const source = createClient(sourceUrl, sourceServiceKey);
